@@ -5,7 +5,7 @@ library(ggplot2)
 library(zoo)
 library(tidyr)
 
-DATA_DIR <- "../data/"
+DATA_DIR <- "../data/ERC20-stablecoins"
 PLOT_DIR <- "../plots/"
 
 df_transactions <- read_csv(file.path(DATA_DIR, "transactions_cleaned.csv"))
