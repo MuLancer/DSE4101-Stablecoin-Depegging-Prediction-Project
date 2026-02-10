@@ -5,10 +5,9 @@ library(purrr)
 
 # Configuration
 # Using abs ref just once since the data file is too big to be pushed to GitHub
-setwd("/Users/mulan/NUS/AY25_Y4S2/DSE4101/code/DSE4101-Stablecoin-Depegging-Prediction-Project/data/ERC20-stablecoins/")
-transaction_file_path <- "token_transfers_V3.0.0.csv"
-price_data_dir <- "price_data/"
-##
+# setwd("/Users/mulan/NUS/AY25_Y4S2/DSE4101/code/DSE4101-Stablecoin-Depegging-Prediction-Project/data/ERC20-stablecoins/")
+transaction_file_path <- "data/token_transfers_V3.0.0.csv"
+price_data_dir <- "data/price_data/"
 
 # Token mapping
 token_mappings <- c(
@@ -49,7 +48,7 @@ df_prices <- map2_df(names(price_files), price_files, ~ {
   df %>%
     mutate(
       stablecoin = .y,
-      date = as_date(timestamp)
+      timestamp = as_datetime(timestamp)
     )
 })
 
