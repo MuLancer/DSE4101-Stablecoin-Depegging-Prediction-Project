@@ -4,13 +4,14 @@ library(readr)
 library(purrr)
 
 # Configuration
-setwd("/Users/mulan/NUS/AY25_Y4S2/DSE4101/code")
-DATA_DIR <- "../data/ERC20-stablecoins/"
-TRANSACTION_FILE <- paste0(DATA_DIR, "token_transfers_V3.0.0.csv")
-PRICE_DATA_DIR <- paste0(DATA_DIR, "price_data/")
+# Using abs ref just once since the data file is too big to be pushed to GitHub
+setwd("/Users/mulan/NUS/AY25_Y4S2/DSE4101/code/DSE4101-Stablecoin-Depegging-Prediction-Project/data/ERC20-stablecoins/")
+transaction_file_path <- "token_transfers_V3.0.0.csv"
+price_data_dir <- "price_data/"
+##
 
 # Token mapping
-TOKEN_MAPPING <- c(
+token_mappings <- c(
   "0xdac17f958d2ee523a2206206994597c13d831ec7" = "USDT",
   "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" = "USDC",
   "0x6b175474e89094c44da98b954eedeac495271d0f" = "DAI",
@@ -20,7 +21,7 @@ TOKEN_MAPPING <- c(
 )
 
 # Load transactions
-df_transactions <- read_csv(TRANSACTION_FILE)
+df_transactions <- read_csv(transaction_file_path)
 
 # Convert timestamps and extract features
 df_transactions <- df_transactions %>%
@@ -29,7 +30,7 @@ df_transactions <- df_transactions %>%
     date = as_date(timestamp),
     hour = hour(timestamp),
     day_of_week = wday(timestamp, week_start = 1) - 1, # 0 = Monday
-    token_name = TOKEN_MAPPING[contract_address]
+    token_name = token_mappings[contract_address]
   )
 
 # Price files mapping
@@ -44,16 +45,16 @@ price_files <- c(
 
 # Load all price data
 df_prices <- map2_df(names(price_files), price_files, ~ {
-  df <- read_csv(file.path(PRICE_DATA_DIR, .x))
+  df <- read_csv(file.path(price_data_dir, .x))
   df %>%
     mutate(
       stablecoin = .y,
-      timestamp = as_datetime(timestamp),
       date = as_date(timestamp)
     )
 })
 
 # Save cleaned data
-write_csv(df_transactions, file.path(DATA_DIR, "transactions_cleaned.csv"))
-write_csv(df_prices, file.path(DATA_DIR, "prices_cleaned.csv"))
+# Reset wd as project name now (".../DSE4101-Stablecoin-Depegging-Prediction-Project/")
+write_csv(df_transactions, "data/transactions_cleaned.csv")
+write_csv(df_prices, "data/prices_cleaned.csv")
 
