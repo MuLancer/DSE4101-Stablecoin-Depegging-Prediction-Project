@@ -28,7 +28,8 @@ df_transactions <- df_transactions %>%
     hour = hour(timestamp),
     day_of_week = wday(timestamp, week_start = 1) - 1, # 0 = Monday
     token_name = token_mappings[contract_address]
-  )
+  ) %>%
+  select(-time_stamp) 
 
 # Price files mapping
 price_files <- c(
