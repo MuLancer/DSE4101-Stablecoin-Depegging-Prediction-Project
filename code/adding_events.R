@@ -27,6 +27,12 @@ df_events_processed <- df_events %>%
   ) %>%
   mutate(across(-timestamp, ~ ifelse(. > 0, 1, 0))) #just an extra step to ensure consistency even tho the values are already 0 or 1
 
+# sorting col names
+df_events_processed <- df_events_processed %>%
+  select(sort(names(.))) %>%
+  select(timestamp, everything()) %>%
+  mutate(usdt_events_negative = 0, .before = usdt_events_positive)
+
 # 3. Combine with Price Data
 df_combined <- df_prices %>%
   left_join(df_events_processed, by = "timestamp") %>%
