@@ -52,6 +52,5 @@ df_prices <- map2_df(names(price_files), price_files, ~ {
 
 # Save cleaned data
 # Reset wd as project name now (".../DSE4101-Stablecoin-Depegging-Prediction-Project/")
-write_csv(df_transactions, "../data/transactions_cleaned.csv")
+write_csv(df_transactions, "../data/token_transfers_cleaned.csv")
 write_csv(df_prices, "../data/prices_cleaned.csv")
-

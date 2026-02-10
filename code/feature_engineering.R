@@ -6,9 +6,8 @@ library(zoo)
 library(tidyr)
 
 DATA_DIR <- "../data/"
-PLOT_DIR <- "../plots/"
 
-df_transactions <- read_csv(file.path(DATA_DIR, "transactions_cleaned.csv"))
+df_transactions <- read_csv(file.path(DATA_DIR, "token_transfers_cleaned.csv"))
 df_prices <- read_csv(file.path(DATA_DIR, "prices_with_events_pricefeatures.csv"))
 
 # Add percentage change features
@@ -178,24 +177,61 @@ df_shark_activity <- df_transactions %>%
 
 # Combine all features and remove duplicates
 df_all <- df_entropy %>%
+  left_join(df_prices, by = c("date" = "timestamp", "token_name" = "stablecoin")) %>%
   left_join(df_gini, by = c("date", "token_name")) %>%
   left_join(df_flows, by = c("date", "token_name")) %>%
   left_join(df_pin %>% select(date, token_name, order_imbalance, pin_7d, log_diff_pin), 
             by = c("date", "token_name")) %>%
   left_join(df_shark_activity, by = c("date", "token_name")) %>%
-  left_join(
-    df_prices,
-    by = c("date" = "timestamp", "token_name" = "stablecoin")
-  ) %>%
+  
   left_join(
     df_markout %>% select(timestamp, stablecoin, starts_with("markout_")),
     by = c("date" = "timestamp", "token_name" = "stablecoin")
   ) %>%
-  select(-pct_close_1d)  # duplicate of log_return
+  select(-pct_close_1d)  # Remove duplicates
+
+# Spillover - add price data from other tokens
+create_spillover <- function(df) {
+  tokens <- unique(df$token_name)
+  df_result <- df
+  
+  for (other_token in tokens) {
+    # Get other token's OHLC data
+    other_ohlc <- df %>%
+      filter(token_name == other_token) %>%
+      select(date, open, high, low, close) %>%
+      rename(
+        !!paste0(other_token, "_open") := open,
+        !!paste0(other_token, "_high") := high,
+        !!paste0(other_token, "_low") := low,
+        !!paste0(other_token, "_close") := close
+      )
+    
+    df_result <- df_result %>%
+      left_join(other_ohlc, by = "date")
+  }
+  
+  # Set own token's spillover to NA (do this after all joins)
+  for (token in tokens) {
+    col_names <- c(
+      paste0(token, "_open"),
+      paste0(token, "_high"),
+      paste0(token, "_low"),
+      paste0(token, "_close")
+    )
+    
+    for (col_name in col_names) {
+      if (col_name %in% colnames(df_result)) {
+        df_result <- df_result %>%
+          mutate(!!col_name := if_else(token_name == token, NA_real_, !!sym(col_name)))
+      }
+    }
+  }
+  
+  return(df_result)
+}
+
+df_all <- create_spillover(df_all)
+colnames(df_all)
 
 write_csv(df_all, file.path(DATA_DIR, "df_all.csv"))
-
-# Print final column names
-cat("Final columns in df_all:\n")
-print(colnames(df_all))
-cat("\nTotal columns:", ncol(df_all), "\n")
