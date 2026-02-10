@@ -4,10 +4,9 @@ library(readr)
 library(purrr)
 
 # Configuration
-# Using abs ref just once since the data file is too big to be pushed to GitHub
-# setwd("/Users/mulan/NUS/AY25_Y4S2/DSE4101/code/DSE4101-Stablecoin-Depegging-Prediction-Project/data/ERC20-stablecoins/")
-transaction_file_path <- "data/token_transfers_V3.0.0.csv"
-price_data_dir <- "data/price_data/"
+# The dataset for token transfers is stored locally due to its size (~5GB). The data is excluded via .gitignore to avoid exceeding repository size limits.
+transaction_file_path <- "../data/token_transfers_V3.0.0.csv"
+price_data_dir <- "../data/price_data/"
 
 # Token mapping
 token_mappings <- c(
@@ -19,7 +18,6 @@ token_mappings <- c(
   "0xd2877702675e6ceb975b4a1dff9fb7baf4c91ea9" = "WLUNA"
 )
 
-# Load transactions
 df_transactions <- read_csv(transaction_file_path)
 
 # Convert timestamps and extract features
@@ -42,7 +40,6 @@ price_files <- c(
   "wluna_price_data.csv" = "WLUNA"
 )
 
-# Load all price data
 df_prices <- map2_df(names(price_files), price_files, ~ {
   df <- read_csv(file.path(price_data_dir, .x))
   df %>%
@@ -54,6 +51,6 @@ df_prices <- map2_df(names(price_files), price_files, ~ {
 
 # Save cleaned data
 # Reset wd as project name now (".../DSE4101-Stablecoin-Depegging-Prediction-Project/")
-write_csv(df_transactions, "data/transactions_cleaned.csv")
-write_csv(df_prices, "data/prices_cleaned.csv")
+write_csv(df_transactions, "../data/transactions_cleaned.csv")
+write_csv(df_prices, "../data/prices_cleaned.csv")
 
