@@ -22,8 +22,8 @@ data <- read.csv("df_all.csv")
 
 depeg_metrics <- function(actual, predicted, threshold) {
   # Compare actual and predicted prices to depeg threshold
-  actual_depeg <- actual >= threshold
-  predicted_depeg <- predicted >= threshold
+  actual_depeg <- actual <= threshold
+  predicted_depeg <- predicted <= threshold
   
   # confusion matrix 
   TP <- sum(actual_depeg == TRUE & predicted_depeg == TRUE, na.rm = TRUE)
