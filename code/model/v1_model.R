@@ -3,6 +3,7 @@ library(randomForest)
 library(xgboost)
 library(pls)
 library(tidyverse)
+library(gridExtra)
 
 rm(list=ls())
 
@@ -142,7 +143,8 @@ oos_WLUNA <- data_WLUNA %>% tail(nprev)
 #####################
 ### Random Forest ###
 #####################
-source("func-rf.R")
+#source("func-rf.R") # uncomment for old splitting logic
+source("func-rf_edited.R")
 
 # Predicting the 6th column: close price
 # Note: using the data_(token)_num dataset for modelling to avoid errors
@@ -182,7 +184,8 @@ grid.arrange(grobs = plot_rf_list, nrow = 2, ncol = 3)
 #########################
 ### Gradient Boosting ###
 #########################
-source("func-gradboost.R")
+#source("func-gradboost.R") # uncomment for old splitting logic
+source("func-gradboost_edited.R")
 
 # Predicting the 6th column: close price
 # Note: using the data_(token)_num dataset for modelling to avoid errors
