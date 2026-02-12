@@ -225,7 +225,9 @@ grid.arrange(grobs = plot_gb_list, nrow = 2, ncol = 3)
 ######################################
 ### Principal Component Regression ###
 ######################################
-source("func-pcr.R")
+#source("func-pcr.R") # uncomment for old splitting logic
+source("func-pcr_edited.R") 
+#source("func-pcr_fixed.R") # uses pls::pcr, no CV (due to Invalid ncomp error)
 
 pcr_DAI = pcr.rolling.window(data_DAI_num,nprev,6,1)
 pcr_PAX = pcr.rolling.window(data_PAX_num,nprev,6,1)
@@ -243,11 +245,6 @@ pcr_rmse_UST=pcr_UST$errors[1]
 # Directional Predictability
 #pcr_depeg_DAI <- depeg_metrics(oos_DAI[[5]], pcr_DAI$pred, threshold)
 
-# Note some additional functions: 
-pcr_result_DAI <- runpcr(data_DAI_num, indice=4, lag=1)
-summary(pcr_result_DAI$model)
-#show_pcr_comps(pcr_result_DAI, top_n = 5)
-
 # Plot OOS results
 plot_pcr_DAI <- plot_results(data_DAI, oos_DAI[[8]], nprev, pcr_DAI, pcr_rmse_DAI, 
                              "PCR (DAI Close)")
@@ -262,6 +259,38 @@ plot_pcr_UST <- plot_results(data_UST, oos_UST[[8]], nprev, pcr_UST, pcr_rmse_US
 
 plot_pcr_list <- list(plot_pcr_DAI, plot_pcr_PAX, plot_pcr_USDC, plot_pcr_USDT, plot_pcr_UST)
 grid.arrange(grobs = plot_pcr_list, nrow = 2, ncol = 3)
+
+
+# Some additional functions: show PCR components, plot CV error curve
+pcr_result_DAI <- runpcr(data_DAI_num, indice=6, lag=1)
+summary(pcr_result_DAI$model)
+print(paste("No. of components for DAI:", pcr_result_DAI$ncomp))
+show_pcr_comps(pcr_result_DAI, top_n = 5)
+plot_cv_curve(pcr_result_DAI$cv_errors, title = "DAI: PCR Cross-Validation Error")
+
+pcr_result_PAX <- runpcr(data_PAX_num, indice=6, lag=1)
+summary(pcr_result_PAX$model)
+print(paste("No. of components for PAX:", pcr_result_PAX$ncomp))
+show_pcr_comps(pcr_result_PAX, top_n = 5)
+plot_cv_curve(pcr_result_PAX$cv_errors, title = "PAX: PCR Cross-Validation Error")
+
+pcr_result_USDC <- runpcr(data_USDC_num, indice=6, lag=1)
+summary(pcr_result_USDC$model)
+print(paste("No. of components for USDC:", pcr_result_USDC$ncomp))
+show_pcr_comps(pcr_result_USDC, top_n = 5)
+plot_cv_curve(pcr_result_USDC$cv_errors, title = "USDC: PCR Cross-Validation Error")
+
+pcr_result_USDT <- runpcr(data_USDT_num, indice=6, lag=1)
+summary(pcr_result_USDT$model)
+print(paste("No. of components for USDT:", pcr_result_USDT$ncomp))
+show_pcr_comps(pcr_result_USDT, top_n = 5)
+plot_cv_curve(pcr_result_USDT$cv_errors, title = "USDT: PCR Cross-Validation Error")
+
+pcr_result_UST <- runpcr(data_UST_num, indice=6, lag=1)
+summary(pcr_result_UST$model)
+print(paste("No. of components for UST:", pcr_result_UST$ncomp))
+show_pcr_comps(pcr_result_UST, top_n = 5)
+plot_cv_curve(pcr_result_UST$cv_errors, title = "UST: PCR Cross-Validation Error")
 
 
 
