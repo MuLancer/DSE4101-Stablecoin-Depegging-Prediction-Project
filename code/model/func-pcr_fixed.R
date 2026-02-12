@@ -67,8 +67,7 @@ runpcr <- function(Y, indice, lag, ncomp = 5) {
   return(list("model" = pcr_model_final, 
               "ncomp" = ncomp,
               "pred" = pred, 
-              "pca_loadings" = pca_loadings, 
-              "cv_errors" = mean_cv_errors,
+              "pca_loadings" = pca_loadings,
               "explained_variance" = explained_variance,
               "cumulative_variance" = cumulative_variance,
               "y_explained" = y_explained))
@@ -79,7 +78,6 @@ pcr.rolling.window <- function(Y, nprev, indice, lag = 1, ncomp = 5) {
   
   save.pred <- matrix(NA, nprev, 1)
   save.ncomp <- matrix(NA, nprev, 1)
-  save.cv_errors <- list()
   save.explained_var <- list()
   save.loadings <-list()
   
@@ -89,7 +87,6 @@ pcr.rolling.window <- function(Y, nprev, indice, lag = 1, ncomp = 5) {
     
     save.pred[(1 + nprev - i), ] <- pcr_model$pred
     save.ncomp[(1 + nprev - i), ] <- pcr_model$ncomp
-    save.cv_errors[[i]] <- pcr_model$cv_errors
     save.explained_var[[i]] <- pcr_model$explained_variance
     save.loadings[[i]] <- pcr_model$pca_loadings
     
@@ -106,7 +103,6 @@ pcr.rolling.window <- function(Y, nprev, indice, lag = 1, ncomp = 5) {
   
   return(list("pred" = save.pred,
               "ncomp" = save.ncomp, 
-              "cv_errors" = save.cv_errors,
               "explained_var" = save.explained_var,
               "pca_loadings" = save.loadings,
               "errors" = errors))
