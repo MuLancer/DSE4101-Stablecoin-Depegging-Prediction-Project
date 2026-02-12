@@ -27,10 +27,10 @@ rungb <- function(Y, indice, lag) {
   # Fixed parameters
   gb_params <- list(
     objective = "reg:squarederror",
-    eta = 0.1,
-    max_depth = 6,
-    subsample = 0.8,
-    colsample_bytree = 0.8
+    eta = 0.1,             # no change, tried lower learning rate (0.01-0.05), but 0.1 still better
+    max_depth = 6,         # no change, 6 splits to balance complexity 
+    subsample = 0.8,       # no change, using 80% randomly selected obs for training
+    colsample_bytree = 0.8 # no change, using 80% randomly selected features for constructing each tree
   )
   
   # Train model
