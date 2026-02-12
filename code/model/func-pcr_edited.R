@@ -167,7 +167,7 @@ show_pcr_comps <- function(pcr_result, top_n = 10) {
 }
 
 
-# Function to plot CV error curve
+# Plot CV error curve
 plot_cv_curve <- function(cv_errors, title = "PCR Cross-Validation Error") {
   ncomp_range <- 1:length(cv_errors)
   cv_df <- data.frame(ncomp = ncomp_range, CV_Error = cv_errors)
