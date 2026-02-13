@@ -1,24 +1,19 @@
-#################
-### Load Data ###
-#################
-
-data <- read.csv("df_all.csv") 
-
-############################
-### Candlestick Analysis ###
-############################
 library(lubridate)
 library(ggplot2)
 library(tidyquant)
 library(dplyr)
 library(gridExtra)
 
+data <- read.csv("data/df_all.csv") 
+
+# Candlestick Analysis
+
 # Full timeframe
 data$date <- as.Date(data$date)
 
 plot_full_list <- list()
-for (i in unique(data$stablecoin)){
-  plot <- data %>% filter(stablecoin == i) %>%
+for (i in unique(data$token_name)){
+  plot <- data %>% filter(token_name == i) %>%
     ggplot(aes(x = date, y = close)) +
     geom_candlestick(aes(open = open, high = high, low = low, close = close),
                      colour_up = "darkgreen",
@@ -39,8 +34,8 @@ grid.arrange(grobs = plot_full_list, nrow = 2, ncol = 3)
 crash_data <- data %>% filter(date <= as.Date("2022-05-20"))
 
 plot_list <- list()
-for (i in unique(crash_data$stablecoin)){
-  plot <- crash_data %>% filter(stablecoin == i) %>%
+for (i in unique(crash_data$token_name)){
+  plot <- crash_data %>% filter(token_name == i) %>%
     ggplot(aes(x = date, y = close)) +
     geom_candlestick(aes(open = open, high = high, low = low, close = close),
                      colour_up = "darkgreen",

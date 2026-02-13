@@ -4,6 +4,7 @@ library(readr)
 library(tidyverse)
 library(purrr)
 library(zoo) 
+library(dplyr)
 library(TTR) # For technical indicators like RSI or Volatility
 
 #Config
@@ -59,10 +60,9 @@ df_combined <- df_combined %>%
     rsi_14d = TTR::RSI(close, n = RSI_N), # momentum indicator (too fast means overbuying and vice versa)
     
     # Bollinger Bands (20d classic, captures vol+stress+trend)
-    bb = list(TTR::BBands(close, n = BB_N, sd = 2)),
-    bb_up   = bb[[1]][, "up"], # upper band
-    bb_dn   = bb[[1]][, "dn"], # lower band
-    bb_pctb = bb[[1]][, "pctB"], # pst of price within bands
+    bb_up   = TTR::BBands(close, n = BB_N, sd = 2)[, "up"],
+    bb_dn   = TTR::BBands(close, n = BB_N, sd = 2)[, "dn"],
+    bb_pctb = TTR::BBands(close, n = BB_N, sd = 2)[, "pctB"],
     dist_from_lower_band = close - bb_dn
   ) %>%
   ungroup()

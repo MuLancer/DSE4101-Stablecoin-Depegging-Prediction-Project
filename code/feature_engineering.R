@@ -5,10 +5,8 @@ library(ggplot2)
 library(zoo)
 library(tidyr)
 
-DATA_DIR <- "../data/"
-
-df_transactions <- read_csv(file.path(DATA_DIR, "token_transfers_cleaned.csv"))
-df_prices <- read_csv(file.path(DATA_DIR, "prices_with_events_pricefeatures.csv"))
+df_transactions <- read_csv("data/token_transfers_cleaned.csv")
+df_prices <- read_csv("data/prices_with_events_pricefeatures.csv")
 
 # Add percentage change features
 df_prices <- df_prices %>%
@@ -234,4 +232,4 @@ create_spillover <- function(df) {
 df_all <- create_spillover(df_all)
 colnames(df_all)
 
-write_csv(df_all, file.path(DATA_DIR, "df_all.csv"))
+write_csv(df_all, "data/df_all.csv")

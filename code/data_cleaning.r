@@ -5,8 +5,8 @@ library(purrr)
 
 # Configuration
 # The dataset for token transfers is stored locally due to its size (~5GB). The data is excluded via .gitignore to avoid exceeding repository size limits.
-transaction_file_path <- "../data/token_transfers_V3.0.0.csv"
-price_data_dir <- "../data/price_data/"
+transaction_file_path <- "data/token_transfers_V3.0.0.csv"
+price_data_dir <- "data/price_data/"
 
 # Token mapping
 token_mappings <- c(
@@ -52,5 +52,5 @@ df_prices <- map2_df(names(price_files), price_files, ~ {
 
 # Save cleaned data
 # Reset wd as project name now (".../DSE4101-Stablecoin-Depegging-Prediction-Project/")
-write_csv(df_transactions, "../data/token_transfers_cleaned.csv")
-write_csv(df_prices, "../data/prices_cleaned.csv")
+write_csv(df_transactions, "data/token_transfers_cleaned.csv")
+write_csv(df_prices, "data/prices_cleaned.csv")
