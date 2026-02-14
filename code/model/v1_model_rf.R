@@ -99,24 +99,24 @@ for (i in unique(data$token_name)){
     assign(var_name, data_i)
 }
 
-# remove overlap OHLC price columns and bb (currently NA columns), remove NA rows
+# remove overlap OHLC price columns, remove NA rows
 data_DAI <- data_DAI %>% 
-  select(-DAI_open, -DAI_high, -DAI_low, -DAI_close, -bb) %>% 
+  select(-DAI_open, -DAI_high, -DAI_low, -DAI_close) %>% 
   na.omit()
 data_PAX <- data_PAX %>% 
-  select(-PAX_open, -PAX_high, -PAX_low, -PAX_close, -bb) %>% 
+  select(-PAX_open, -PAX_high, -PAX_low, -PAX_close) %>% 
   na.omit()
 data_USDC <- data_USDC %>% 
-  select(-USDC_open, -USDC_high, -USDC_low, -USDC_close, -bb) %>% 
+  select(-USDC_open, -USDC_high, -USDC_low, -USDC_close) %>% 
   na.omit()
 data_USDT <- data_USDT %>% 
-  select(-USDT_open, -USDT_high, -USDT_low, -USDT_close, -bb) %>%
+  select(-USDT_open, -USDT_high, -USDT_low, -USDT_close) %>%
   na.omit()
 data_UST <- data_UST %>% 
-  select(-UST_open, -UST_high, -UST_low, -UST_close, -bb) %>%
+  select(-UST_open, -UST_high, -UST_low, -UST_close) %>%
   na.omit()
 data_WLUNA <- data_WLUNA %>% 
-  select(-WLUNA_open, -WLUNA_high, -WLUNA_low, -WLUNA_close, -bb) %>%
+  select(-WLUNA_open, -WLUNA_high, -WLUNA_low, -WLUNA_close) %>%
   na.omit()
 
 # Numerical dataset FOR MODELS, and remove NA obs
