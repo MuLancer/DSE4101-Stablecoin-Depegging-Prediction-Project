@@ -178,7 +178,8 @@ plot_rf_UST <- plot_results(data_UST, oos_UST[[8]], nprev, rf_UST, rf_rmse_UST,
                             "Random Forest (UST Close)")
 
 plot_rf_list <- list(plot_rf_DAI, plot_rf_PAX, plot_rf_USDC, plot_rf_USDT, plot_rf_UST)
-grid.arrange(grobs = plot_rf_list, nrow = 2, ncol = 3)
+rf_grid <- grid.arrange(grobs = plot_rf_list, nrow = 2, ncol = 3)
+ggsave("../../plots/RF_model_OOS.png", rf_grid, width = 12, height = 8)
 
 
 #########################
@@ -219,7 +220,8 @@ plot_gb_UST <- plot_results(data_UST, oos_UST[[5]], nprev, gb_UST, gb_rmse_UST,
                             "Gradient Boosting (UST Close)")
 
 plot_gb_list <- list(plot_gb_DAI, plot_gb_PAX, plot_gb_USDC, plot_gb_USDT, plot_gb_UST)
-grid.arrange(grobs = plot_gb_list, nrow = 2, ncol = 3)
+gb_grid <- grid.arrange(grobs = plot_gb_list, nrow = 2, ncol = 3)
+ggsave("../../plots/GB_model_OOS.png", gb_grid, width = 12, height = 8)
 
 
 ######################################
@@ -258,7 +260,8 @@ plot_pcr_UST <- plot_results(data_UST, oos_UST[[8]], nprev, pcr_UST, pcr_rmse_US
                              "PCR (UST Close)")
 
 plot_pcr_list <- list(plot_pcr_DAI, plot_pcr_PAX, plot_pcr_USDC, plot_pcr_USDT, plot_pcr_UST)
-grid.arrange(grobs = plot_pcr_list, nrow = 2, ncol = 3)
+pcr_grid <- grid.arrange(grobs = plot_pcr_list, nrow = 2, ncol = 3)
+ggsave("../../plots/PCR_model_OOS.png", pcr_grid, width = 12, height = 8)
 
 
 # Some additional functions: show PCR components, plot CV error curve
