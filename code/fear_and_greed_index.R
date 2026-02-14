@@ -24,3 +24,4 @@ ggplot(fng_history, aes(x = date, y = value)) +
        y = "Index Value (0-100)", x = "Year") +
   theme_minimal()
 
+write_csv(fng_history, "data/fear_and_greed_index.csv")
