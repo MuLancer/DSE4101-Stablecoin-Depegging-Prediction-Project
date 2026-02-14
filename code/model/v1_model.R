@@ -231,6 +231,31 @@ rf_feature_importance_block <- function(rf_obj, top_n = 20, method = c("auto", "
 
 imp_rf_USDT <- rf_feature_importance_block(rf_USDT, top_n = 15)
 
+imp_df <- imp_rf_USDT$table
+
+imp_df$feature <- factor(
+  imp_df$feature,
+  levels = imp_df$feature[order(imp_df$mean_importance)]
+)
+
+plot_imp_rf_USDT <- ggplot(imp_df, aes(x = feature, y = mean_importance)) +
+  geom_col(fill = "steelblue") +
+  geom_errorbar(aes(ymin = mean_importance - sd_importance,
+                    ymax = mean_importance + sd_importance),
+                width = 0.2) +
+  coord_flip() +
+  labs(
+    title = "Random Forest Feature Importance (USDT)",
+    subtitle = paste("Mean Permutation Importance (± SD) | Method:", imp_rf_USDT$method),
+    x = "",
+    y = "Mean Importance"
+  ) +
+  theme_minimal()
+
+ggsave("../../plots/RF_USDT_feature_importance.png", plot_imp_rf_USDT,
+       width = 8, height = 6)
+
+
 
 #########################
 ### Gradient Boosting ###
