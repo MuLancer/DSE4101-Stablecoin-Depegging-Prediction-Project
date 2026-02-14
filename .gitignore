@@ -209,3 +209,4 @@ data/ERC-stablecoins/
 .DS_Store
 data/token_transfers_V3.0.0.csv
 data/token_transfers_cleaned.csv
+*.RDataTmp
