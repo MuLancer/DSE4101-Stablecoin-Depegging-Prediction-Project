@@ -74,7 +74,7 @@ plot_results <- function(y_data, oosy, nprev, model, rmse, title){
     geom_line(aes(y = pred, color = "Predicted")) +
     scale_color_manual(values = c("Actual" = "black", "Predicted" = "red")) +
     labs(title = title,
-         subtitle = paste("RMSE:", round(rmse, 4)),
+         subtitle = paste("RMSE:", round(rmse, 6)),
          x = "Index", 
          y = "Price",
          color = "Series") +
