@@ -181,6 +181,56 @@ plot_rf_list <- list(plot_rf_DAI, plot_rf_PAX, plot_rf_USDC, plot_rf_USDT, plot_
 rf_grid <- grid.arrange(grobs = plot_rf_list, nrow = 2, ncol = 3)
 ggsave("../../plots/RF_model_OOS.png", rf_grid, width = 12, height = 8)
 
+# ---- RF Feature Importance Block (rolling-window averaged) ----
+rf_feature_importance_block <- function(rf_obj, top_n = 20, method = c("auto", "IncNodePurity", "%IncMSE")) {
+  method <- match.arg(method)
+  
+  # rf_obj is the output of rf.rolling.window(), e.g. rf_DAI
+  imps <- rf_obj$save.importance
+  imps <- imps[!sapply(imps, is.null)]
+  if (length(imps) == 0) stop("No importance found in rf_obj$save.importance")
+  
+  # Each element is a matrix: rows = features, cols = importance metrics
+  # Stack them into a 3D-like structure using names intersection
+  common_vars <- Reduce(intersect, lapply(imps, rownames))
+  if (length(common_vars) == 0) stop("No common variables across importance matrices")
+  
+  imps <- lapply(imps, function(m) m[common_vars, , drop = FALSE])
+  imp_cols <- colnames(imps[[1]])
+  
+  # Choose method
+  chosen <- method
+  if (method == "auto") {
+    if ("%IncMSE" %in% imp_cols) chosen <- "%IncMSE"
+    else if ("IncNodePurity" %in% imp_cols) chosen <- "IncNodePurity"
+    else chosen <- imp_cols[1]
+  }
+  
+  # Build matrix [features x iterations] for chosen metric
+  M <- sapply(imps, function(m) m[, chosen])
+  avg <- rowMeans(M, na.rm = TRUE)
+  sdv <- apply(M, 1, sd, na.rm = TRUE)
+  
+  out <- data.frame(
+    feature = names(avg),
+    mean_importance = as.numeric(avg),
+    sd_importance = as.numeric(sdv),
+    stringsAsFactors = FALSE
+  )
+  
+  out <- out[order(out$mean_importance, decreasing = TRUE), ]
+  out_top <- head(out, top_n)
+  
+  list(
+    method = chosen,
+    table = out_top,
+    full_table = out
+  )
+}
+
+
+imp_rf_USDT <- rf_feature_importance_block(rf_USDT, top_n = 15)
+
 
 #########################
 ### Gradient Boosting ###
