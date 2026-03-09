@@ -97,47 +97,6 @@ df_flows <- df_transactions %>%
   ) %>%
   ungroup()
 
-# PIN
-calculate_pin <- function(df) {
-  df %>%
-    group_by(date, token_name) %>%
-    summarise(
-      n_buys = sum(value > median(value), na.rm = TRUE),
-      n_sells = sum(value <= median(value), na.rm = TRUE),
-      total_trades = n(),
-      .groups = 'drop'
-    ) %>%
-    mutate(
-      order_imbalance = abs(n_buys - n_sells) / total_trades,
-      pin_proxy = order_imbalance
-    ) %>%
-    group_by(token_name) %>%
-    arrange(date) %>%
-    mutate(
-      pin_7d = rollapply(pin_proxy, width = 7, FUN = mean, fill = NA, align = "right"),
-      log_diff_pin = log(1 + pin_7d / lag(pin_7d))
-    ) %>%
-    ungroup()
-}
-
-df_pin <- calculate_pin(df_transactions)
-
-# Markout
-df_markout <- df_prices %>%
-  group_by(stablecoin) %>%
-  arrange(timestamp) %>%
-  mutate(
-    is_depegged = (abs(close - 1.0) > 0.02)
-  )
-
-horizons <- c(1, 3, 7, 14, 30)
-for (h in horizons) {
-  df_markout <- df_markout %>%
-    mutate(
-      !!paste0("markout_", h, "d") := log(lead(close, n = h) / close)
-    )
-}
-df_markout <- ungroup(df_markout)
 
 # Shark Trades
 df_sharks <- df_transactions %>%
@@ -178,14 +137,7 @@ df_all <- df_entropy %>%
   left_join(df_prices, by = c("date" = "timestamp", "token_name" = "stablecoin")) %>%
   left_join(df_gini, by = c("date", "token_name")) %>%
   left_join(df_flows, by = c("date", "token_name")) %>%
-  left_join(df_pin %>% select(date, token_name, order_imbalance, pin_7d, log_diff_pin), 
-            by = c("date", "token_name")) %>%
   left_join(df_shark_activity, by = c("date", "token_name")) %>%
-  
-  left_join(
-    df_markout %>% select(timestamp, stablecoin, starts_with("markout_")),
-    by = c("date" = "timestamp", "token_name" = "stablecoin")
-  ) %>%
   select(-pct_close_1d)  # Remove duplicates
 
 # Spillover - add price data from other tokens

@@ -74,7 +74,7 @@ plot_results <- function(y_data, oosy, nprev, model, rmse, title){
     geom_line(aes(y = pred, color = "Predicted")) +
     scale_color_manual(values = c("Actual" = "black", "Predicted" = "red")) +
     labs(title = title,
-         subtitle = paste("RMSE:", round(rmse, 4)),
+         subtitle = paste("RMSE:", round(rmse, 6)),
          x = "Index", 
          y = "Price",
          color = "Series") +
@@ -100,24 +100,24 @@ for (i in unique(data$token_name)){
     assign(var_name, data_i)
 }
 
-# remove overlap OHLC price columns and bb (currently NA columns), remove NA rows
+# remove overlap OHLC price columns, remove NA rows
 data_DAI <- data_DAI %>% 
-  select(-DAI_open, -DAI_high, -DAI_low, -DAI_close, -bb) %>% 
+  select(-DAI_open, -DAI_high, -DAI_low, -DAI_close) %>% 
   na.omit()
 data_PAX <- data_PAX %>% 
-  select(-PAX_open, -PAX_high, -PAX_low, -PAX_close, -bb) %>% 
+  select(-PAX_open, -PAX_high, -PAX_low, -PAX_close) %>% 
   na.omit()
 data_USDC <- data_USDC %>% 
-  select(-USDC_open, -USDC_high, -USDC_low, -USDC_close, -bb) %>% 
+  select(-USDC_open, -USDC_high, -USDC_low, -USDC_close) %>% 
   na.omit()
 data_USDT <- data_USDT %>% 
-  select(-USDT_open, -USDT_high, -USDT_low, -USDT_close, -bb) %>%
+  select(-USDT_open, -USDT_high, -USDT_low, -USDT_close) %>%
   na.omit()
 data_UST <- data_UST %>% 
-  select(-UST_open, -UST_high, -UST_low, -UST_close, -bb) %>%
+  select(-UST_open, -UST_high, -UST_low, -UST_close) %>%
   na.omit()
 data_WLUNA <- data_WLUNA %>% 
-  select(-WLUNA_open, -WLUNA_high, -WLUNA_low, -WLUNA_close, -bb) %>%
+  select(-WLUNA_open, -WLUNA_high, -WLUNA_low, -WLUNA_close) %>%
   na.omit()
 
 # Numerical dataset FOR MODELS, and remove NA obs
@@ -178,7 +178,83 @@ plot_rf_UST <- plot_results(data_UST, oos_UST[[8]], nprev, rf_UST, rf_rmse_UST,
                             "Random Forest (UST Close)")
 
 plot_rf_list <- list(plot_rf_DAI, plot_rf_PAX, plot_rf_USDC, plot_rf_USDT, plot_rf_UST)
-grid.arrange(grobs = plot_rf_list, nrow = 2, ncol = 3)
+rf_grid <- grid.arrange(grobs = plot_rf_list, nrow = 2, ncol = 3)
+ggsave("../../plots/RF_model_OOS.png", rf_grid, width = 12, height = 8)
+
+# ---- RF Feature Importance Block (rolling-window averaged) ----
+rf_feature_importance_block <- function(rf_obj, top_n = 20, method = c("auto", "IncNodePurity", "%IncMSE")) {
+  method <- match.arg(method)
+  
+  # rf_obj is the output of rf.rolling.window(), e.g. rf_DAI
+  imps <- rf_obj$save.importance
+  imps <- imps[!sapply(imps, is.null)]
+  if (length(imps) == 0) stop("No importance found in rf_obj$save.importance")
+  
+  # Each element is a matrix: rows = features, cols = importance metrics
+  # Stack them into a 3D-like structure using names intersection
+  common_vars <- Reduce(intersect, lapply(imps, rownames))
+  if (length(common_vars) == 0) stop("No common variables across importance matrices")
+  
+  imps <- lapply(imps, function(m) m[common_vars, , drop = FALSE])
+  imp_cols <- colnames(imps[[1]])
+  
+  # Choose method
+  chosen <- method
+  if (method == "auto") {
+    if ("%IncMSE" %in% imp_cols) chosen <- "%IncMSE"
+    else if ("IncNodePurity" %in% imp_cols) chosen <- "IncNodePurity"
+    else chosen <- imp_cols[1]
+  }
+  
+  # Build matrix [features x iterations] for chosen metric
+  M <- sapply(imps, function(m) m[, chosen])
+  avg <- rowMeans(M, na.rm = TRUE)
+  sdv <- apply(M, 1, sd, na.rm = TRUE)
+  
+  out <- data.frame(
+    feature = names(avg),
+    mean_importance = as.numeric(avg),
+    sd_importance = as.numeric(sdv),
+    stringsAsFactors = FALSE
+  )
+  
+  out <- out[order(out$mean_importance, decreasing = TRUE), ]
+  out_top <- head(out, top_n)
+  
+  list(
+    method = chosen,
+    table = out_top,
+    full_table = out
+  )
+}
+
+
+imp_rf_USDT <- rf_feature_importance_block(rf_USDT, top_n = 15)
+
+imp_df <- imp_rf_USDT$table
+
+imp_df$feature <- factor(
+  imp_df$feature,
+  levels = imp_df$feature[order(imp_df$mean_importance)]
+)
+
+plot_imp_rf_USDT <- ggplot(imp_df, aes(x = feature, y = mean_importance)) +
+  geom_col(fill = "steelblue") +
+  geom_errorbar(aes(ymin = mean_importance - sd_importance,
+                    ymax = mean_importance + sd_importance),
+                width = 0.2) +
+  coord_flip() +
+  labs(
+    title = "Random Forest Feature Importance (USDT)",
+    subtitle = paste("Mean Permutation Importance (± SD) | Method:", imp_rf_USDT$method),
+    x = "",
+    y = "Mean Importance"
+  ) +
+  theme_minimal()
+
+ggsave("../../plots/RF_USDT_feature_importance.png", plot_imp_rf_USDT,
+       width = 8, height = 6)
+
 
 
 #########################
@@ -219,7 +295,8 @@ plot_gb_UST <- plot_results(data_UST, oos_UST[[5]], nprev, gb_UST, gb_rmse_UST,
                             "Gradient Boosting (UST Close)")
 
 plot_gb_list <- list(plot_gb_DAI, plot_gb_PAX, plot_gb_USDC, plot_gb_USDT, plot_gb_UST)
-grid.arrange(grobs = plot_gb_list, nrow = 2, ncol = 3)
+gb_grid <- grid.arrange(grobs = plot_gb_list, nrow = 2, ncol = 3)
+ggsave("../../plots/GB_model_OOS.png", gb_grid, width = 12, height = 8)
 
 
 ######################################
@@ -258,7 +335,8 @@ plot_pcr_UST <- plot_results(data_UST, oos_UST[[8]], nprev, pcr_UST, pcr_rmse_US
                              "PCR (UST Close)")
 
 plot_pcr_list <- list(plot_pcr_DAI, plot_pcr_PAX, plot_pcr_USDC, plot_pcr_USDT, plot_pcr_UST)
-grid.arrange(grobs = plot_pcr_list, nrow = 2, ncol = 3)
+pcr_grid <- grid.arrange(grobs = plot_pcr_list, nrow = 2, ncol = 3)
+ggsave("../../plots/PCR_model_OOS.png", pcr_grid, width = 12, height = 8)
 
 
 # Some additional functions: show PCR components, plot CV error curve
