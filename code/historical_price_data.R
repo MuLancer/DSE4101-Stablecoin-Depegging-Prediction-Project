@@ -12,16 +12,20 @@ library(coinmarketcapr)
 library(data.table)
 library(ggplot2)
 
-coins <- c("DAI", "PAXG", "USDC", 
+coins <- c("DAI", "PAX", "USDC", 
            "USDT", 
            "UST", "USTC", "LUNA")
 
 #using cmc
 
-# file paths per coin (have 6 CSVs per coin)
+#on cmc:
+  # TerraClassicUSD - og chain for TerraUSD (UST->USTC) - og chain still going not at $1 anymore
+  # Terra Classic (LUNC) - original chain of LUNA. diff from Terra (LUNA) which is new chain
+
+# file paths per coin (have 8 CSVs per coin)
 files <- list(
   DAI  = list.files("./data/cmc/", pattern = "Dai", full.names = TRUE),
-  PAXG = list.files("./data/cmc/", pattern = "PAX Gold", full.names = TRUE),
+  USDP = list.files("./data/cmc/", pattern = "Pax Dollar", full.names = TRUE),
   USDC = list.files("./data/cmc/", pattern = "USDC", full.names = TRUE),
   USDT = list.files("./data/cmc/", pattern = "Tether USDt", full.names = TRUE),
   UST  = list.files("./data/cmc/", pattern = "TerraClassicUSD", full.names = TRUE),
@@ -42,7 +46,9 @@ for (symbol in names(files)) {
     )
   }) %>%
     bind_rows() %>%
-    distinct()   # remove duplicates from overlapping CSVs
+    distinct() # remove duplicates from overlapping CSVs
+
+  
   
   # add symbol column
   coin_data$symbol <- symbol
@@ -90,14 +96,20 @@ cleaned_df <- combined_df %>%
   ) %>%
   
   #reorder rows
-  arrange(symbol, timeOpen)
+  arrange(symbol, timeOpen) %>%
+  filter(!year(timeOpen)<2018)
 
 # check
 dim(cleaned_df)
 head(cleaned_df)
 str(cleaned_df)
 
-#write.csv(cleaned_df, file="./data/historical_prices_cmc.csv")
+#write.csv(cleaned_df, file="./data/historical_prices_cmc_from2018.csv")
+
+#start date of records per coin
+cleaned_df %>% 
+  group_by(symbol) %>%
+  summarise(start_date = min(timeOpen))
 
 # compare coins at one time
 compare_df = cleaned_df %>%
@@ -138,13 +150,45 @@ ggplot(cleaned_df, aes(x = timeClose, y = close)) +
     strip.text = element_text(face = "bold", size = 12)
   )
 
+#DAI full
+ggplot(cleaned_df%>%filter(symbol=="DAI"), aes(x = timeClose, y = close)) +
+  geom_line(color = "steelblue", linewidth = 0.5) +
+  labs(
+    title = "Close Prices of DAI Over Time",
+    x = "Date",
+    y = "Close Price (USD)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    strip.text = element_text(face = "bold", size = 12)
+  )
+
 
 #from 2022-2024 to see terrausd crash
-df_plot2 = df_plot %>% filter(year(timeOpen)>2022 & year(timeOpen)<2024)
+df_plot2 = df_plot %>% filter(year(timeOpen)>2021 & year(timeOpen)<2023)
 ggplot(df_plot2, aes(x = timeClose, y = close, color = symbol)) +
   geom_line(linewidth = 0.5) +
   labs(
     title = "Close Prices of stablcoins from 2022-2024",
+    x = "Date",
+    y = "Close Price (USD)",
+    color = "Coin"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(hjust = 0.5)
+  )
+
+
+ggplot(cleaned_df%>% 
+         filter(year(timeOpen)>2021 & year(timeOpen)<2024) %>%
+         filter(!symbol%in%c("LUNA", "UST")), 
+       aes(x = timeClose, y = close, color = symbol)) +
+  geom_line(linewidth = 0.5) +
+  labs(
+    title = "Close Prices of stablcoins from 2022-2023",
     x = "Date",
     y = "Close Price (USD)",
     color = "Coin"
