@@ -45,4 +45,3 @@ for (coin in names(coin_data)) {
 
 
 
-
