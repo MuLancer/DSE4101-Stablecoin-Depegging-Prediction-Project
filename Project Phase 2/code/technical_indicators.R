@@ -4,6 +4,7 @@ library(dplyr)
 library(zoo)
 library(TTR)
 library(tidyr)
+library(readr)
 
 dai <- read_csv("data/Dai/Dai_model_dataset.csv")
 pax <- read_csv("data/Pax Dollar/Pax_model_dataset.csv")
@@ -104,6 +105,7 @@ add_trend_band_indicators <- function(df) {
       ma_30d = zoo::rollmean(close, 30, fill = NA, align = "right"),
       dist_from_ma_7d = (close - ma_7d) / ma_7d,
       ema_7d = TTR::EMA(close, n = 7),
+      rsi_14 = TTR::RSI(close, n = 14),
       bb_mid = TTR::SMA(close, n = 20),
       bb_sd = zoo::rollapply(close, 20, sd, fill = NA, align = "right"),
       bb_upper = bb_mid + 2 * bb_sd,
@@ -118,7 +120,7 @@ usdc <- add_trend_band_indicators(usdc)
 usdt <- add_trend_band_indicators(usdt)
 terra_usd <- add_trend_band_indicators(terra_usd)
 
-# head(dai[, c("close","ma_7d","ma_30d","dist_from_ma_7d","ema_7d","bb_pctb","dist_from_lower_band")], 25)
+# head(dai[, c("close","ma_7d","ma_30d","dist_from_ma_7d","ema_7d", "rsi_14", "bb_pctb","dist_from_lower_band")], 25)
 
 drop_helper_cols <- function(df) {
   df %>%
@@ -195,7 +197,7 @@ write.csv(terra_usd, "data/TerraClassicUSD/terra_usd_price_technical_features.cs
 # Indicators include:
 # - Returns and lagged prices
 # - Rolling volatility (3d, 7d, 30d)
-# - Moving averages and EMA
+# - Moving averages, EMA and RSI
 # - Bollinger band indicators
 # - Peg deviation metrics
 # - Intraday price range
@@ -203,3 +205,4 @@ write.csv(terra_usd, "data/TerraClassicUSD/terra_usd_price_technical_features.cs
 # Missing observations created by rolling windows were removed to
 # ensure a fully balanced feature matrix for downstream modeling.
 # ------------------------------------------------------------------
+
