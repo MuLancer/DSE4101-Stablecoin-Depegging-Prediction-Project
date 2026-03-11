@@ -4,11 +4,11 @@ library(readr)
 library(dplyr)
 library(ggplot2)
 
-dai <- read_csv("data/Dai/Dai_model_dataset.csv")
-pax <- read_csv("data/PAx Dollar/Pax_model_dataset.csv")
-usdc <- read_csv("data/USDC/USDC_model_dataset.csv")
-usdt <- read_csv("data/Tether USDt/Tether_model_dataset.csv")
-terra_usd <- read_csv("data/TerraClassicUSD/TerraClassicUSD_model_dataset.csv")
+dai <- read_csv("data/Dai/Dai_model_trimmed_dataset.csv")
+pax <- read_csv("data/PAx Dollar/Pax_model_trimmed_dataset.csv")
+usdc <- read_csv("data/USDC/USDC_model_trimmed_dataset.csv")
+usdt <- read_csv("data/Tether USDt/Tether_model_trimmed_dataset.csv")
+terra_usd <- read_csv("data/TerraClassicUSD/TerraClassicUSD_model_trimmed_dataset.csv")
 
 dim(dai) # good enough history
 dim(pax) # longest fiat-backed sample

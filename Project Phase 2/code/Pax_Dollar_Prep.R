@@ -182,4 +182,5 @@ dim(pax_final)
 summary(pax_final$depeg)
 
 # Save dataset
-write_csv(pax_final, "data/Pax Dollar/Pax_model_dataset.csv")
+write_csv(pax_final, "data/Pax Dollar/Pax_model_trimmed_dataset.csv")
+write_csv(pax, "data/Pax Dollar/Pax_model_dataset.csv")

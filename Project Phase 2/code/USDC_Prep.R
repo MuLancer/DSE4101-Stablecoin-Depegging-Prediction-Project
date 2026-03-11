@@ -188,4 +188,5 @@ dim(usdc_final)
 summary(usdc_final$depeg)
 
 # Save dataset
-write_csv(usdc_final, "data/USDC/USDC_model_dataset.csv")
+write_csv(usdc_final, "data/USDC/USDC_model_trimmed_dataset.csv")
+write_csv(usdc, "data/USDC/USDC_model_dataset.csv")

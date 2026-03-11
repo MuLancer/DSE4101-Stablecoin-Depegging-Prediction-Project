@@ -222,4 +222,5 @@ dim(terra_usd_final)
 summary(terra_usd_final$depeg)
 
 # Save dataset
-write_csv(terra_usd_final, "data/TerraClassicUSD/TerraClassicUSD_model_dataset.csv")
+write_csv(terra_usd_final, "data/TerraClassicUSD/TerraClassicUSD_model_trimmed_dataset.csv")
+write_csv(terra_usd, "data/TerraClassicUSD/TerraClassicUSD_model_dataset.csv")

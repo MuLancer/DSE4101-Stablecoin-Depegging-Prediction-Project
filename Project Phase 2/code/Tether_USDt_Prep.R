@@ -188,4 +188,6 @@ dim(tether_final)
 summary(tether_final$depeg)
 
 # Save dataset
-write_csv(tether_final, "data/Tether USDt/Tether_model_dataset.csv")
+write_csv(tether_final, "data/Tether USDt/Tether_model_trimmed_dataset.csv")
+write_csv(tether, "data/Tether USDt/Tether_model_dataset.csv")
+

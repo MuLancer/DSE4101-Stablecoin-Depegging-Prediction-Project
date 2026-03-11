@@ -84,7 +84,7 @@ mean(dai$depeg, na.rm = TRUE)
 # Depegging events: 159 observations (~7.2% of sample)
 # Class imbalance is moderate, making classification feasible without extreme resampling.
 
-# small improvemnet: remove invalid rows like first 29 rows (no Vmonthly) and last row (no next_close)
+# small improvement: remove invalid rows like first 29 rows (no Vmonthly) and last row (no next_close)
 dai_final <- dai %>%
   filter(!is.na(V_monthly)) %>%
   filter(!is.na(next_close))
@@ -186,4 +186,6 @@ dim(dai_final)
 summary(dai_final$depeg)
 
 # Save dataset
-write_csv(dai_final, "data/Dai/Dai_model_dataset.csv")
+write_csv(dai_final, "data/Dai/Dai_model_trimmed_dataset.csv")
+write_csv(dai, "data/Dai/Dai_model_dataset.csv")
+
