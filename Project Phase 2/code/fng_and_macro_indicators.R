@@ -207,6 +207,11 @@ write.csv(usdc, "Project Phase 2/data/USDC/usdc_macro_features.csv", row.names =
 write.csv(usdt, "Project Phase 2/data/Tether USDt/usdt_macro_features.csv", row.names = FALSE)
 write.csv(terra_usd, "Project Phase 2/data/TerraClassicUSD/terra_usd_macro_features.csv", row.names = FALSE)
 
+df_dai = read.csv("Project Phase 2/data/Dai/dai_price_macro_features.csv")
+df_pax = read.csv("Project Phase 2/data/Pax Dollar/pax_macro_features.csv")
+df_usdc = read.csv("Project Phase 2/data/USDC/usdc_macro_features.csv")
+df_usdt = read.csv("Project Phase 2/data/Tether USDt/usdt_macro_features.csv")
+df_terra_usd = read.csv("Project Phase 2/data/TerraClassicUSD/terra_usd_macro_features.csv")
 
 # --- ON-CHAIN METRIC DEFINITIONS ---
 
