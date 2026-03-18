@@ -1,193 +1,258 @@
+# =============================================================================
+# USDT Data Preparation Script
+# Project: DSE4101 - Stablecoin Depegging Prediction
+# =============================================================================
+
 # setwd("~/DSE4101 Project/DSE4101-Stablecoin-Depegging-Prediction-Project/Project Phase 2")
 
 library(readr)
 library(dplyr)
 library(zoo)
 
-# read dataset
-tether <- read_csv("data/Tether USDt/Tether_USDt_combined.csv")
+# -----------------------------------------------------------------------------
+# 1. READ DATA
+# -----------------------------------------------------------------------------
+
+USDT <- read_csv("data/USDT/USDT_combined.csv")
 
 # inspect columns
-names(tether)
-str(tether)
-# Structure matches the other stablecoin datasets.
-# timeOpen will be used to construct the dataset date.
-# name appears to be a numeric CoinMarketCap id and is not useful for analysis.
-# marketCap and circulatingSupply will be checked before deciding whether to retain them.
-summary(tether$marketCap)
-summary(tether$circulatingSupply)
-sum(tether$marketCap == 0, na.rm = TRUE) # quick check for how many zeros and non zeros
-sum(tether$circulatingSupply == 0, na.rm = TRUE) # quick check for how many zeros and non zeros
-# marketCap and circulatingSupply appear valid for Tether.
-# Both variables contain meaningful positive values across the sample, with only one zero observation in circulatingSupply.
+names(USDT)
+str(USDT)
+# timeOpen is the USDTly date -> used as dataset date
+# name column is CoinMarketCap internal ID, not useful -> will be dropped later
+# marketCap and circulatingSupply: check for zeros
 
-# quick inspection of first few rows
-head(tether[, c("timeOpen","close","volume","marketCap","circulatingSupply")])
 
-# using timeOpen to create date
-tether <- tether %>%
+summary(USDT$marketCap)
+summary(USDT$circulatingSupply)
+sum(USDT$marketCap == 0, na.rm = TRUE) 
+sum(USDT$circulatingSupply == 0, na.rm = TRUE) 
+# only 1 circulatingSupply obs=0, possibly on start day of coin
+
+# quick inspection 
+head(USDT[, c("timeOpen","close","volume","marketCap","circulatingSupply")])
+
+
+# -----------------------------------------------------------------------------
+# 2. DATE CONSTRUCTION AND BASIC CLEANING
+# -----------------------------------------------------------------------------
+
+USDT <- USDT %>%
   mutate(date = as.Date(timeOpen), .before = timeOpen) %>%
   arrange(date)
+
 # quick check
-head(tether[, c("date","close","volume","marketCap","circulatingSupply")])
+head(USDT[, c("date","close","volume","marketCap","circulatingSupply")])
 
-# getting dataset time range now
-min(tether$date)
-max(tether$date)
-## The Tether dataset covers 2017-11-27 to 2025-12-31
-
-# check for missing values
-colSums(is.na(tether)) # none
-# check for duplicate days
-sum(duplicated(tether$date)) # none
-# check for volume = 0
-sum(tether$volume == 0) # none
+# dataset time range
+min(USDT$date)
+max(USDT$date)
+## USDT dataset covers: 2017-11-27 to 2025-12-31
 
 
-## IMPORTANT: Summary so far ##
-# Dataset covers: 2017-11-27 to 2025-12-31
-# Total observations: 2957 daily observations
-# No missing values across variables
-# No duplicate dates
-# No zero trading volume observations
-# circulatingSupply is zero only once
+# check for missing values, duplicate days, zero volume
+colSums(is.na(USDT))       # none expected
+sum(duplicated(USDT$date)) # none expected
+sum(USDT$volume == 0)      # none expected
 
-# Rolling 30-day cumulative trading volume used in dynamic threshold construction
-tether <- tether %>%
+## SUMMARY: Data Quality Check
+## Dataset covers: 2017-11-27 to 2025-12-31
+## Total observations: 2957 daily observations
+## No missing values, no duplicate dates, no zero trading volume
+## circulatingSupply zero only in one observation
+
+
+# -----------------------------------------------------------------------------
+# 3. DYNAMIC THRESHOLD CONSTRUCTION
+# -----------------------------------------------------------------------------
+
+# Rolling 30-day cumulative trading volume
+# Used to construct liquidity-adjusted dynamic thresholds following Lee, Chiu, and Hsieh (2024)
+# Higher trading volume narrows the allowed deviation band around the $1 peg
+USDT <- USDT %>%
   mutate(V_monthly = rollapply(volume,
                                width = 30,
                                FUN = sum,
                                align = "right",
                                fill = NA), .after = volume)
-# set component param
-alpha <- 1/3
-# Construct dyanmic threshold
-tether <- tether %>%
-  mutate(ThreshD = 1 - (10 / (V_monthly^alpha)),
-         ThreshU = 1 + (10 / (V_monthly^alpha)), .after = V_monthly)
-# Dynamic depegging thresholds following liquidity-adjusted formulation
-# Larger trading volume narrows the allowed deviation from the $1 peg
 
-# create next-day prediction variable
-tether <- tether %>%
-  mutate(next_close = lead(close), .after = close)
+# USDT: Fixed threshold applied (ThreshD = 0.995, ThreshU = 1.005)
+# The dynamic threshold formula from Lee et al. (2024) is volume-sensitive by design: ThreshD = 1 - 10 / V_monthly^(1/3), ThreshU = 1 + 10 / V_monthly^(1/3)
+# USDT's median 30-day cumulative volume (~1.47 trillion USD) is several orders of magnitude larger than other coins in the sample (e.g. DAI ~6 billion), causing the dynamic band to collapse to an economically implausible ±0.09% around the $1 peg.
+# This results in depeg rates exceeding 35%, driven by normal daily price noise rather than genuine peg instability. 
+# A fixed ±0.5% threshold is therefore applied, consistent with thresholds commonly used in stablecoin literature. 
+# This yields a 1-day depeg rate of ~11.3%, which is slightly elevated relative to DAI (~7.2%) and PAX (~8.9%) but economically plausible given USDT's well-documented history of reserve controversies and heightened sensitivity to broader crypto market stress events.
+# The fixed threshold is retained consistently across all four forecast horizons.
+USDT <- USDT %>%
+  mutate(
+    ThreshD = 0.995,
+    ThreshU = 1.005,
+    .after = V_monthly
+  )
 
-# create depegging binary variable
-tether <- tether %>%
-  mutate(depeg = ifelse(next_close <= ThreshD | next_close >= ThreshU, 1, 0),
-         .after = next_close)
-# Depegging event defined when next-day closing price breaches dynamic threshold band
 
-# quick check for no. of depegging events
-table(tether$depeg)
-# mean tells event freq. this matters since depegs should be rare events
-mean(tether$depeg, na.rm = TRUE)
+# -----------------------------------------------------------------------------
+# 4. MULTI-HORIZON DEPEG LABEL CONSTRUCTION
+# -----------------------------------------------------------------------------
 
-# Depegging events: 1016 observations (~34.7% of sample)
-# Tether shows a much higher event frequency than DAI, Pax, or USDC.
-# This likely reflects the very tight dynamic threshold band implied by Tether’s extremely high trading volume, so even small next-day price deviations are often classified as depegs.
+## METHODOLOGY NOTE (for report):
+## -----------------------------------------------------------------------------
+## We construct four binary depeg labels corresponding to forecast horizons of 1, 3, 5, and 7 days ahead. 
+## Following Lee, Chiu, and Hsieh (2024), a depegging event is defined as occurring when the lowest closing price (PL) or highest closing price (PH) within the prediction period breaches the dynamic threshold band [ThreshD, ThreshU]. 
+## Specifically, depeg = 1 if PL <= ThreshD or PH >= ThreshU, and 0 otherwise. 
+## For the 1-day horizon, PL and PH collapse to the single next-day closing price. 
+## For 3-, 5-, and 7-day horizons, PL and PH are computed as the rolling minimum and maximum closing price over the respective forward window using lead() and rollapply(). 
+## Importantly, PL and PH are used solely to construct the target labels during training and are never included as input features, ensuring no look-ahead bias is introduced into the model.
+## At prediction time, the trained model generates a depeg probability using only features observable on the current day.
+## -----------------------------------------------------------------------------
 
-# small improvement: remove invalid rows like first 29 rows (no Vmonthly) and last row (no next_close)
-tether_final <- tether %>%
+USDT <- USDT %>%
+  mutate(
+    # --- 1-day horizon ---
+    # PL and PH over 1 day = next day's closing price
+    depeg_1d = ifelse(lead(close, 1) <= ThreshD | 
+                        lead(close, 1) >= ThreshU, 1, 0),
+    # --- 3-day horizon ---
+    # PL = minimum closing price over next 3 days
+    # PH = maximum closing price over next 3 days
+    PL_3 = rollapply(lead(close, 1), width = 3, FUN = min, align = "left", fill = NA),
+    PH_3 = rollapply(lead(close, 1), width = 3, FUN = max, align = "left", fill = NA),
+    depeg_3d = ifelse(PL_3 <= ThreshD | PH_3 >= ThreshU, 1, 0),
+    # --- 5-day horizon ---
+    PL_5 = rollapply(lead(close, 1), width = 5, FUN = min, align = "left", fill = NA),
+    PH_5 = rollapply(lead(close, 1), width = 5, FUN = max, align = "left", fill = NA),
+    depeg_5d = ifelse(PL_5 <= ThreshD | PH_5 >= ThreshU, 1, 0),
+    # --- 7-day horizon ---
+    PL_7 = rollapply(lead(close, 1), width = 7, FUN = min, align = "left", fill = NA),
+    PH_7 = rollapply(lead(close, 1), width = 7, FUN = max, align = "left", fill = NA),
+    depeg_7d = ifelse(PL_7 <= ThreshD | PH_7 >= ThreshU, 1, 0)
+  )
+
+
+# -----------------------------------------------------------------------------
+# 5. EVENT FREQUENCY CHECK ACROSS HORIZONS
+# -----------------------------------------------------------------------------
+
+# depeg event counts and frequencies per horizon
+# Expected: event frequency increases with horizon length since longer windows give more opportunities for price to breach threshold
+cat("--- Depeg Event Frequency by Horizon ---\n")
+cat("1-day:  ", mean(USDT$depeg_1d, na.rm = TRUE), "\n") # ~11.3% of sample
+cat("3-day:  ", mean(USDT$depeg_3d, na.rm = TRUE), "\n") # ~18.3% of sample
+cat("5-day:  ", mean(USDT$depeg_5d, na.rm = TRUE), "\n") # ~22.1% of sample
+cat("7-day:  ", mean(USDT$depeg_7d, na.rm = TRUE), "\n") # ~24.8% of sample
+
+table(USDT$depeg_1d) # 333 depegs
+table(USDT$depeg_3d) # 540 depegs
+table(USDT$depeg_5d) # 653 depegs
+table(USDT$depeg_7d) # 731 depegs
+
+
+# -----------------------------------------------------------------------------
+# 6. TRIM DATASET
+# -----------------------------------------------------------------------------
+
+# Remove first 29 rows: no V_monthly due to 30-day rolling window
+# Remove last 7 rows: no forward prices available for 7-day label construction
+USDT_final <- USDT %>%
   filter(!is.na(V_monthly)) %>%
-  filter(!is.na(next_close))
+  filter(!is.na(depeg_7d))   # most restrictive horizon, covers all shorter ones too
 
-# check final dataset span
-min(tether_final$date)
-max(tether_final$date)
-nrow(tether_final)
+# verify final dataset span
+min(USDT_final$date)
+max(USDT_final$date)
+nrow(USDT_final)
 
-## Final analysis dataset after feature construction
-## First 29 observations removed due to rolling 30-day volume calculation
-## Last observation removed due to missing next-day close price
+# verify event counts after trimming
+cat("--- Post-Trim Event Frequency ---\n")
+cat("1-day:  ", mean(USDT_final$depeg_1d, na.rm = TRUE), "\n")
+cat("3-day:  ", mean(USDT_final$depeg_3d, na.rm = TRUE), "\n")
+cat("5-day:  ", mean(USDT_final$depeg_5d, na.rm = TRUE), "\n")
+cat("7-day:  ", mean(USDT_final$depeg_7d, na.rm = TRUE), "\n")
 
-## Final dataset span: 2017-12-26 to 2025-12-30
-## Total observations used for analysis: 2927
+# Final trimmed dataset: 2921 observations (2017-12-26 to 2025-12-24)
+# First 29 rows removed: insufficient history for 30-day rolling volume (V_monthly)
+# Last 7 rows removed: insufficient forward prices for 7-day label construction
 
-# quick verify event counts after trimming dataset
-table(tether_final$depeg)
-mean(tether_final$depeg)
+# Post-trim event frequencies:
+# 1-day:  10.65% -> moderate-severe class imbalance, SMOTE will be important
+# 3-day:  17.56% -> moderate imbalance
+# 5-day:  21.36% -> moderate imbalance
+# 7-day:  24.03% -> most balanced, but longest horizon
 
-## Final event statistics after dataset trimming
-## Total observations: 2927
-## Depegging events: 1016
-## Non-depegging observations: 1911
-## Event frequency: ~34.7%
-## Event frequency is much higher for Tether compared to other stablecoins, likely due to extremely high trading volumes producing very tight thresholds.
 
-# quick check for thresholds to make sure they look reasonable
-summary(tether_final$ThreshD)
-summary(tether_final$ThreshU)
-# Dynamic thresholds are extremely tight for Tether.
-# Typical band lies roughly between 0.999 and 1.001 (±0.1% around the peg).
-# This occurs because USDT has very large trading volumes, which shrink the liquidity-adjusted threshold band and cause small deviations to be flagged as depegging events more frequently.
+# -----------------------------------------------------------------------------
+# 7. THRESHOLD SANITY CHECK
+# -----------------------------------------------------------------------------
 
-# check abs deviation from peg
-summary(abs(tether_final$close - 1))
-# Absolute deviations from the $1 peg remain small on average.
-# Median deviation is ~0.0005 (≈0.05%), indicating USDT usually trades very close to the peg.
-# Maximum deviation reaches ~5.36%, reflecting rare stress periods in the market.
+summary(USDT_final$ThreshD)
+summary(USDT_final$ThreshU)
+# Fixed threshold: ThreshD = 0.995, ThreshU = 1.005 throughout
+# Represents a ±0.5% band around the $1 peg, consistent with stablecoin literature
+# Unlike DAI/PAX/USDC, band does not vary with volume by design
 
-# final dataset cols check
-names(tether_final)
-# arrange cols in nice order
-tether_final <- tether_final %>%
+
+# -----------------------------------------------------------------------------
+# 8. COLUMN SELECTION AND ORDERING
+# -----------------------------------------------------------------------------
+USDT_final <- USDT_final %>%
   select(
     date,
-    open,
-    high,
-    low,
-    close,
-    next_close,
-    depeg,
+    open, high, low, close,
+    depeg_1d, depeg_3d, depeg_5d, depeg_7d,
+    PL_3, PH_3,
+    PL_5, PH_5,
+    PL_7, PH_7,
     volume,
     V_monthly,
-    ThreshD,
-    ThreshU,
+    ThreshD, ThreshU,
     marketCap,
     circulatingSupply
   )
-# Clean analysis dataset: removed raw CoinMarketCap timestamp fields
-# Retained price variables, liquidity measures, thresholds, and depeg label
+USDT <- USDT %>%
+  select(
+    date,
+    open, high, low, close,
+    depeg_1d, depeg_3d, depeg_5d, depeg_7d,
+    PL_3, PH_3,
+    PL_5, PH_5,
+    PL_7, PH_7,
+    volume,
+    V_monthly,
+    ThreshD, ThreshU,
+    marketCap,
+    circulatingSupply
+  )
 
-# identify largest deviations of Tether price from the $1 peg, helps visually verify that major deviations correspond to depegging events
-# using close here (instead of next_close) since not tied to the pred horizon and is descriptive
-tether_check <- tether_final %>%
+
+# -----------------------------------------------------------------------------
+# 9. LARGEST DEVIATION CHECK (DESCRIPTIVE VERIFICATION)
+# -----------------------------------------------------------------------------
+
+# Identify largest historical deviations from the $1 peg for sanity checking
+# Using close (not forward prices) since this is purely descriptive
+USDT_check <- USDT_final %>%
   mutate(dev_from_peg = abs(close - 1))
-# find largest deviations
-tether_check %>%
+
+USDT_check %>%
   arrange(desc(dev_from_peg)) %>%
-  select(date, close, dev_from_peg, volume) %>%
+  select(date, close, dev_from_peg, ThreshD, ThreshU, depeg_1d, depeg_7d) %>%
   head(10)
-# check if these were labelled as depeg
-tether_check %>%
-  arrange(desc(dev_from_peg)) %>%
-  select(date, close, dev_from_peg, ThreshD, ThreshU, depeg) %>%
-  head(10)
-# Most large deviations are classified as depegging events.
-# However, a few extreme price spikes (e.g., 2020-03-12) are labelled 0
-# because the next-day price returned within the threshold band.
 
-# Largest deviation in dataset, check for one day after
-tether_check %>%
-  filter(date == "2020-03-12") %>%
-  select(date, close, next_close, ThreshD, ThreshU, depeg)
-# On 2020-03-12 USDT showed its largest price spike.
-# But the next-day price moved back within the threshold band, so it is correctly labelled depeg = 0.
-
-# quick verification to see if all largest deviations correspond to actual threshold breaches when using next_close
-tether_check %>%
-  arrange(desc(dev_from_peg)) %>%
-  select(date, close, next_close, ThreshD, ThreshU, depeg) %>%
-  head(15)
-# Most large deviations correspond to depeg = 1, confirming the threshold rule works.
-# A few large spikes are labelled 0 because the next-day price returned within the threshold band, indicating temporary dislocations rather than sustained depegs.
+# Largest deviations confirm threshold captures genuine stress events, not routine noise.
+# Top deviations cluster around COVID Black Thursday (Mar 2020) and the 2018 bear market, both well-documented periods of crypto market stress and USDT reserve scrutiny.
 
 
-dim(tether_final)
-summary(tether_final$depeg)
+# -----------------------------------------------------------------------------
+# 10. SAVE DATASETS
+# -----------------------------------------------------------------------------
 
-# Save dataset
-write_csv(tether_final, "data/Tether USDt/Tether_model_trimmed_dataset.csv")
-write_csv(tether, "data/Tether USDt/Tether_model_dataset.csv")
+dim(USDT_final)
+
+write_csv(USDT_final, "data/USDT/USDT_short_dataset.csv")
+write_csv(USDT, "data/USDT/USDT_full_dataset.csv")
+
+cat("USDT data preparation complete.\n")
+cat("Final dataset dimensions:", nrow(USDT_final), "rows x", ncol(USDT_final), "cols\n")
+
+
 
