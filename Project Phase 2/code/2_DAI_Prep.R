@@ -1,191 +1,255 @@
+# =============================================================================
+# DAI Data Preparation Script
+# Project: DSE4101 - Stablecoin Depegging Prediction
+# =============================================================================
+
 # setwd("~/DSE4101 Project/DSE4101-Stablecoin-Depegging-Prediction-Project/Project Phase 2")
 
 library(readr)
 library(dplyr)
 library(zoo)
 
-# read dataset
-dai <- read_csv("data/Dai/Dai_combined.csv")
+# -----------------------------------------------------------------------------
+# 1. READ DATA
+# -----------------------------------------------------------------------------
+
+dai <- read_csv("data/DAI/Dai_combined.csv")
 
 # inspect columns
 names(dai)
 str(dai)
-# timeOpen is the daily date -> can be used as dataset date
-# name is 2781 everywhere, likely CMC id so useless, can be dropped
-# marketCap and circulatingSupply look a bit weird, let's check
+# timeOpen is the daily date -> used as dataset date
+# name column is CoinMarketCap internal ID, not useful -> will be dropped later
+# marketCap and circulatingSupply: check for zeros
+
+
 summary(dai$marketCap)
 summary(dai$circulatingSupply)
-sum(dai$marketCap == 0, na.rm = TRUE) # quick check for how many zeros and non zeros
-sum(dai$circulatingSupply == 0, na.rm = TRUE) # quick check for how many zeros and non zeros
-# seems like only 60 rpws are zeros. this was probbaly before cmc started tracking these vars properly..
+sum(dai$marketCap == 0, na.rm = TRUE) 
+sum(dai$circulatingSupply == 0, na.rm = TRUE) 
+# Early observations (~60 rows) have zero values, likely before CMC began tracking these variables
 
-# quick inspection of first few rows
+# quick inspection 
 head(dai[, c("timeOpen","close","volume","marketCap","circulatingSupply")])
 
-# using timeOpen to create date
+
+# -----------------------------------------------------------------------------
+# 2. DATE CONSTRUCTION AND BASIC CLEANING
+# -----------------------------------------------------------------------------
+
 dai <- dai %>%
   mutate(date = as.Date(timeOpen), .before = timeOpen) %>%
   arrange(date)
+
 # quick check
 head(dai[, c("date","close","volume","marketCap","circulatingSupply")])
 
-# getting dataset time range now
+# dataset time range
 min(dai$date)
 max(dai$date)
-## The Dai Dataset covers 2019-11-22 to 2025-12-31
-
-# check for missing values
-colSums(is.na(dai)) # none
-# check for duplicate days
-sum(duplicated(dai$date)) # none
-# check for volume = 0
-sum(dai$volume == 0) # none
+## DAI dataset covers: 2019-11-22 to 2025-12-31
 
 
-## IMPORTANT: Summary so far ##
-# Dataset covers: 2019-11-22 to 2025-12-31
-# Total observations: 2232 daily observations
-# No missing values across variables
-# No duplicate dates
-# No zero trading volume observations
-# marketCap and circulatingSupply are zero only in early observations
+# check for missing values, duplicate days, zero volume
+colSums(is.na(dai))       # none expected
+sum(duplicated(dai$date)) # none expected
+sum(dai$volume == 0)      # none expected
 
-# Rolling 30-day cumulative trading volume used in dynamic threshold construction
+## SUMMARY: Data Quality Check
+## Dataset covers: 2019-11-22 to 2025-12-31
+## Total observations: 2232 daily observations
+## No missing values, no duplicate dates, no zero trading volume
+## marketCap and circulatingSupply zero only in earliest observations (pre-CMC tracking)
+
+
+# -----------------------------------------------------------------------------
+# 3. DYNAMIC THRESHOLD CONSTRUCTION
+# -----------------------------------------------------------------------------
+
+# Rolling 30-day cumulative trading volume
+# Used to construct liquidity-adjusted dynamic thresholds following Lee, Chiu, and Hsieh (2024)
+# Higher trading volume narrows the allowed deviation band around the $1 peg
 dai <- dai %>%
   mutate(V_monthly = rollapply(volume,
-                          width = 30,
-                          FUN = sum,
-                          align = "right",
-                          fill = NA), .after = volume)
-# set component param
+                               width = 30,
+                               FUN = sum,
+                               align = "right",
+                               fill = NA), .after = volume)
+
+# Set alpha parameter
 alpha <- 1/3
-# Construct dyanmic threshold
+
+# Construct dynamic threshold bounds
+# ThreshD = 1 - 10 / V_monthly^alpha  (lower bound)
+# ThreshU = 1 + 10 / V_monthly^alpha  (upper bound)
 dai <- dai %>%
-  mutate(ThreshD = 1 - (10 / (V_monthly^alpha)),
-    ThreshU = 1 + (10 / (V_monthly^alpha)), .after = V_monthly)
-# Dynamic depegging thresholds following liquidity-adjusted formulation
-# Larger trading volume narrows the allowed deviation from the $1 peg
+  mutate(
+    ThreshD = 1 - (10 / (V_monthly^alpha)),
+    ThreshU = 1 + (10 / (V_monthly^alpha)),
+    .after = V_monthly
+  )
 
-# create next-day prediction variable
+
+# -----------------------------------------------------------------------------
+# 4. MULTI-HORIZON DEPEG LABEL CONSTRUCTION
+# -----------------------------------------------------------------------------
+
+## METHODOLOGY NOTE (for report):
+## -----------------------------------------------------------------------------
+## We construct four binary depeg labels corresponding to forecast horizons of 1, 3, 5, and 7 days ahead. 
+## Following Lee, Chiu, and Hsieh (2024), a depegging event is defined as occurring when the lowest closing price (PL) or highest closing price (PH) within the prediction period breaches the dynamic threshold band [ThreshD, ThreshU]. 
+## Specifically, depeg = 1 if PL <= ThreshD or PH >= ThreshU, and 0 otherwise. 
+## For the 1-day horizon, PL and PH collapse to the single next-day closing price. 
+## For 3-, 5-, and 7-day horizons, PL and PH are computed as the rolling minimum and maximum closing price over the respective forward window using lead() and rollapply(). 
+## Importantly, PL and PH are used solely to construct the target labels during training and are never included as input features, ensuring no look-ahead bias is introduced into the model.
+## At prediction time, the trained model generates a depeg probability using only features observable on the current day.
+## -----------------------------------------------------------------------------
+
 dai <- dai %>%
-  mutate(next_close = lead(close), .after = close)
+  mutate(
+    # --- 1-day horizon ---
+    # PL and PH over 1 day = next day's closing price
+    depeg_1d = ifelse(lead(close, 1) <= ThreshD | 
+                        lead(close, 1) >= ThreshU, 1, 0),
+    # --- 3-day horizon ---
+    # PL = minimum closing price over next 3 days
+    # PH = maximum closing price over next 3 days
+    PL_3 = rollapply(lead(close, 1), width = 3, FUN = min, align = "left", fill = NA),
+    PH_3 = rollapply(lead(close, 1), width = 3, FUN = max, align = "left", fill = NA),
+    depeg_3d = ifelse(PL_3 <= ThreshD | PH_3 >= ThreshU, 1, 0),
+    # --- 5-day horizon ---
+    PL_5 = rollapply(lead(close, 1), width = 5, FUN = min, align = "left", fill = NA),
+    PH_5 = rollapply(lead(close, 1), width = 5, FUN = max, align = "left", fill = NA),
+    depeg_5d = ifelse(PL_5 <= ThreshD | PH_5 >= ThreshU, 1, 0),
+    # --- 7-day horizon ---
+    PL_7 = rollapply(lead(close, 1), width = 7, FUN = min, align = "left", fill = NA),
+    PH_7 = rollapply(lead(close, 1), width = 7, FUN = max, align = "left", fill = NA),
+    depeg_7d = ifelse(PL_7 <= ThreshD | PH_7 >= ThreshU, 1, 0)
+  )
 
-# create depegging binary variable
-dai <- dai %>%
-  mutate(depeg = ifelse(next_close <= ThreshD | next_close >= ThreshU, 1, 0),
-         .after = next_close)
-# Depegging event defined when next-day closing price breaches dynamic threshold band
 
-# quick check for no. of depegging events
-table(dai$depeg)
-# mean tells event freq. this matters since depegs should be rare events
-mean(dai$depeg, na.rm = TRUE)
+# -----------------------------------------------------------------------------
+# 5. EVENT FREQUENCY CHECK ACROSS HORIZONS
+# -----------------------------------------------------------------------------
 
-# Depegging events: 159 observations (~7.2% of sample)
-# Class imbalance is moderate, making classification feasible without extreme resampling.
+# depeg event counts and frequencies per horizon
+# Expected: event frequency increases with horizon length since longer windows give more opportunities for price to breach threshold
+cat("--- Depeg Event Frequency by Horizon ---\n")
+cat("1-day:  ", mean(dai$depeg_1d, na.rm = TRUE), "\n") # ~7.2% of sample
+cat("3-day:  ", mean(dai$depeg_3d, na.rm = TRUE), "\n") # ~12.2% of sample
+cat("5-day:  ", mean(dai$depeg_5d, na.rm = TRUE), "\n") # ~14.6% of sample
+cat("7-day:  ", mean(dai$depeg_7d, na.rm = TRUE), "\n") # ~16.1% of sample
 
-# small improvement: remove invalid rows like first 29 rows (no Vmonthly) and last row (no next_close)
+table(dai$depeg_1d) # 159 depegs
+table(dai$depeg_3d) # 268 depegs
+table(dai$depeg_5d) # 321 depegs
+table(dai$depeg_7d) # 354 depegs
+
+
+# -----------------------------------------------------------------------------
+# 6. TRIM DATASET
+# -----------------------------------------------------------------------------
+
+# Remove first 29 rows: no V_monthly due to 30-day rolling window
+# Remove last 7 rows: no forward prices available for 7-day label construction
 dai_final <- dai %>%
   filter(!is.na(V_monthly)) %>%
-  filter(!is.na(next_close))
+  filter(!is.na(depeg_7d))   # most restrictive horizon, covers all shorter ones too
 
-# check final dataset span
+# verify final dataset span
 min(dai_final$date)
 max(dai_final$date)
 nrow(dai_final)
 
-## Final analysis dataset after feature construction
-## First 29 observations removed due to rolling 30-day volume calculation
-## Last observation removed due to missing next-day close price
+# verify event counts after trimming
+cat("--- Post-Trim Event Frequency ---\n")
+cat("1-day:  ", mean(dai_final$depeg_1d, na.rm = TRUE), "\n")
+cat("3-day:  ", mean(dai_final$depeg_3d, na.rm = TRUE), "\n")
+cat("5-day:  ", mean(dai_final$depeg_5d, na.rm = TRUE), "\n")
+cat("7-day:  ", mean(dai_final$depeg_7d, na.rm = TRUE), "\n")
 
-## Final dataset span: 2019-12-21 to 2025-12-30
-## Total observations used for analysis: 2202
+# Final trimmed dataset: 2196 observations (2019-12-21 to 2025-12-24)
+# First 29 rows removed: insufficient history for 30-day rolling volume (V_monthly)
+# Last 7 rows removed: insufficient forward prices for 7-day label construction
 
-# quick verify event counts after trimming dataset
-table(dai_final$depeg)
-mean(dai_final$depeg)
+# Post-trim event frequencies:
+# 1-day:  7.24%  -> severe class imbalance, SMOTE will be important
+# 3-day:  12.20% -> moderate imbalance
+# 5-day:  14.62% -> moderate imbalance
+# 7-day:  16.12% -> most balanced, but longest horizon
 
-## Final event statistics after dataset trimming
-## Total observations: 2202
-## Depegging events: 159
-## Non-depegging observations: 2043
-## Event frequency: ~7.2%
-## This indicates moderate class imbalance but still sufficient positive cases for ML models.
 
-# quick check for thresholds to make sure they look reasonable
+# -----------------------------------------------------------------------------
+# 7. THRESHOLD SANITY CHECK
+# -----------------------------------------------------------------------------
+
 summary(dai_final$ThreshD)
 summary(dai_final$ThreshU)
-# Dynamic thresholds behave as expected.
-# Typical band lies roughly between 0.995 and 1.005 (±0.5% around the $1 peg).
-# When trading volume is lower, the band widens (up to ~0.974–1.026),
-# allowing larger deviations before classifying a depegging event.
-# This confirms that the liquidity-adjusted threshold formulation is functioning correctly.
+# Dynamic thresholds should show typical band of roughly ±0.5% around $1 peg
+# Lower volume periods widen the band, higher volume periods narrow it
+# This is economically intuitive: thin markets are more volatile, so wider tolerance is warranted.
 
-# check abs deviation from peg
-summary(abs(dai_final$close - 1))
 
-# final daatset cols check
-names(dai_final)
-# arrange cols in nice order
+# -----------------------------------------------------------------------------
+# 8. COLUMN SELECTION AND ORDERING
+# -----------------------------------------------------------------------------
 dai_final <- dai_final %>%
   select(
     date,
-    open,
-    high,
-    low,
-    close,
-    next_close,
-    depeg,
+    open, high, low, close,
+    depeg_1d, depeg_3d, depeg_5d, depeg_7d,
+    PL_3, PH_3,
+    PL_5, PH_5,
+    PL_7, PH_7,
     volume,
     V_monthly,
-    ThreshD,
-    ThreshU,
+    ThreshD, ThreshU,
     marketCap,
     circulatingSupply
   )
-# Clean analysis dataset: removed raw CoinMarketCap timestamp fields
-# Retained price variables, liquidity measures, thresholds, and depeg label
+dai <- dai %>%
+  select(
+    date,
+    open, high, low, close,
+    depeg_1d, depeg_3d, depeg_5d, depeg_7d,
+    PL_3, PH_3,
+    PL_5, PH_5,
+    PL_7, PH_7,
+    volume,
+    V_monthly,
+    ThreshD, ThreshU,
+    marketCap,
+    circulatingSupply
+  )
 
-# identify largest deviations of DAI price from the $1 peg, helps visually verify that major deviations correspond to depegging events
-# using close here (instead of next_close) since not tied to the pred horizon and is descriptive
+
+# -----------------------------------------------------------------------------
+# 9. LARGEST DEVIATION CHECK (DESCRIPTIVE VERIFICATION)
+# -----------------------------------------------------------------------------
+
+# Identify largest historical deviations from the $1 peg for sanity checking
+# Using close (not forward prices) since this is purely descriptive
 dai_check <- dai_final %>%
   mutate(dev_from_peg = abs(close - 1))
-# find largest deviations
+
 dai_check %>%
   arrange(desc(dev_from_peg)) %>%
-  select(date, close, dev_from_peg, volume) %>%
+  select(date, close, dev_from_peg, ThreshD, ThreshU, depeg_1d, depeg_7d) %>%
   head(10)
-# check if these were labelled as depeg
-dai_check %>%
-  arrange(desc(dev_from_peg)) %>%
-  select(date, close, dev_from_peg, ThreshD, ThreshU, depeg) %>%
-  head(10)
-## These are real historical stress periods for DAI, especially March 2020 (COVID liquidity crisis / Black Thursday in DeFi). So, dataset is behaving realistically.
 
-# Largest deviation in dataset, check for one day after
-dai_check %>%
-  filter(date == "2020-03-13") %>%
-  select(date, close, next_close, ThreshD, ThreshU, depeg)
-# large deviation does not always imply a depeg event.
-# On 2020-03-13 DAI closed at 1.09 (~9.3% above the $1 peg), representing the largest observed deviation in the dataset. 
-# However, the next-day closing price was 0.999, which lies within the dynamic threshold band [0.989, 1.01]. 
-# Since the label is defined using next-day price relative to today's thresholds, this observation is correctly classified as depeg = 0. 
-# This confirms that the model captures sustained next-day peg breaks rather than temporary one-day price spikes.
+# Large deviations should correspond to known historical stress periods (e.g. March 2020 COVID crash)
+# Note: a large close deviation on day T does not guarantee depeg_1d = 1, since the label is based on forward prices, not current price
 
-# quick verification to see if all largest deviations correspond to actual threshold breaches when using next_close
-dai_check %>%
-  arrange(desc(dev_from_peg)) %>%
-  select(date, close, next_close, ThreshD, ThreshU, depeg) %>%
-  head(15)
-# most large deviations from the $1 peg correspond to depeg = 1.
-# A few large spikes (e.g. 2020-03-13) are labeled 0 because the next-day price returned within the threshold band. 
-# Since labels use next_close relative to today's thresholds, only sustained deviations are classified as depegs.
 
+# -----------------------------------------------------------------------------
+# 10. SAVE DATASETS
+# -----------------------------------------------------------------------------
 
 dim(dai_final)
-summary(dai_final$depeg)
 
-# Save dataset
-write_csv(dai_final, "data/Dai/Dai_model_trimmed_dataset.csv")
-write_csv(dai, "data/Dai/Dai_model_dataset.csv")
+write_csv(dai_final, "data/DAI/DAI_short_dataset.csv")
+write_csv(dai, "data/DAI/DAI_full_dataset.csv")
+
+cat("DAI data preparation complete.\n")
+cat("Final dataset dimensions:", nrow(dai_final), "rows x", ncol(dai_final), "cols\n")
 
