@@ -159,4 +159,32 @@ WLUNA %>%
     n = n()
   )
 
-# We decide to not use this dataset since it never was a stablecoin but was only tied to UST in its relationship
+
+# -----------------------------------------------------------------------------
+# 6. COLUMN SELECTION AND ORDERING
+# -----------------------------------------------------------------------------
+WLUNA <- WLUNA %>%
+  select(
+    date,
+    open, high, low, close,
+    depeg_1d, depeg_3d, depeg_5d, depeg_7d,
+    PL_3, PH_3,
+    PL_5, PH_5,
+    PL_7, PH_7,
+    volume,
+    V_monthly,
+    ThreshD, ThreshU,
+    marketCap,
+    circulatingSupply
+  )
+
+
+# -----------------------------------------------------------------------------
+# 7. SAVE DATASETS
+# -----------------------------------------------------------------------------
+
+dim(WLUNA)
+
+write_csv(WLUNA, "data/WLUNA/WLUNA_full_dataset.csv")
+
+# We decide to not use this dataset since it never was a stablecoin but was only tied to WLUNA in its relationship
