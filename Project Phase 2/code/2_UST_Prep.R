@@ -1,226 +1,306 @@
+# =============================================================================
+# UST Data Preparation Script
+# Project: DSE4101 - Stablecoin Depegging Prediction
+# =============================================================================
+
 # setwd("~/DSE4101 Project/DSE4101-Stablecoin-Depegging-Prediction-Project/Project Phase 2")
 
 library(readr)
 library(dplyr)
 library(zoo)
 
-# read dataset
-terra_usd <- read_csv("data/TerraClassicUSD/TerraClassicUSD_combined.csv")
+# -----------------------------------------------------------------------------
+# 1. READ DATA
+# -----------------------------------------------------------------------------
+
+UST <- read_csv("data/UST/UST_combined.csv")
 
 # inspect columns
-names(terra_usd)
-str(terra_usd)
-# timeOpen is the daily date -> can be used as dataset date
-# name is 2781 everywhere, likely CMC id so useless, can be dropped
-# marketCap and circulatingSupply have first few values =0, let's check
-summary(terra_usd$marketCap)
-summary(terra_usd$circulatingSupply)
-sum(terra_usd$marketCap == 0, na.rm = TRUE) # quick check for how many zeros and non zeros
-sum(terra_usd$circulatingSupply == 0, na.rm = TRUE) # quick check for how many zeros and non zeros
+names(UST)
+str(UST)
+# timeOpen is the USTly date -> used as dataset date
+# name column is CoinMarketCap internal ID, not useful -> will be dropped later
+# marketCap and circulatingSupply: check for zeros
 
-# quick inspection of first few rows
-head(terra_usd[, c("timeOpen","close","volume","marketCap","circulatingSupply")])
 
-# using timeOpen to create date
-terra_usd <- terra_usd %>%
+summary(UST$marketCap)
+summary(UST$circulatingSupply)
+sum(UST$marketCap == 0, na.rm = TRUE) 
+sum(UST$circulatingSupply == 0, na.rm = TRUE) 
+
+# quick inspection 
+head(UST[, c("timeOpen","close","volume","marketCap","circulatingSupply")])
+
+
+# -----------------------------------------------------------------------------
+# 2. DATE CONSTRUCTION AND BASIC CLEANING
+# -----------------------------------------------------------------------------
+
+UST <- UST %>%
   mutate(date = as.Date(timeOpen), .before = timeOpen) %>%
   arrange(date)
+
 # quick check
-head(terra_usd[, c("date","close","volume","marketCap","circulatingSupply")])
+head(UST[, c("date","close","volume","marketCap","circulatingSupply")])
 
-# getting dataset time range now
-min(terra_usd$date)
-max(terra_usd$date)
-## The Terra_USD Dataset covers 2020-11-25 to 2025-12-31
-
-# check for missing values
-colSums(is.na(terra_usd)) # none
-# check for duplicate days
-sum(duplicated(terra_usd$date)) # none
-# check for volume = 0
-sum(terra_usd$volume == 0) # none
+# dataset time range
+min(UST$date)
+max(UST$date)
+## UST dataset covers: 2020-11-25 to 2025-12-31
 
 
-## IMPORTANT: Summary so far ##
-# Dataset covers: 2020-11-25 to 2025-12-31
-# Total observations: 1863 daily observations
-# No missing values across variables
-# No duplicate dates
-# No zero trading volume observations
+# check for missing values, duplicate days, zero volume
+colSums(is.na(UST))       # none expected
+sum(duplicated(UST$date)) # none expected
+sum(UST$volume == 0)      # none expected
 
-# Rolling 30-day cumulative trading volume used in dynamic threshold construction
-terra_usd <- terra_usd %>%
+# Further checks since the coin lost its depeg completely and forever in May 2022
+summary(UST$close)
+summary(UST$volume)
+
+# look at price around collapse
+UST %>%
+  filter(date >= "2022-05-01" & date <= "2022-05-20") %>%
+  select(date, close, volume)
+
+## SUMMARY: Data Quality Check
+## Dataset covers: 2020-11-25 to 2025-12-31
+## Total observations: 1863 USTly observations
+## No missing values, no duplicate dates, no zero trading volume
+## After the coin collapsed in MAy 2022, it never recovered
+
+
+# -----------------------------------------------------------------------------
+# 3. DYNAMIC THRESHOLD CONSTRUCTION
+# -----------------------------------------------------------------------------
+
+# Rolling 30-day cumulative trading volume
+# Used to construct liquidity-adjusted dynamic thresholds following Lee, Chiu, and Hsieh (2024)
+# Higher trading volume narrows the allowed deviation band around the $1 peg
+UST <- UST %>%
   mutate(V_monthly = rollapply(volume,
                                width = 30,
                                FUN = sum,
                                align = "right",
                                fill = NA), .after = volume)
-# set component param
+
+# Set alpha parameter
 alpha <- 1/3
-# Construct dyanmic threshold
-terra_usd <- terra_usd %>%
-  mutate(ThreshD = 1 - (10 / (V_monthly^alpha)),
-         ThreshU = 1 + (10 / (V_monthly^alpha)), .after = V_monthly)
-# Dynamic depegging thresholds following liquidity-adjusted formulation
-# Larger trading volume narrows the allowed deviation from the $1 peg
 
-# create next-day prediction variable
-terra_usd <- terra_usd %>%
-  mutate(next_close = lead(close), .after = close)
+# Construct dynamic threshold bounds
+# ThreshD = 1 - 10 / V_monthly^alpha  (lower bound)
+# ThreshU = 1 + 10 / V_monthly^alpha  (upper bound)
+UST <- UST %>%
+  mutate(
+    ThreshD = 1 - (10 / (V_monthly^alpha)),
+    ThreshU = 1 + (10 / (V_monthly^alpha)),
+    .after = V_monthly
+  )
 
-# create depegging binary variable
-terra_usd <- terra_usd %>%
-  mutate(depeg = ifelse(next_close <= ThreshD | next_close >= ThreshU, 1, 0),
-         .after = next_close)
-# Depegging event defined when next-day closing price breaches dynamic threshold band
 
-# quick check for no. of depegging events
-table(terra_usd$depeg)
-# mean tells event freq. this matters since depegs should be rare events
-mean(terra_usd$depeg, na.rm = TRUE)
+# -----------------------------------------------------------------------------
+# 4. MULTI-HORIZON DEPEG LABEL CONSTRUCTION
+# -----------------------------------------------------------------------------
 
-# Depegging events: 1361 observations (~74.2% of sample)
-# All starting May 8th~9th are depegged (this was the May 2022 crash and formerly UST, now TerraUSD never recovered)
-# Dataset contains post-collapse regime
+## METHODOLOGY NOTE (for report):
+## -----------------------------------------------------------------------------
+## We construct four binary depeg labels corresponding to forecast horizons of 1, 3, 5, and 7 days ahead. 
+## Following Lee, Chiu, and Hsieh (2024), a depegging event is defined as occurring when the lowest closing price (PL) or highest closing price (PH) within the prediction period breaches the dynamic threshold band [ThreshD, ThreshU]. 
+## Specifically, depeg = 1 if PL <= ThreshD or PH >= ThreshU, and 0 otherwise. 
+## For the 1-day horizon, PL and PH collapse to the single next-day closing price. 
+## For 3-, 5-, and 7-day horizons, PL and PH are computed as the rolling minimum and maximum closing price over the respective forward window using lead() and rollapply(). 
+## Importantly, PL and PH are used solely to construct the target labels during training and are never included as input features, ensuring no look-ahead bias is introduced into the model.
+## At prediction time, the trained model generates a depeg probability using only features observable on the current day.
+## -----------------------------------------------------------------------------
 
-# TerraUSD permanently lost its peg during the May 2022 collapse.
-# To ensure the model captures temporary depegging events rather than a permanent failure regime, the sample is restricted to the pre-collapse period.
-terra_usd <- terra_usd %>%
-  mutate(date = as.Date(timeOpen), .before = timeOpen) %>%
-  arrange(date)
-# Restrict TerraUSD sample to pre-collapse regime
-terra_usd <- terra_usd %>%
-  filter(date < "2022-05-09")
-# Rolling 30-day cumulative trading volume used in dynamic threshold construction
-terra_usd <- terra_usd %>%
-  mutate(V_monthly = rollapply(volume,
-                               width = 30,
-                               FUN = sum,
-                               align = "right",
-                               fill = NA), .after = volume)
-# set component param
-alpha <- 1/3
-# Construct dyanmic threshold
-terra_usd <- terra_usd %>%
-  mutate(ThreshD = 1 - (10 / (V_monthly^alpha)),
-         ThreshU = 1 + (10 / (V_monthly^alpha)), .after = V_monthly)
+UST <- UST %>%
+  mutate(
+    # --- 1-day horizon ---
+    # PL and PH over 1 day = next day's closing price
+    depeg_1d = ifelse(lead(close, 1) <= ThreshD | 
+                        lead(close, 1) >= ThreshU, 1, 0),
+    # --- 3-day horizon ---
+    # PL = minimum closing price over next 3 days
+    # PH = maximum closing price over next 3 days
+    PL_3 = rollapply(lead(close, 1), width = 3, FUN = min, align = "left", fill = NA),
+    PH_3 = rollapply(lead(close, 1), width = 3, FUN = max, align = "left", fill = NA),
+    depeg_3d = ifelse(PL_3 <= ThreshD | PH_3 >= ThreshU, 1, 0),
+    # --- 5-day horizon ---
+    PL_5 = rollapply(lead(close, 1), width = 5, FUN = min, align = "left", fill = NA),
+    PH_5 = rollapply(lead(close, 1), width = 5, FUN = max, align = "left", fill = NA),
+    depeg_5d = ifelse(PL_5 <= ThreshD | PH_5 >= ThreshU, 1, 0),
+    # --- 7-day horizon ---
+    PL_7 = rollapply(lead(close, 1), width = 7, FUN = min, align = "left", fill = NA),
+    PH_7 = rollapply(lead(close, 1), width = 7, FUN = max, align = "left", fill = NA),
+    depeg_7d = ifelse(PL_7 <= ThreshD | PH_7 >= ThreshU, 1, 0)
+  )
 
-# create next-day prediction variable
-terra_usd <- terra_usd %>%
-  mutate(next_close = lead(close), .after = close)
 
-# create depegging binary variable
-terra_usd <- terra_usd %>%
-  mutate(depeg = ifelse(next_close <= ThreshD | next_close >= ThreshU, 1, 0),
-         .after = next_close)
+# -----------------------------------------------------------------------------
+# 5. EVENT FREQUENCY CHECK ACROSS HORIZONS
+# -----------------------------------------------------------------------------
 
-# quick check for no. of depegging events
-table(terra_usd$depeg)
-# mean tells event freq. this matters since depegs should be rare events
-mean(terra_usd$depeg, na.rm = TRUE)
-# Depegging events: 28 observations (~5.6% of sample which is 530 events)
-# Dataset contains only pre-collapse regime
+# depeg event counts and frequencies per horizon
+# Expected: event frequency increases with horizon length since longer windows give more opportunities for price to breach threshold
+cat("--- Depeg Event Frequency by Horizon ---\n")
+cat("1-day:  ", mean(UST$depeg_1d, na.rm = TRUE), "\n") # ~74.2% of sample
+cat("3-day:  ", mean(UST$depeg_3d, na.rm = TRUE), "\n") # ~75.6% of sample
+cat("5-day:  ", mean(UST$depeg_5d, na.rm = TRUE), "\n") # ~76.8% of sample
+cat("7-day:  ", mean(UST$depeg_7d, na.rm = TRUE), "\n") # ~77.8% of sample
 
-# small improvement: remove invalid rows like first 29 rows (no Vmonthly) and last row (no next_close)
-terra_usd_final <- terra_usd %>%
-  filter(!is.na(V_monthly)) %>%
-  filter(!is.na(next_close))
+table(UST$depeg_1d) # 1361 depegs
+table(UST$depeg_3d) # 1384 depegs
+table(UST$depeg_5d) # 1404 depegs
+table(UST$depeg_7d) # 1422 depegs
 
-# check final dataset span
-min(terra_usd_final$date)
-max(terra_usd_final$date)
-nrow(terra_usd_final)
+# then check pre-collapse period only
+cat("--- Pre-Collapse Only (up to 2022-05-08) ---\n")
+UST %>%
+  filter(date <= "2022-05-08") %>%
+  summarise(
+    rate_1d = mean(depeg_1d, na.rm=TRUE), # ~5.8% of sample
+    rate_3d = mean(depeg_3d, na.rm=TRUE), # ~10.8% of sample
+    rate_5d = mean(depeg_5d, na.rm=TRUE), # ~15.2% of sample
+    rate_7d = mean(depeg_7d, na.rm=TRUE), # ~19.2% of sample
+    n = n()
+  )
 
-## Final analysis dataset after feature construction
-## First 29 observations removed due to rolling 30-day volume calculation
-## Last observation removed due to missing next-day close price
+# Truncate at last pre-collapse day
+# Post-May 8 2022, UST permanently lost its peg and never recovered
+# Retaining post-collapse data would inflate depeg rates to ~74% and cause models to learn collapse dynamics rather than early warning signals
+UST <- UST %>% filter(date <= "2022-05-08")
 
-## Final dataset span: 2020-12-24 to 2022-05-07
-## Total observations used for analysis: 500
+# verify
+nrow(UST) # 530
+min(UST$date) # starts 202-11-25
+max(UST$date) # ends 2022-05-08
 
-# quick verify event counts after trimming dataset
-table(terra_usd_final$depeg)
-mean(terra_usd_final$depeg)
+# Dataset truncated at 2022-05-08 (last day UST traded near $1 peg)
+# Full dataset ran 2020-11-25 to 2025-12-31 (1833 obs) but post-collapse data showed ~74% depeg rate, driven by UST's permanent collapse from May 9 2022 onward.
+# Post-collapse UST traded at $0.01-0.02, never recovering its peg.
+# Retaining this data would cause models to learn collapse dynamics, not early warnings.
+# Truncated dataset: 530 observations (2020-11-25 to 2022-05-08)
 
-## Final event statistics after dataset trimming
-## Total observations: 500
-## Depegging events: 28
-## Non-depegging observations: 472
-## Event frequency: ~5.6%
-## This indicates a realistic rare-event setting for depegging prediction.
+# Post-truncation event frequencies:
+# 1-day:  5.79%  -> severe class imbalance, SMOTE will be important
+# 3-day:  10.78% -> moderate imbalance
+# 5-day:  15.17% -> moderate imbalance
+# 7-day:  19.16% -> most balanced, but longest horizon
 
-# quick check for thresholds to make sure they look reasonable
-summary(terra_usd_final$ThreshD)
-summary(terra_usd_final$ThreshU)
-# Dynamic thresholds behave as expected for TerraUSD.
-# The typical band lies roughly between 0.992 and 1.008 (≈ ±0.8% around the $1 peg).
-# When trading volume decreases the band widens slightly, allowing larger deviations before classifying a depegging event.
-# Typical allowed band is ≈ ±0.8% around $1 which is very realistic for UST, which was known to drift slightly more than fiat-backed stablecoins.
 
-# check abs deviation from peg
-summary(abs(terra_usd_final$close - 1))
-# TerraUSD mostly trades very close to the $1 peg in the pre-collapse period.
-# The median deviation is only ~0.0015 (≈0.15%), indicating tight peg stability.
+# -----------------------------------------------------------------------------
+# 6. TRIM DATASET
+# -----------------------------------------------------------------------------
 
-# final dataset cols check
-names(terra_usd_final)
-# arrange cols in nice order
-terra_usd_final <- terra_usd_final %>%
+# Remove first 29 rows: no V_monthly due to 30-day rolling window
+# Already removed last 7 rows where no forward prices were available for 7-day label construction
+UST_final <- UST %>%
+  filter(!is.na(V_monthly)) 
+
+# verify final dataset span
+min(UST_final$date)
+max(UST_final$date)
+nrow(UST_final)
+
+# verify event counts after trimming
+cat("--- Post-Trim Event Frequency ---\n")
+cat("1-day:  ", mean(UST_final$depeg_1d, na.rm = TRUE), "\n")
+cat("3-day:  ", mean(UST_final$depeg_3d, na.rm = TRUE), "\n")
+cat("5-day:  ", mean(UST_final$depeg_5d, na.rm = TRUE), "\n")
+cat("7-day:  ", mean(UST_final$depeg_7d, na.rm = TRUE), "\n")
+
+# Final trimmed dataset: 501 observations (2020-12-24 to 2022-05-08)
+# First 29 rows removed: insufficient history for 30-day rolling volume (V_monthly)
+
+# Post-trim event frequencies:
+# 1-day:  5.79%  -> severe class imbalance, SMOTE will be important
+# 3-day:  10.78% -> moderate imbalance
+# 5-day:  15.17% -> moderate imbalance
+# 7-day:  19.16% -> most balanced, but longest horizon
+
+
+# -----------------------------------------------------------------------------
+# 7. THRESHOLD SANITY CHECK
+# -----------------------------------------------------------------------------
+
+summary(UST_final$ThreshD)
+summary(UST_final$ThreshU)
+# Dynamic thresholds should show typical band of roughly ±0.5% around $1 peg
+# Lower volume periods widen the band, higher volume periods narrow it
+# This is economically intuitive: thin markets are more volatile, so wider tolerance is warranted.
+
+
+# -----------------------------------------------------------------------------
+# 8. COLUMN SELECTION AND ORDERING
+# -----------------------------------------------------------------------------
+UST_final <- UST_final %>%
   select(
     date,
-    open,
-    high,
-    low,
-    close,
-    next_close,
-    depeg,
+    open, high, low, close,
+    depeg_1d, depeg_3d, depeg_5d, depeg_7d,
+    PL_3, PH_3,
+    PL_5, PH_5,
+    PL_7, PH_7,
     volume,
     V_monthly,
-    ThreshD,
-    ThreshU,
+    ThreshD, ThreshU,
     marketCap,
     circulatingSupply
   )
-# Clean analysis dataset: removed raw CoinMarketCap timestamp fields
-# Retained price variables, liquidity measures, thresholds, and depeg label
+UST <- UST %>%
+  select(
+    date,
+    open, high, low, close,
+    depeg_1d, depeg_3d, depeg_5d, depeg_7d,
+    PL_3, PH_3,
+    PL_5, PH_5,
+    PL_7, PH_7,
+    volume,
+    V_monthly,
+    ThreshD, ThreshU,
+    marketCap,
+    circulatingSupply
+  )
 
-# identify largest deviations of TerraUSD price from the $1 peg, helps visually verify that major deviations correspond to depegging events
-# using close here (instead of next_close) since not tied to the pred horizon and is descriptive
-terra_usd_check <- terra_usd_final %>%
+
+  #   --------------------------------------------------------------------------
+  # 9. LARGEST DEVIATION CHECK (DESCRIPTIVE VERIFICATION)
+  # -----------------------------------------------------------------------------
+
+# Identify largest historical deviations from the $1 peg for sanity checking
+# Using close (not forward prices) since this is purely descriptive
+UST_check <- UST_final %>%
   mutate(dev_from_peg = abs(close - 1))
-# find largest deviations
-terra_usd_check %>%
+
+UST_check %>%
   arrange(desc(dev_from_peg)) %>%
-  select(date, close, dev_from_peg, volume) %>%
+  select(date, close, dev_from_peg, ThreshD, ThreshU, depeg_1d, depeg_7d) %>%
   head(10)
-# check if these were labelled as depeg
-terra_usd_check %>%
-  arrange(desc(dev_from_peg)) %>%
-  select(date, close, dev_from_peg, ThreshD, ThreshU, depeg) %>%
-  head(10)
-# First observation for 2020-12-30 has extremely low volume for UST. Early in its launch, TerraUSD markets were thin, so small trades could move price a lot.
-# Rest rep the largest real stress period in our pre-collapse data. May 2021 was when btc also dropped 40% during some days
-# UST during the time, probably lost peg due to redemption pressure.
 
-# Largest deviation in dataset, check for one day after
-terra_usd_check %>%
-  filter(date == "2020-12-30") %>%
-  select(date, close, next_close, ThreshD, ThreshU, depeg)
-# The large deviation on 2020-12-30  likely reflects early launch liquidity conditions when TerraUSD markets were still thin.
-# The next-day price returned inside the threshold band, so the event is not classified as a persistent depegging episode.
+# Large deviations correspond to known stress periods (e.g. Jan-Feb 2021 crypto volatility, May 2021 market selloff).
+# Note: a large close deviation on day T does not guarantee depeg_1d = 1, since the label is based on forward prices, not current price.
+# e.g. 2020-12-30 shows 14.9% deviation but depeg_1d = 0, price recovered within threshold by next day.
 
-# quick verification to see if all largest deviations correspond to actual threshold breaches when using next_close
-terra_usd_check %>%
-  arrange(desc(dev_from_peg)) %>%
-  select(date, close, next_close, ThreshD, ThreshU, depeg) %>%
-  head(15)
-# Most large deviations are correctly classified as depegging events.
-# Observations with depeg = 0 occur when the deviation is short-lived and the next-day price returns within the dynamic threshold band.
-# This confirms the rule captures persistent peg breaks rather than temporary one-day price spikes.
+# -----------------------------------------------------------------------------
+# 10. SAVE DATASETS
+# -----------------------------------------------------------------------------
 
-dim(terra_usd_final)
-summary(terra_usd_final$depeg)
+dim(UST_final)
 
-# Save dataset
-write_csv(terra_usd_final, "data/TerraClassicUSD/TerraClassicUSD_model_trimmed_dataset.csv")
-write_csv(terra_usd, "data/TerraClassicUSD/TerraClassicUSD_model_dataset.csv")
+write_csv(UST_final, "data/UST/UST_short_dataset.csv")
+write_csv(UST, "data/UST/UST_full_dataset.csv")
+
+cat("UST data preparation complete.\n")
+cat("Final dataset dimensions:", nrow(UST_final), "rows x", ncol(UST_final), "cols\n")
+
+
+
+
+
+
+
+
+
+
+
+
