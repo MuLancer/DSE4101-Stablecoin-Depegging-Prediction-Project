@@ -6,11 +6,11 @@ library(zoo)
 library(TTR)
 library(tidyr)
 
-dai <- read_csv("Project Phase 2/data/Dai/dai_price_technical_features.csv")
-pax <- read_csv("Project Phase 2/data/Pax Dollar/pax_price_technical_features.csv")
-usdc <- read_csv("Project Phase 2/data/USDC/usdc_price_technical_features.csv")
-usdt <- read_csv("Project Phase 2/data/Tether USDt/usdt_price_technical_features.csv")
-terra_usd <- read_csv("Project Phase 2/data/TerraClassicUSD/terra_usd_price_technical_features.csv")
+dai <- read_csv("Project Phase 2/data/Dai/DAI_technical_features.csv")
+pax <- read_csv("Project Phase 2/data/PAX/PAX_technical_features.csv")
+usdc <- read_csv("Project Phase 2/data/USDC/USDC_technical_features.csv")
+usdt <- read_csv("Project Phase 2/data/USDT/USDT_technical_features.csv")
+terra_usd <- read_csv("Project Phase 2/data/UST/UST_technical_features.csv")
 
 dai$date <- as.Date(dai$date)
 pax$date <- as.Date(pax$date)
@@ -201,17 +201,17 @@ terra_usd <- clean_macro_features(terra_usd, "UST")
 
 
 # Save datasets
-write.csv(dai, "Project Phase 2/data/Dai/dai_price_macro_features.csv", row.names = FALSE)
-write.csv(pax, "Project Phase 2/data/Pax Dollar/pax_macro_features.csv", row.names = FALSE)
-write.csv(usdc, "Project Phase 2/data/USDC/usdc_macro_features.csv", row.names = FALSE)
-write.csv(usdt, "Project Phase 2/data/Tether USDt/usdt_macro_features.csv", row.names = FALSE)
-write.csv(terra_usd, "Project Phase 2/data/TerraClassicUSD/terra_usd_macro_features.csv", row.names = FALSE)
+write.csv(dai, "Project Phase 2/data/Dai/dai_onchain_features.csv", row.names = FALSE)
+write.csv(pax, "Project Phase 2/data/PAX/pax_onchain_features.csv", row.names = FALSE)
+write.csv(usdc, "Project Phase 2/data/USDC/usdc_onchain_features.csv", row.names = FALSE)
+write.csv(usdt, "Project Phase 2/data/USDT/usdt_onchain_features.csv", row.names = FALSE)
+write.csv(terra_usd, "Project Phase 2/data/UST/ust_onchain_features.csv", row.names = FALSE)
 
-df_dai = read.csv("Project Phase 2/data/Dai/dai_price_macro_features.csv")
-df_pax = read.csv("Project Phase 2/data/Pax Dollar/pax_macro_features.csv")
-df_usdc = read.csv("Project Phase 2/data/USDC/usdc_macro_features.csv")
+df_dai = read.csv("Project Phase 2/data/Dai/dai_onchain_features.csv")
+df_pax = read.csv("Project Phase 2/data/PAX/pax_onchain_features.csv")
+df_usdc = read.csv("Project Phase 2/data/USDT/usdt_onchain_features.csv")
 df_usdt = read.csv("Project Phase 2/data/Tether USDt/usdt_macro_features.csv")
-df_terra_usd = read.csv("Project Phase 2/data/TerraClassicUSD/terra_usd_macro_features.csv")
+df_ust = read.csv("Project Phase 2/data/UST/ust_onchain_features.csv")
 
 # --- ON-CHAIN METRIC DEFINITIONS ---
 
