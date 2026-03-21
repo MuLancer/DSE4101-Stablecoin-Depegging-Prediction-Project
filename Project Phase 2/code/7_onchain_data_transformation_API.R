@@ -182,7 +182,11 @@ for (year in years_to_run) {
 # Glob all annual macro indicator CSVs from the data directory
 # token_address read as character to preserve leading zeros in hex addresses
 # bind_rows() stacks all years into a single master data frame
-all_files <- list.files(pattern = "data/onchain_metrics_.*\\.csv", full.names = TRUE)
+all_files <- list.files(
+  path = "data", 
+  pattern = "onchain_metrics_20.*\\.csv", 
+  full.names = TRUE
+)
 df_master <- lapply(all_files, function(file) {
   read.csv(file, colClasses = c("token_address" = "character"))
 }) %>% bind_rows()
@@ -191,7 +195,7 @@ df_master <- lapply(all_files, function(file) {
 print(range(as.Date(df_master$date)))
 
 # Save consolidated master file for use in fng_and_macro_indicators.R
-write.csv(df_master, "/data/onchain_metrics_all.csv", row.names = FALSE)
+write.csv(df_master, "data/onchain_metrics_all.csv", row.names = FALSE)
 
 cat("Onchain metrics master dataset saved.\n")
 

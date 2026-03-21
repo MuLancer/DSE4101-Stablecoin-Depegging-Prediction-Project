@@ -6,26 +6,26 @@ library(zoo)
 library(TTR)
 library(tidyr)
 
-dai <- read_csv("Project Phase 2/data/Dai/DAI_technical_features.csv")
-pax <- read_csv("Project Phase 2/data/PAX/PAX_technical_features.csv")
-usdc <- read_csv("Project Phase 2/data/USDC/USDC_technical_features.csv")
-usdt <- read_csv("Project Phase 2/data/USDT/USDT_technical_features.csv")
-terra_usd <- read_csv("Project Phase 2/data/UST/UST_technical_features.csv")
+dai <- read_csv("data/Dai/DAI_technical_features.csv")
+pax <- read_csv("data/PAX/PAX_technical_features.csv")
+usdc <- read_csv("data/USDC/USDC_technical_features.csv")
+usdt <- read_csv("data/USDT/USDT_technical_features.csv")
+ust <- read_csv("data/UST/UST_technical_features.csv")
 
 dai$date <- as.Date(dai$date)
 pax$date <- as.Date(pax$date)
 usdc$date <- as.Date(usdc$date)
 usdt$date <- as.Date(usdt$date)
-terra_usd$date <- as.Date(terra_usd$date)
+ust$date <- as.Date(ust$date)
 
 dai <- dai[order(dai$date), ]
 pax <- pax[order(pax$date), ]
 usdc <- usdc[order(usdc$date), ]
 usdt <- usdt[order(usdt$date), ]
-terra_usd <- terra_usd[order(terra_usd$date), ]
+ust <- ust[order(ust$date), ]
 
 # Adding fear and greed
-fng = read.csv("Project Phase 2/data/fear_and_greed_index_2.csv") %>%
+fng = read.csv("data/fear_and_greed_index_2.csv") %>%
   mutate(date = as.Date(date))
 
 add_fng <- function(df) {
@@ -36,7 +36,7 @@ dai <- add_fng(dai)
 pax <- add_fng(pax)
 usdc <- add_fng(usdc)
 usdt <- add_fng(usdt)
-terra_usd <- add_fng(terra_usd)
+ust <- add_fng(ust)
 
 # Adding momentum/pct change
 add_pct_change <- function(df) {
@@ -73,62 +73,97 @@ dai <- add_pct_change(dai)
 pax <- add_pct_change(pax)
 usdc <- add_pct_change(usdc)
 usdt <- add_pct_change(usdt)
-terra_usd <- add_pct_change(terra_usd)
+ust <- add_pct_change(ust)
 
 
-# Adding macro indicators
-DATA_DIR <- "Project Phase 2/data/"
-PLOT_DIR <- "Project Phase 2/plots/"
-
-df_macro = read.csv(paste0(DATA_DIR,"macro_indicators_all.csv"), colClasses = c("token_address" = "character"))
-
-# 1. (price-related) Markout and will depeg
-add_markout <- function(df) {
-  df <- df %>%
+# Adding Parkinson's volatility estimate
+add_parkinson_metrics <- function(df, window = 7) {
+  df %>%
     arrange(date) %>%
-    # 1. First, define if the coin IS currently depegged
     mutate(
-      is_depegged = as.integer(close < ThreshD | close > ThreshU)
-    )
-  
-  # 2. Then, calculate future markout and will_depeg labels
-  horizons <- c(1, 3, 7, 14, 30)
-  for (h in horizons) {
-    # Markout: The log-return to the price 'h' days away
-    df <- df %>%
-      mutate(!!paste0("markout_", h, "d") := log(lead(close, n = h) / close))
-    
-    # Will Depeg: Looking forward from tomorrow (i+1) to horizon (i+h)
-    df[[paste0("will_depeg_", h, "d")]] <- sapply(1:nrow(df), function(i) {
-      start_idx <- i + 1
-      end_idx <- min(i + h, nrow(df))
+      # Constant for Parkinson's formula: 1 / (4 * log(2))
+      k = 1 / (4 * log(2)),
       
-      # Handle end of dataset
-      if (start_idx > nrow(df)) return(NA)
+      # 1. Daily Parkinson's (n = 1)
+      # Captures the raw intraday high-low range for just today
+      parkinson_daily = sqrt(k * (log(high / low)^2)),
       
-      # Slice future prices and their respective future thresholds
-      future_prices <- df$close[start_idx:end_idx]
-      future_lows   <- df$ThreshD[start_idx:end_idx]
-      future_highs  <- df$ThreshU[start_idx:end_idx]
+      # 2. 7-Day Rolling Parkinson's (n = 7)
+      # Captures the weekly volatility regime (smoothed)
+      parkinson_7d = rollapplyr(
+        log(high / low)^2, 
+        width = window, 
+        FUN = function(x) sqrt(sum(x) / (4 * window * log(2))), 
+        fill = NA
+      )
+    ) %>%
+    # Remove the temporary constant column
+    select(-k)
+}
+
+# Apply to your stablecoin dataframes
+dai  <- add_parkinson_metrics(dai)
+pax  <- add_parkinson_metrics(pax)
+usdc <- add_parkinson_metrics(usdc)
+usdt <- add_parkinson_metrics(usdt)
+ust  <- add_parkinson_metrics(ust)
+
+
+# Adding RVOL
+add_rvol_metric <- function(df, window = 20) {
+  df %>%
+    arrange(date) %>%
+    mutate(
+      # Calculate the 20-day Moving Average for Volume
+      volume_ma_20d = rollmean(volume, k = window, fill = NA, align = "right"),
       
-      # Check if any future price violates its own future threshold
-      any_violation <- any(future_prices < future_lows | future_prices > future_highs, na.rm = TRUE)
-      return(as.integer(any_violation))
-    })
-  }
-  return(df)
+      # Formula: Current Volume / Average Volume (past 20 days)
+      rvol = volume / volume_ma_20d
+    ) %>%
+    # Clean up the temporary moving average column
+    select(-volume_ma_20d)
+}
+
+dai  <- add_rvol_metric(dai)
+pax  <- add_rvol_metric(pax)
+usdc <- add_rvol_metric(usdc)
+usdt <- add_rvol_metric(usdt)
+ust  <- add_rvol_metric(ust)
+
+## Creating spillover effects
+# Master Close Price table
+all_closes <- bind_rows(
+  dai %>% mutate(coin = "dai"),
+  pax %>% mutate(coin = "pax"),
+  usdc %>% mutate(coin = "usdc"),
+  usdt %>% mutate(coin = "usdt"),
+  ust %>% mutate(coin = "ust")
+) %>%
+  select(date, coin, close) %>%
+  pivot_wider(names_from = coin, values_from = close, names_prefix = "close_")
+
+
+add_spillovers <- function(df, current_coin_name) {
+  df %>%
+    left_join(all_closes, by = "date") %>%
+    select(-all_of(paste0("close_", current_coin_name)))
 }
 
 
-dai       <- add_markout(dai)
-pax       <- add_markout(pax)
-usdc      <- add_markout(usdc)
-usdt      <- add_markout(usdt)
-terra_usd <- add_markout(terra_usd)
+dai  <- add_spillovers(dai, "dai")
+pax  <- add_spillovers(pax, "pax")
+usdc <- add_spillovers(usdc, "usdc")
+usdt <- add_spillovers(usdt, "usdt")
+ust  <- add_spillovers(ust, "ust")
+
+# Adding onchain indicators
+DATA_DIR <- "data/"
+PLOT_DIR <- "plots/"
+
+df_onchain = read.csv(paste0(DATA_DIR,"onchain_metrics_all.csv"), colClasses = c("token_address" = "character"))
 
 
-# 2. Map Addresses to Names
-# This makes the df_macro easier to handle and ensures joins are clean
+# Map Addresses to Names
 token_mapping <- data.frame(
   token_address = c(
     '0x6b175474e89094c44da98b954eedeac495271d0f', # DAI
@@ -141,77 +176,76 @@ token_mapping <- data.frame(
   stringsAsFactors = FALSE
 )
 
-df_macro <- df_macro %>%
+df_onchain <- df_onchain %>%
   mutate(date = as.Date(date)) %>%
   mutate(gini_coefficient=abs(gini_coefficient)) %>%
   mutate(token_address = as.character(token_address)) %>%
   left_join(token_mapping, by = "token_address")
 
-# 3. Adding 7d rolling averages and log diffs
-clean_macro_features <- function(price_df, name_label) {
+# Adding 7d rolling averages and log diffs
+clean_onchain_features <- function(price_df, name_label) {
   
-  # Filter macro data for this specific token name
-  token_macro <- df_macro %>%
+  # Filter onchain data for this specific token
+  token_onchain <- df_onchain %>%
     filter(token_name == name_label) %>%
     arrange(date)
   
   # Join and calculate features
   df <- price_df %>%
-    left_join(token_macro, by = "date") %>%
+    left_join(token_onchain, by = "date") %>%
     arrange(date) %>%
     mutate(
       # --- ENTROPY ---
-      entropy_7d_avg   = rollapply(shannon_entropy, 7, mean, fill = NA, align = "right"),
-      log_diff_entropy = log(1 + shannon_entropy / (lag(shannon_entropy) + 0.0001)),
+      entropy_7d_avg    = rollapply(shannon_entropy, 7, mean, fill = NA, align = "right"),
+      log_diff_entropy  = log(1 + shannon_entropy / (lag(shannon_entropy) + 0.0001)),
       
-      # --- GINI (Using the ABS fix we discussed) ---
-      gini_7d_avg      = rollapply(gini_coefficient, 7, mean, fill = NA, align = "right"),
-      log_diff_gini    = log(1 + gini_coefficient / (lag(gini_coefficient) + 0.0001)),
+      # --- GINI ---
+      gini_7d_avg       = rollapply(gini_coefficient, 7, mean, fill = NA, align = "right"),
+      log_diff_gini     = log(1 + gini_coefficient / (lag(gini_coefficient) + 0.0001)),
       
       # --- NET FLOWS ---
-      net_flow_7d_avg   = rollapply(net_swap_flow, 7, mean, fill = NA, align = "right"),
-      log_diff_net_flow = log(1 + abs(net_swap_flow) / (lag(abs(net_swap_flow)) + 1)),
+      net_flow_7d_avg    = rollapply(net_swap_flow, 7, mean, fill = NA, align = "right"),
+      log_diff_net_flow  = log(1 + abs(net_swap_flow) / (lag(abs(net_swap_flow)) + 1)),
       
       # --- PIN / ORDER IMBALANCE ---
-      pin_7d_avg       = rollapply(pin_proxy, 7, mean, fill = NA, align = "right"),
-      log_diff_pin     = log(1 + pin_proxy / (lag(pin_proxy) + 0.0001)),
+      pin_7d_avg        = rollapply(pin_proxy, 7, mean, fill = NA, align = "right"),
+      log_diff_pin      = log(1 + pin_proxy / (lag(pin_proxy) + 0.0001)),
       
-      # --- SHARK ACTIVITY ---
-      shark_pct_7d_avg   = rollapply(shark_volume_pct, 7, mean, fill = NA, align = "right"),
-      log_diff_shark_pct = log(1 + shark_volume_pct / (lag(shark_volume_pct) + 0.001))
+      # --- BIG PLAYER ACTIVITY ---
+      big_player_7d_avg = rollapply(big_players_vol_pct, 7, mean, fill = NA, align = "right")
     ) %>%
-    # Remove rownames
+    # Remove index columns if present
     select(-any_of("X")) %>%
-    # --- REORDERING COLUMNS ---
+    # --- FULL REORDERING ---
     relocate(token_name, .after = token_address) %>%
     relocate(entropy_7d_avg, log_diff_entropy, .after = shannon_entropy) %>%
     relocate(gini_7d_avg, log_diff_gini, .after = gini_coefficient) %>%
     relocate(net_flow_7d_avg, log_diff_net_flow, .after = net_swap_flow) %>%
     relocate(pin_7d_avg, log_diff_pin, .after = pin_proxy) %>%
-    relocate(shark_pct_7d_avg, log_diff_shark_pct, .after = shark_volume_pct)
+    relocate(big_player_7d_avg, .after = big_players_vol_pct)
   
   return(df)
 }
 
-dai       <- clean_macro_features(dai, "DAI")
-pax       <- clean_macro_features(pax, "PAX")
-usdc      <- clean_macro_features(usdc, "USDC")
-usdt      <- clean_macro_features(usdt, "USDT")
-terra_usd <- clean_macro_features(terra_usd, "UST")
+dai       <- clean_onchain_features(dai, "DAI")
+pax       <- clean_onchain_features(pax, "PAX")
+usdc      <- clean_onchain_features(usdc, "USDC")
+usdt      <- clean_onchain_features(usdt, "USDT")
+ust       <- clean_onchain_features(ust, "UST")
 
 
 # Save datasets
-write.csv(dai, "Project Phase 2/data/Dai/dai_onchain_features.csv", row.names = FALSE)
-write.csv(pax, "Project Phase 2/data/PAX/pax_onchain_features.csv", row.names = FALSE)
-write.csv(usdc, "Project Phase 2/data/USDC/usdc_onchain_features.csv", row.names = FALSE)
-write.csv(usdt, "Project Phase 2/data/USDT/usdt_onchain_features.csv", row.names = FALSE)
-write.csv(terra_usd, "Project Phase 2/data/UST/ust_onchain_features.csv", row.names = FALSE)
+write.csv(dai, "data/Dai/dai_onchain_features.csv", row.names = FALSE)
+write.csv(pax, "data/PAX/pax_onchain_features.csv", row.names = FALSE)
+write.csv(usdc, "data/USDC/usdc_onchain_features.csv", row.names = FALSE)
+write.csv(usdt, "data/USDT/usdt_onchain_features.csv", row.names = FALSE)
+write.csv(ust, "data/UST/ust_onchain_features.csv", row.names = FALSE)
 
-df_dai = read.csv("Project Phase 2/data/Dai/dai_onchain_features.csv")
-df_pax = read.csv("Project Phase 2/data/PAX/pax_onchain_features.csv")
-df_usdc = read.csv("Project Phase 2/data/USDT/usdt_onchain_features.csv")
-df_usdt = read.csv("Project Phase 2/data/Tether USDt/usdt_macro_features.csv")
-df_ust = read.csv("Project Phase 2/data/UST/ust_onchain_features.csv")
+df_dai = read.csv("data/Dai/dai_onchain_features.csv")
+df_pax = read.csv("data/PAX/pax_onchain_features.csv")
+df_usdc = read.csv("data/USDT/usdt_onchain_features.csv")
+df_usdt = read.csv("data/USDT/usdt_onchain_features.csv")
+df_ust = read.csv("data/UST/ust_onchain_features.csv")
 
 # --- ON-CHAIN METRIC DEFINITIONS ---
 
