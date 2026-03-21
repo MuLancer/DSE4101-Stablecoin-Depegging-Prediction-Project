@@ -443,11 +443,12 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
-data/
-*/.DS_Store
-*/.RDataTmp
-*/.Rdata
-*/.Rhistory
+
+# Ignore specific temp/system files globally (including inside data/)
+**/.DS_Store
+**/.RDataTmp
+**/.Rdata
+**/.Rhistory
 
 
 
