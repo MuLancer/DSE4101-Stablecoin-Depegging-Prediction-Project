@@ -297,8 +297,8 @@ data/token_transfers_cleaned.csv
 *.RDataTmp
 .Rproj.user
 Project Phase 1/data/*.csv
-Project Phase 2/data/*.csv
-Project Phase 2/data/*.csv
+#Project Phase 2/data/*.csv
+#Project Phase 2/data/*.csv
 Mulans-MacBook-Air-2:DSE4101-Stablecoin-Depegging-Prediction-Project mulan$ nano .gitignore
 
   UW PICO 5.09                        File: .gitignore                          

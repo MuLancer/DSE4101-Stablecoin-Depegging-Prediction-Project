@@ -35,14 +35,14 @@ years_to_run <- 2018:2025
 # Token value is divided by 1e18 to convert from raw wei to token units
 #
 # Five CTEs compute daily on-chain metrics per token:
-#   entropy_calc  — Shannon entropy of wallet-level volume distribution
-#   gini_calc     — Gini coefficient of transaction size inequality
-#   pin_calc      — PIN proxy: order imbalance relative to median trade size
-#   shark_calc (CHANGE THIS ABI)   — Shark activity: volume share of top-volume, high-frequency wallets
-#   flow_calc     — Net swap flow: inflows minus outflows (excluding burn address)
-#   (ADD RVOL ABI)
-#
+#   entropy_calc      — Shannon entropy of wallet-level volume distribution
+#   gini_calc         — Gini coefficient of transaction size inequality
+#   pin_calc          — PIN proxy: order imbalance relative to median trade size
+#   big_players_calc  — Institutional/Whale activity: volume and count of top-tier, high-frequency wallets
+#   flow_calc         — Ecosystem liquidity: gross inflows, gross outflows, and net supply change (mints vs. burns)
+
 # All CTEs are joined on (date, token_address) and results ordered chronologically
+
 sql_template <- "
 WITH raw_transfers AS (
   SELECT 
@@ -91,33 +91,54 @@ pin_calc AS (
     FROM raw_transfers
   ) GROUP BY 1, 2
 ),
-shark_calc AS (
+big_players_calc AS (
   SELECT date, token_address,
-         COUNTIF(vol_rank > 0.9 AND count_rank > 0.75) AS n_shark_trades,
-         SUM(CASE WHEN vol_rank > 0.9 AND count_rank > 0.75 THEN wallet_volume ELSE 0 END) AS shark_volume,
+         -- Count how many unique Big Player wallets were active
+         COUNTIF(vol_rank > 0.9 AND count_rank > 0.75) AS n_big_players,
+         
+         -- Total volume moved by these specific Big Players
+         SUM(CASE WHEN vol_rank > 0.9 AND count_rank > 0.75 THEN wallet_volume ELSE 0 END) AS big_players_volume,
+         
+         -- Total volume of all wallets (used to calculate the percentage)
          SUM(wallet_volume) AS total_volume
   FROM (
-    SELECT date, token_address, from_address, SUM(value) as wallet_volume,
+    SELECT date, token_address, from_address, 
+           SUM(value) as wallet_volume,
            PERCENT_RANK() OVER(PARTITION BY date, token_address ORDER BY SUM(value)) as vol_rank,
            PERCENT_RANK() OVER(PARTITION BY date, token_address ORDER BY COUNT(*)) as count_rank
-    FROM raw_transfers GROUP BY 1, 2, 3
+    FROM raw_transfers 
+    GROUP BY 1, 2, 3
   ) GROUP BY 1, 2
 ),
 flow_calc AS (
   SELECT date, token_address,
+         -- 1. Gross Inflow: Everything moving INTO real wallets
+         SUM(CASE WHEN to_address != '0x0000000000000000000000000000000000000000' THEN value ELSE 0 END) AS gross_inflow,
+         
+         -- 2. Gross Outflow: Everything moving OUT of real wallets
+         SUM(CASE WHEN from_address != '0x0000000000000000000000000000000000000000' THEN value ELSE 0 END) AS gross_outflow,
+         
+         -- 3. Net Swap Flow: (Total In - Total Out)
+         -- This will be positive if Minting > Burning, and negative if Burning > Minting.
          SUM(CASE WHEN to_address != '0x0000000000000000000000000000000000000000' THEN value ELSE 0 END) - 
          SUM(CASE WHEN from_address != '0x0000000000000000000000000000000000000000' THEN value ELSE 0 END) AS net_swap_flow
   FROM raw_transfers GROUP BY 1, 2
 )
 SELECT 
-  e.date, e.token_address, e.shannon_entropy, g.gini_coefficient,
-  p.pin_proxy, s.n_shark_trades, 
-  s.shark_volume / NULLIF(s.total_volume, 0) AS shark_volume_pct,
+  e.date, 
+  e.token_address, 
+  e.shannon_entropy, 
+  g.gini_coefficient,
+  p.pin_proxy, 
+  b.n_big_players,
+  b.big_players_volume / NULLIF(b.total_volume, 0) AS big_players_vol_pct,
+  f.gross_inflow, 
+  f.gross_outflow, 
   f.net_swap_flow
 FROM entropy_calc e
 JOIN gini_calc g ON e.date = g.date AND e.token_address = g.token_address
 JOIN pin_calc p ON e.date = p.date AND e.token_address = p.token_address
-JOIN shark_calc s ON e.date = s.date AND e.token_address = s.token_address
+JOIN big_players_calc b ON e.date = b.date AND e.token_address = b.token_address
 JOIN flow_calc f ON e.date = f.date AND e.token_address = f.token_address
 ORDER BY e.date, e.token_address"
 
