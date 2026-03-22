@@ -162,15 +162,15 @@ UST   <- drop_helper_cols(UST)
 colSums(is.na(DAI))
 colSums(is.na(UST))   # UST may have fewer NAs due to shorter sample
 
-clean_rows <- function(df) {
-  df %>% drop_na()
-}
-
-DAI   <- clean_rows(DAI)
-PAX   <- clean_rows(PAX)
-USDC  <- clean_rows(USDC)
-USDT  <- clean_rows(USDT)
-UST   <- clean_rows(UST)
+# clean_rows <- function(df) {
+#   df %>% drop_na()
+# }
+# 
+# DAI   <- clean_rows(DAI)
+# PAX   <- clean_rows(PAX)
+# USDC  <- clean_rows(USDC)
+# USDT  <- clean_rows(USDT)
+# UST   <- clean_rows(UST)
 
 # ~31 rows dropped per coin due to rolling window initialisation
 # UST may differ due to shorter sample and truncation at collapse date
