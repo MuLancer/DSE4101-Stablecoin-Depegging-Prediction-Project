@@ -5,6 +5,8 @@ library(pls)
 library(tidyverse)
 library(gridExtra)
 library(pROC)
+library(smotefamily)
+library(scales)
 
 rm(list=ls())
 
@@ -81,34 +83,6 @@ depeg_metrics <- function(actual, predicted, threshold) {
 ### Plot OOS Results ###
 ########################
 
-plot_results <- function(y_data, oosy, nprev, model, rmse, title){
-  oos_dates <- tail(y_data$date, nprev)
-  
-  plot_data <- data.frame(date = oos_dates, actual = as.vector(oosy), pred = as.vector(model$pred))
-  
-  plot <- ggplot(plot_data, aes(x = date)) +
-    geom_line(aes(y = actual, color = "Actual")) +
-    geom_line(aes(y = pred, color = "Predicted")) +
-    scale_color_manual(values = c("Actual" = "black", "Predicted" = "red")) +
-    labs(title = title,
-         subtitle = paste("RMSE:", round(rmse, 6)),
-         x = "Index", 
-         y = "Price",
-         color = "Series") +
-    theme_minimal() +
-    theme(legend.position = "bottom")
-  
-  return(plot)
-  
-  # Plot AUC
-  roc_obj <- plot(roc(actual, predicted), 
-                  print.auc = TRUE, 
-                  col = "blue", # Optional: change the curve color
-                  main = "ROC Curve with AUC") # Optional: add a title
-  
-  # Add a diagonal reference line for a random classifier (AUC = 0.5)
-  abline(a = 0, b = 1, col = "gray", lty = 2) 
-}
 
 ########################
 ### Data Preparation ###
@@ -135,7 +109,7 @@ train_test_split <-function(data, train_start, train_end, test_start, test_end){
   return(list(train = train_data, test = test_data))
 }
 
-prep_features <- function(data, target_col, remove_col){
+prep_features <- function(data, target_col, remove_col, smote = FALSE){
   
   # creates a vector of column names
   # should all be numeric features except those excluded
@@ -149,22 +123,43 @@ prep_features <- function(data, target_col, remove_col){
   X <- cleaned_data %>% select(all_of(feature_cols))
   y <- cleaned_data %>% pull(!!sym(target_col)) %>% as.factor()
   
-  # Print class distribution
-  cat("\nClass distribution for", target_col, ":\n")
-  print(table(y))
-  cat("Proportion of depegs:", 
-      round(sum(y == 1) / length(y) * 100, 2), "%\n")
+  if(smote){
+    # Class balance before and after smote (only for train set)
+    cat("TRAIN before SMOTE:\n")
+    print(table(y))
+    cat("Proportion of depegs:", 
+        round(sum(y == 1) / length(y) * 100, 2), "%\n")
+    
+    # Note: duplicate size - 1 or 2, nearest neighbours - 3 or 5 
+    smote_out <- SMOTE(X, as.numeric(y), dup_size = 2, K = 3)
+    smote_data <- smote_out$data
+    
+    X <- smote_data[, 1:ncol(X), drop = FALSE]
+    y <- as.factor(smote_data[, ncol(smote_data)])
+    
+    cat("TRAIN after SMOTE:\n")
+    print(table(y))
+    cat("Proportion of depegs:", 
+        round(sum(y == 1) / length(y) * 100, 2), "%\n")
+    
+  } else {
+    # Class distribution for test set (not using SMOTE)
+    cat("\nTEST class distribution", target_col, ":\n")
+    print(table(y))
+    cat("Proportion of depegs:", 
+        round(sum(y == 1) / length(y) * 100, 2), "%\n \n")
+  }
   
   return(list(X = X, y = y, dates = cleaned_data$date,
               feature_names = feature_cols))
 }
 
-# columns to remove
+horizons <- c("depeg_1d", "depeg_3d", "depeg_5d", "depeg_7d")
+
 remove_col = c("date", "open", "high", "low", "close", 
                "ThreshD", "ThreshU", "value_classification",
-               "depeg_1d", "depeg_3d", "depeg_5d", "depeg_7d")
-
-horizons <- c("depeg_1d", "depeg_3d", "depeg_5d", "depeg_7d")
+               "depeg_1d", "depeg_3d", "depeg_5d", "depeg_7d",
+               "token_name", "close_ust")
 
 coin_dfw1 <- list(DAI = data_DAI, PAX = data_PAX, USDC = data_USDC,
                   USDT = data_USDT, UST = data_UST)
@@ -196,8 +191,8 @@ w1 <- function(){
     temp <- list()
     
     for(h in horizons) {
-      train_prep <- prep_features(split$train, h, remove_col)
-      test_prep <- prep_features(split$test, h, remove_col)
+      train_prep <- prep_features(split$train, h, remove_col, smote = TRUE)
+      test_prep <- prep_features(split$test, h, remove_col, smote = FALSE)
       
       # Store results
       temp[[h]] <- list(
@@ -220,7 +215,6 @@ w1 <- function(){
 
 dfw1 <- w1()
 
-
 ###################################################
 ### Window 2: Train 2019 - 2023, Test 2024-2025 ###
 ###################################################
@@ -236,7 +230,7 @@ w2 <- function(){
     # split each coin into train/test
     dataset <- coin_dfw2[[coin]]
     split <- train_test_split(dataset, 
-                              train_start = "2019-12-21", # NA depeg values before
+                              train_start = "2019-11-22",
                               train_end = "2023-12-31", 
                               test_start = "2024-01-01", 
                               test_end = "2025-12-24") # NA depeg values after
@@ -245,8 +239,8 @@ w2 <- function(){
     temp <- list()
     
     for(h in horizons) {
-      train_prep <- prep_features(split$train, h, remove_col)
-      test_prep <- prep_features(split$test, h, remove_col)
+      train_prep <- prep_features(split$train, h, remove_col, smote = FALSE)
+      test_prep <- prep_features(split$test, h, remove_col, smote = FALSE)
       
       # Store results
       temp[[h]] <- list(
