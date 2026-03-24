@@ -4,6 +4,7 @@ library(xgboost)
 library(pls)
 library(tidyverse)
 library(gridExtra)
+library(pROC)
 
 rm(list=ls())
 
@@ -11,37 +12,53 @@ rm(list=ls())
 ### Load Data ###
 #################
 
-data <- read.csv("df_all.csv") 
+## Working directory should be set to "Project Phase 2/models/code"
+## Load in data and convert "date" column into date type (previously character)
+
+set.seed(99)
+
+# Data from 2019-11-22 to 2025-12-31
+data_DAI <- read.csv("../../data/Dai/DAI_onchain_features.csv") %>%
+  mutate(date = as.Date(date))
+
+# Data from 2018-09-27 to 2025-12-31
+data_PAX <- read.csv("../../data/PAX/PAX_onchain_features.csv") %>%
+  mutate(date = as.Date(date))
+
+# Data from 2018-10-08 to 2025-12-31
+data_USDC <- read.csv("../../data/USDC/USDC_onchain_features.csv") %>%
+  mutate(date = as.Date(date))
+
+# Data from 2017-11-27 to 2025-12-31
+data_USDT <- read.csv("../../data/USDT/USDT_onchain_features.csv") %>%
+  mutate(date = as.Date(date))
+
+# Data from 2020-11-25 to 2022-05-08 
+data_UST <- read.csv("../../data/UST/UST_onchain_features.csv") %>%
+  mutate(date = as.Date(date))
 
 ################################
 ### Depeg Prediction Metrics ###
 ################################
 
-# check whether depeg is identified based on depeg threshold
-
-## TBU: update code for "threshold" ##
-
 depeg_metrics <- function(actual, predicted, threshold) {
-  # Compare actual and predicted prices to depeg threshold
-  actual_depeg <- actual <= threshold
-  predicted_depeg <- predicted <= threshold
   
   # confusion matrix 
-  TP <- sum(actual_depeg == TRUE & predicted_depeg == TRUE, na.rm = TRUE)
-  FP <- sum(actual_depeg == FALSE & predicted_depeg == TRUE, na.rm = TRUE)
-  TN <- sum(actual_depeg == FALSE & predicted_depeg == FALSE, na.rm = TRUE)
-  FN <- sum(actual_depeg == TRUE & predicted_depeg == FALSE, na.rm = TRUE)
+  TP <- sum(actual == 1 & predicted == 1, na.rm = TRUE)
+  FP <- sum(actual == 0 & predicted == 1, na.rm = TRUE)
+  TN <- sum(actual == 0 & predicted == 0, na.rm = TRUE)
+  FN <- sum(actual == 1 & predicted == 0, na.rm = TRUE)
   
   # performance metrics
   accuracy <- (TP + TN) / (TP + FP + TN + FN) 
   misclass_rate <- 1 - accuracy
-  sensitivity <- TP / (TP + FN)
+  sensitivity <- TP / (TP + FN) # want to maximise 
   specificity <- TN / (TN + FP)
   precision <- TP / (TP + FP)
   recall <- sensitivity
   f1 <- 2 / (1/precision + 1/recall)
   
-  # cost ratios (FP vs FN): In the case of our project, FP is more detrimental
+  # cost ratios (FP vs FN): In the case of our project, FN is more detrimental
   FP_cost_ratio <- FP / (FP + FN)
   FN_cost_ratio <- FN / (FP + FN)
   
@@ -82,63 +99,175 @@ plot_results <- function(y_data, oosy, nprev, model, rmse, title){
     theme(legend.position = "bottom")
   
   return(plot)
+  
+  # Plot AUC
+  roc_obj <- plot(roc(actual, predicted), 
+                  print.auc = TRUE, 
+                  col = "blue", # Optional: change the curve color
+                  main = "ROC Curve with AUC") # Optional: add a title
+  
+  # Add a diagonal reference line for a random classifier (AUC = 0.5)
+  abline(a = 0, b = 1, col = "gray", lty = 2) 
 }
 
-###################################
-### Set training and test split ###
-###################################
+########################
+### Data Preparation ###
+########################
 
-set.seed(99)
-
-# Convert "date" column into date type (previously character)
-data$date <- as.Date(data$date)
-
-# Split coins into individual datasets (for simplicity)
-for (i in unique(data$token_name)){
-  data_i <- data %>% filter(token_name == i) %>% arrange(date)
-  var_name <- paste0("data_", i)
-  assign(var_name, data_i)
+train_test_split <-function(data, train_start, train_end, test_start, test_end){
+  
+  # convert to character to date objects
+  train_start <- as.Date(train_start)
+  train_end <- as.Date(train_end)
+  test_start <- as.Date(test_start)
+  test_end <- as.Date(test_end)
+  
+  # split into train and test datasets
+  train_data <- data %>% filter(date >= train_start & date <= train_end)
+  test_data <- data %>% filter(date >= test_start & date <= test_end)
+  
+  # Print split information
+  cat("Training data:", nrow(train_data), "observations (", 
+      min(train_data$date), "to", max(train_data$date), ")\n")
+  cat("Test data:", nrow(test_data), "observations (", 
+      min(test_data$date), "to", max(test_data$date), ")\n")
+  
+  return(list(train = train_data, test = test_data))
 }
 
-# remove overlap OHLC price columns, remove NA rows
-data_DAI <- data_DAI %>% 
-  select(-DAI_open, -DAI_high, -DAI_low, -DAI_close) %>% 
-  na.omit()
-data_PAX <- data_PAX %>% 
-  select(-PAX_open, -PAX_high, -PAX_low, -PAX_close) %>% 
-  na.omit()
-data_USDC <- data_USDC %>% 
-  select(-USDC_open, -USDC_high, -USDC_low, -USDC_close) %>% 
-  na.omit()
-data_USDT <- data_USDT %>% 
-  select(-USDT_open, -USDT_high, -USDT_low, -USDT_close) %>%
-  na.omit()
-data_UST <- data_UST %>% 
-  select(-UST_open, -UST_high, -UST_low, -UST_close) %>%
-  na.omit()
-data_WLUNA <- data_WLUNA %>% 
-  select(-WLUNA_open, -WLUNA_high, -WLUNA_low, -WLUNA_close) %>%
-  na.omit()
+prep_features <- function(data, target_col, remove_col){
+  
+  # creates a vector of column names
+  # should all be numeric features except those excluded
+  feature_cols <- names(data)[!names(data) %in% remove_col]
+  
+  cleaned_data <- data %>% 
+    filter(!is.na(!!sym(target_col))) %>%  # remove only rows where the target variable is NA
+    drop_na(all_of(feature_cols))          # remove NA in features 
+  
+  # split into feature matrix and target variable vector
+  X <- cleaned_data %>% select(all_of(feature_cols))
+  y <- cleaned_data %>% pull(!!sym(target_col)) %>% as.factor()
+  
+  # Print class distribution
+  cat("\nClass distribution for", target_col, ":\n")
+  print(table(y))
+  cat("Proportion of depegs:", 
+      round(sum(y == 1) / length(y) * 100, 2), "%\n")
+  
+  return(list(X = X, y = y, dates = cleaned_data$date,
+              feature_names = feature_cols))
+}
 
-# Numerical dataset FOR MODELS, and remove NA obs
-data_DAI_num <- data_DAI %>% select(where(is.numeric))
-data_PAX_num <- data_PAX %>% select(where(is.numeric))
-data_USDC_num <- data_USDC %>% select(where(is.numeric))
-data_USDT_num <- data_USDT %>% select(where(is.numeric))
-data_UST_num <- data_UST %>% select(where(is.numeric))
-data_WLUNA_num <- data_WLUNA %>% select(where(is.numeric))
+# columns to remove
+remove_col = c("date", "open", "high", "low", "close", 
+               "ThreshD", "ThreshU", "value_classification",
+               "depeg_1d", "depeg_3d", "depeg_5d", "depeg_7d")
 
-# check number of observations, 70/30 train-test split
-n = nrow(data_DAI_num)
-nprev <- floor(0.3*n)
+horizons <- c("depeg_1d", "depeg_3d", "depeg_5d", "depeg_7d")
 
-oos_DAI <- data_DAI %>% tail(nprev)
-oos_PAX <- data_PAX %>% tail(nprev)
-oos_USDC <- data_USDC %>% tail(nprev)
-oos_USDT <- data_USDT %>% tail(nprev)
-oos_UST <- data_UST %>% tail(nprev)
-oos_WLUNA <- data_WLUNA %>% tail(nprev)
+coin_dfw1 <- list(DAI = data_DAI, PAX = data_PAX, USDC = data_USDC,
+                  USDT = data_USDT, UST = data_UST)
 
+coin_dfw2 <- list(DAI = data_DAI, PAX = data_PAX, USDC = data_USDC,
+                  USDT = data_USDT)
+
+##############################################
+### Window 1: Train 2020 - 2021, Test 2022 ###
+##############################################
+
+w1 <- function(){
+  dfw1 <- list()
+  
+  for(coin in names(coin_dfw1)) {
+    cat(paste(rep("=", 10), collapse = ""), "\n")
+    cat("Processing:", coin, "\n")
+    cat(paste(rep("=", 10), collapse = ""), "\n")
+    
+    # split each coin into train/test
+    dataset <- coin_dfw1[[coin]]
+    split <- train_test_split(dataset, 
+                              train_start = "2020-11-25", 
+                              train_end = "2021-12-31", 
+                              test_start = "2022-01-01", 
+                              test_end = "2022-05-08")
+    
+    # create a mini list for each horizon (for each coin)
+    temp <- list()
+    
+    for(h in horizons) {
+      train_prep <- prep_features(split$train, h, remove_col)
+      test_prep <- prep_features(split$test, h, remove_col)
+      
+      # Store results
+      temp[[h]] <- list(
+        train = list(
+          X = train_prep$X,
+          y = train_prep$y,
+          dates = train_prep$dates,
+          features = train_prep$feature_names),
+        test = list(
+          X = test_prep$X,
+          y = test_prep$y,
+          dates = test_prep$dates,
+          features = train_prep$feature_names))
+    }
+    
+    dfw1[[coin]] <- temp
+  }
+  return(dfw1)
+}
+
+dfw1 <- w1()
+
+
+###################################################
+### Window 2: Train 2019 - 2023, Test 2024-2025 ###
+###################################################
+
+w2 <- function(){
+  dfw2 <- list()
+  
+  for(coin in names(coin_dfw2)) {
+    cat(paste(rep("=", 10), collapse = ""), "\n")
+    cat("Processing:", coin, "\n")
+    cat(paste(rep("=", 10), collapse = ""), "\n")
+    
+    # split each coin into train/test
+    dataset <- coin_dfw2[[coin]]
+    split <- train_test_split(dataset, 
+                              train_start = "2019-12-21", # NA depeg values before
+                              train_end = "2023-12-31", 
+                              test_start = "2024-01-01", 
+                              test_end = "2025-12-24") # NA depeg values after
+    
+    # create a mini list for each horizon (for each coin)
+    temp <- list()
+    
+    for(h in horizons) {
+      train_prep <- prep_features(split$train, h, remove_col)
+      test_prep <- prep_features(split$test, h, remove_col)
+      
+      # Store results
+      temp[[h]] <- list(
+        train = list(
+          X = train_prep$X,
+          y = train_prep$y,
+          dates = train_prep$dates,
+          features = train_prep$feature_names),
+        test = list(
+          X = test_prep$X,
+          y = test_prep$y,
+          dates = test_prep$dates,
+          features = train_prep$feature_names))
+    }
+    
+    dfw2[[coin]] <- temp
+  }
+  return(dfw2)
+}
+
+dfw2 <- w2()
 
 #####################
 ### Random Forest ###
