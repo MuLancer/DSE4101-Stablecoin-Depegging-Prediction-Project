@@ -160,46 +160,8 @@ runpcr_all <- function(dfw, coin_list, horizons) {
 }
 
 
-
-pcr.rolling.window <- function(Y, nprev, indice, lag = 1, max_comp = 10, cv_folds = 5) {
-  
-  save.pred <- matrix(NA, nprev, 1)
-  save.ncomp <- matrix(NA, nprev, 1)
-  save.cv_errors <- list()
-  save.explained_var <- list()
-  save.loadings <- list()
-  
-  for (i in nprev:1) {
-    Y.window <- Y[(1 + nprev - i):(nrow(Y) - i), , drop = FALSE]
-    pcr_model <- runpcr(Y.window, indice, lag, max_comp, cv_folds)
-    
-    save.pred[(1 + nprev - i), ] <- pcr_model$pred
-    save.ncomp[(1 + nprev - i), ] <- pcr_model$ncomp
-    save.cv_errors[[i]] <- pcr_model$cv_errors
-    save.explained_var[[i]] <- pcr_model$explained_variance
-    save.loadings[[i]] <- pcr_model$pca_loadings
-    
-    cat("iteration", (1 + nprev - i), "\n")
-  }
-  
-  # Calculate errors
-  real <- Y[, indice]
-  oos_real <- tail(real, nprev)
-  
-  rmse <- sqrt(mean((oos_real - save.pred)^2, na.rm = TRUE))
-  mae <- mean(abs(oos_real - save.pred), na.rm = TRUE)
-  errors <- c("rmse" = rmse, "mae" = mae)
-  
-  return(list("pred" = save.pred,
-              "ncomp" = save.ncomp, 
-              "cv_errors" = save.cv_errors,
-              "explained_var" = save.explained_var,
-              "pca_loadings" = save.loadings,
-              "errors" = errors))
-}
-
-
-show_pcr_comps <- function(pcr_result, top_n = 10) {
+# top_n refers to the no. of variables in each component 
+show_pcr_comps <- function(pcr_result, top_n) {
   # Get PCA loadings
   pca_loadings <- pcr_result$pca_loadings
   
@@ -250,4 +212,42 @@ plot_cv_curve <- function(cv_errors, title = "PCR Cross-Validation Error") {
 }
 
 
+
+
+pcr.rolling.window <- function(Y, nprev, indice, lag = 1, max_comp = 10, cv_folds = 5) {
+  
+  save.pred <- matrix(NA, nprev, 1)
+  save.ncomp <- matrix(NA, nprev, 1)
+  save.cv_errors <- list()
+  save.explained_var <- list()
+  save.loadings <- list()
+  
+  for (i in nprev:1) {
+    Y.window <- Y[(1 + nprev - i):(nrow(Y) - i), , drop = FALSE]
+    pcr_model <- runpcr(Y.window, indice, lag, max_comp, cv_folds)
+    
+    save.pred[(1 + nprev - i), ] <- pcr_model$pred
+    save.ncomp[(1 + nprev - i), ] <- pcr_model$ncomp
+    save.cv_errors[[i]] <- pcr_model$cv_errors
+    save.explained_var[[i]] <- pcr_model$explained_variance
+    save.loadings[[i]] <- pcr_model$pca_loadings
+    
+    cat("iteration", (1 + nprev - i), "\n")
+  }
+  
+  # Calculate errors
+  real <- Y[, indice]
+  oos_real <- tail(real, nprev)
+  
+  rmse <- sqrt(mean((oos_real - save.pred)^2, na.rm = TRUE))
+  mae <- mean(abs(oos_real - save.pred), na.rm = TRUE)
+  errors <- c("rmse" = rmse, "mae" = mae)
+  
+  return(list("pred" = save.pred,
+              "ncomp" = save.ncomp, 
+              "cv_errors" = save.cv_errors,
+              "explained_var" = save.explained_var,
+              "pca_loadings" = save.loadings,
+              "errors" = errors))
+}
 
