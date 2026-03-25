@@ -41,6 +41,37 @@ runrf <- function(train_data, test_data, title){
 }
 
 
+run_rf_all <- function(dfw, coin_list, horizons) {
+  all_results <- list()
+  
+  for(coin in names(coin_list)) {
+    cat("RUNNING RANDOM FOREST FOR:", coin)
+    coin_results <- list()
+    
+    for(h in horizons) {
+      cat("\n---", h, "---\n")
+      train_data <- dfw[[coin]][[h]]$train
+      test_data <- dfw[[coin]][[h]]$test
+      
+      cat("Training class distribution:")
+      print(table(train_data$y))
+      cat("\nTest class distribution:")
+      print(table(test_data$y))
+      
+      title <- paste(coin, ":", h)
+      rf_results <- runrf(train_data = train_data,
+                          test_data = test_data,
+                          title = title)
+      
+      coin_results[[h]] <- rf_results
+    }
+    
+    all_results[[coin]] <- coin_results
+  }
+  
+  return(all_results)
+}
+
 
 
 

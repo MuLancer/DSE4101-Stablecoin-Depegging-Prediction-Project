@@ -1,32 +1,19 @@
 
-# indice: predict the i column of Y
-
-rungb <- function(Y, indice, lag) {
+rungb <- function(train_data, test_data, title) {
   
-  Y2 <- as.matrix(Y)
-  n  <- nrow(Y2)
+  X_train <- train_data$X
+  y_train <- train_data$y
   
-  # y_{t+lag}
-  y_all <- Y2[(1 + lag):n, indice]
+  X_test <- test_data$X
+  y_test <- test_data$y
   
-  # X_t (info available at time t)
-  X_all <- Y2[1:(n - lag), , drop = FALSE]
-  
-  # remove the target column from predictors
-  X_all <- X_all[, -indice, drop = FALSE]
-  
-  # train on all but last, predict last
-  X_train <- X_all[-nrow(X_all), , drop = FALSE]
-  y_train <- y_all[-length(y_all)]
-  X.out   <- X_all[nrow(X_all), , drop = FALSE]
-  
-  # Convert to matrix format for xgboost
-  dtrain <- xgb.DMatrix(data = as.matrix(X_train), label = y_train)
-  dtest <- xgb.DMatrix(data = matrix(X.out, nrow = 1))
+  dtrain <- xgb.DMatrix(data = as.matrix(X_train), label = as.numeric(as.character(y_train)))
+  dtest <- xgb.DMatrix(data = as.matrix(X_test))
   
   # Fixed parameters
   gb_params <- list(
-    objective = "reg:squarederror",
+    objective = "binary:logistic",
+    eval_metric = "logloss",
     eta = 0.1,             # no change, tried lower learning rate (0.01-0.05), but 0.1 still better
     max_depth = 6,         # no change, 6 splits to balance complexity 
     subsample = 0.8,       # no change, using 80% randomly selected obs for training
@@ -41,11 +28,62 @@ rungb <- function(Y, indice, lag) {
     verbose = 0
   )
   
-  # Generate prediction
-  pred <- predict(gb_model, dtest)
+  # Prediction probabilities for class 1 (depeg)
+  pred_prob <- predict(gb_model, dtest)
   
-  return(list("model" = gb_model, "pred" = pred))
+  pred_class <- ifelse(pred_prob >= 0.5, "1", "0")
+  pred_class <- factor(pred_class, levels = levels(y_test))
+  
+  # confusion matrix
+  cm <- table(Predicted = pred_class, Actual = y_test)
+  accuracy <- sum(diag(cm)) / sum(cm)
+  
+  cat("\n", title, "\n")
+  cat("Accuracy:", round(accuracy, 4), "\n")
+  print(cm)
+  
+  importance_matrix <- xgb.importance(model = gb_model)
+  
+  return(list(model = gb_model, 
+              pred_prob = pred_prob,
+              pred_class = pred_class,
+              importance = importance_matrix,
+              confusion_matrix = cm))
 }
+
+
+run_gb_all <- function(dfw, coin_list, horizons) {
+  all_results <- list()
+  
+  for(coin in names(coin_list)) {
+    cat("RUNNING GRADIENT BOOSTING FOR:", coin)
+    
+    coin_results <- list()
+    
+    for(h in horizons) {
+      cat("\n---", h, "---\n")
+      train_data <- dfw[[coin]][[h]]$train
+      test_data <- dfw[[coin]][[h]]$test
+      
+      cat("Training class distribution:")
+      print(table(train_data$y))
+      cat("\nTest class distribution:")
+      print(table(test_data$y))
+      
+      title <- paste(coin, ":", h)
+      gb_results <- rungb(train_data = train_data,
+                          test_data = test_data,
+                          title = title)
+      
+      coin_results[[h]] <- gb_results
+    }
+    
+    all_results[[coin]] <- coin_results
+  }
+  
+  return(all_results)
+}
+
 
 
 gb.rolling.window <- function(Y, nprev, indice = 1, lag = 1) {
