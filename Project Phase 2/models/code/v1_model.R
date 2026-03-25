@@ -111,6 +111,7 @@ data_UST <- read.csv("../../data/UST/UST_onchain_features.csv") %>%
          depeg_7d = ifelse(PL_7 <= ThreshD | PH_7 >= ThreshU, 1, 0)) %>%
   select(-PL_3, -PH_3,-PL_5, -PH_5,-PL_7, -PH_7)
 
+
 ################################
 ### Depeg Prediction Metrics ###
 ################################
@@ -390,15 +391,15 @@ w1 <- function(){
     dataset <- coin_dfw1[[coin]]
     split <- train_test_split(dataset, 
                               train_start = "2020-11-25", 
-                              train_end = "2021-05-01",  #2021-12-31
-                              test_start = "2021-05-02", #2022-01-01
+                              train_end = "2021-12-31",
+                              test_start = "2022-01-01", 
                               test_end = "2022-05-08")
     
     # create a mini list for each horizon (for each coin)
     temp <- list()
     
     for(h in horizons) {
-      train_prep <- prep_features(split$train, h, remove_col, smote = FALSE)
+      train_prep <- prep_features(split$train, h, remove_col, smote = TRUE)
       test_prep <- prep_features(split$test, h, remove_col, smote = FALSE)
       
       # Store results
@@ -438,15 +439,15 @@ w2 <- function(){
     dataset <- coin_dfw2[[coin]]
     split <- train_test_split(dataset, 
                               train_start = "2019-11-22",
-                              train_end = "2022-12-31", #2023-12-31
-                              test_start = "2023-01-01", #2024-01-01
+                              train_end = "2023-12-31",
+                              test_start = "2024-01-01",
                               test_end = "2025-12-31")
     
     # create a mini list for each horizon (for each coin)
     temp <- list()
     
     for(h in horizons) {
-      train_prep <- prep_features(split$train, h, remove_col, smote = FALSE)
+      train_prep <- prep_features(split$train, h, remove_col, smote = TRUE)
       test_prep <- prep_features(split$test, h, remove_col, smote = FALSE)
       
       # Store results
