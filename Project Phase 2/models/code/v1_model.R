@@ -761,44 +761,69 @@ gbw2 = rungb_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
 ######################################
 ### Principal Component Regression ###
 ######################################
-#source("func-pcr.R") # uncomment for old splitting logic
-source("func-pcr_edited.R") 
-#source("func-pcr_fixed.R") # uses pls::pcr, no CV (due to Invalid ncomp error)
+source("func-pcr.R") 
 
-pcr_DAI = pcr.rolling.window(data_DAI_num,nprev,6,1)
-pcr_PAX = pcr.rolling.window(data_PAX_num,nprev,6,1)
-pcr_USDC = pcr.rolling.window(data_USDC_num,nprev,6,1)
-pcr_USDT = pcr.rolling.window(data_USDT_num,nprev,6,1)
-pcr_UST = pcr.rolling.window(data_UST_num,nprev,6,1)
+# Note warnings: "glm.fit: fitted probabilities numerically 0 or 1 occurred"
+# occurs when some PCs predict the class exactly (overfit)
+# happens due to small sample size and class imbalance (depeg rare)
 
-# PCR RMSE's
-pcr_rmse_DAI=pcr_DAI$errors[1]
-pcr_rmse_PAX=pcr_PAX$errors[1]
-pcr_rmse_USDC=pcr_USDC$errors[1]
-pcr_rmse_USDT=pcr_USDT$errors[1]
-pcr_rmse_UST=pcr_UST$errors[1]
+## WINDOW 1 ====================================================================
+# run PCR on all coins for all horizons
+pcrw1 = runpcr_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
 
-# Directional Predictability
-#pcr_depeg_DAI <- depeg_metrics(oos_DAI[[5]], pcr_DAI$pred, threshold)
+# --------------------------------- DAI ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
 
-# Plot OOS results
-plot_pcr_DAI <- plot_results(data_DAI, oos_DAI[[8]], nprev, pcr_DAI, pcr_rmse_DAI, 
-                             "PCR (DAI Close)")
-plot_pcr_PAX <- plot_results(data_PAX, oos_PAX[[8]], nprev, pcr_PAX, pcr_rmse_PAX, 
-                             "PCR (PAX Close)")
-plot_pcr_USDC <- plot_results(data_USDC, oos_USDC[[8]], nprev, pcr_USDC, pcr_rmse_USDC, 
-                              "PCR (USDC Close)")
-plot_pcr_USDT <- plot_results(data_USDT, oos_USDT[[8]], nprev, pcr_USDT, pcr_rmse_USDT, 
-                              "PCR (USDT Close)")
-plot_pcr_UST <- plot_results(data_UST, oos_UST[[8]], nprev, pcr_UST, pcr_rmse_UST, 
-                             "PCR (UST Close)")
+# --------------------------------- PAX ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- USDC ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- USDT ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- UST ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# ==============================================================================
+
+
+## WINDOW 2 ====================================================================
+# run PCR on all coins for all horizons
+pcrw2 = runpcr_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
+
+# --------------------------------- DAI ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- PAX ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- USDC ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- USDT ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# ==============================================================================
+
 
 # plot_pcr_list <- list(plot_pcr_DAI, plot_pcr_PAX, plot_pcr_USDC, plot_pcr_USDT, plot_pcr_UST)
 # pcr_grid <- grid.arrange(grobs = plot_pcr_list, nrow = 2, ncol = 3)
 # ggsave("../../plots/PCR_model_OOS.png", pcr_grid, width = 12, height = 8)
 
+
 # ++++++++++++++++++++++++++++++++++++++++++++
-#         OLD PC CODE: DO NOT RUN
+#        OLD PCR CODE: DO NOT RUN
 # ++++++++++++++++++++++++++++++++++++++++++++
 
 # Some additional functions: show PCR components, plot CV error curve
@@ -831,3 +856,62 @@ summary(pcr_result_UST$model)
 print(paste("No. of components for UST:", pcr_result_UST$ncomp))
 show_pcr_comps(pcr_result_UST, top_n = 5)
 plot_cv_curve(pcr_result_UST$cv_errors, title = "UST: PCR Cross-Validation Error")
+
+# ++++++++++++++++++++++++++++++++++++++++++++
+#              END OF OLD CODE 
+# ++++++++++++++++++++++++++++++++++++++++++++
+
+
+#############################
+### Partial Least Squares ###
+#############################
+source("func-pls.R") 
+
+## WINDOW 1 ====================================================================
+# run PLS on all coins for all horizons
+plsw1 = runpls_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
+
+# --------------------------------- DAI ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- PAX ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- USDC ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- USDT ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- UST ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# ==============================================================================
+
+
+## WINDOW 2 ====================================================================
+# run PLS on all coins for all horizons
+plsw2 = runpls_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
+
+# --------------------------------- DAI ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- PAX ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- USDC ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- USDT ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# ==============================================================================

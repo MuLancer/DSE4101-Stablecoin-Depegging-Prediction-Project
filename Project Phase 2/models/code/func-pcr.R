@@ -1,46 +1,39 @@
 
-runpcr <- function(Y, indice, lag, max_comp = 10, cv_folds = 5) {
+runpcr <- function(train_data, test_data, title, max_comp = 10, cv_folds = 5) {
   
-  Y2 <- as.matrix(Y)
-  n <- nrow(Y2)
+  X_train <- train_data$X
+  y_train <- train_data$y
   
-  # --- Updated time series splitting logic ---
-  # y_{t+lag}
-  y_all <- Y2[(1 + lag):n, indice]
+  X_test <- test_data$X
+  y_test <- test_data$y
   
-  # X_t (info available at time t)
-  X_all <- Y2[1:(n - lag), , drop = FALSE]
+  # need to convert y to numeric for regression (0/1)
+  y_train_n <- as.numeric(as.character(y_train))
+  y_test_n <- as.numeric(as.character(y_test))
   
-  # remove the target column from predictors
-  X_all <- X_all[, -indice, drop = FALSE]
+  # need to scale and center for PCR
+  X_train_scaled <- scale(X_train)
+  train_center <- attr(X_train_scaled, "scaled:center")
+  train_scale  <- attr(X_train_scaled, "scaled:scale")
+  X_test_scaled <- scale(X_test, center = train_center, scale  = train_scale)
   
-  # train on all but last, predict last (for expanding window)
-  X_train <- X_all[-nrow(X_all), , drop = FALSE]
-  y_train <- y_all[-length(y_all)]
-  X.out   <- X_all[nrow(X_all), , drop = FALSE]
-  # --------------------------------------------
-  
-  # Center data (so PCA works)
-  X_centered <- scale(X_train, center = TRUE, scale = FALSE)
-  y_centered <- y_train - mean(y_train)
-  
-  # run PCA
-  pca <- prcomp(X_centered, center = FALSE, scale. = FALSE)
+  # no need to center and scale again
+  pca <- prcomp(X_train_scaled, center = FALSE, scale. = FALSE)
   
   # CV to choose optimal number of components
-  n_obs <- nrow(X_centered)
+  n_obs <- nrow(X_train_scaled)
   fold_size <- floor(n_obs / cv_folds)
-  cv_errors <- matrix(NA, nrow = cv_folds, ncol = min(max_comp, ncol(X_centered), n_obs-1))
+  cv_errors <- matrix(NA, nrow = cv_folds, ncol = min(max_comp, ncol(X_train_scaled), n_obs-1))
   
   for (fold in 1:cv_folds) {
     
     test_indices <- ((fold - 1) * fold_size + 1):min(fold * fold_size, n_obs)
     train_indices <- setdiff(1:n_obs, test_indices)
     
-    X_train_fold <- X_centered[train_indices, , drop = FALSE]
-    y_train_fold <- y_centered[train_indices]
-    X_test_fold <- X_centered[test_indices, , drop = FALSE]
-    y_test_fold <- y_centered[test_indices]
+    X_train_fold <- X_train_scaled[train_indices, , drop = FALSE]
+    y_train_fold <- y_train_n[train_indices]
+    X_test_fold <- X_train_scaled[test_indices, , drop = FALSE]
+    y_test_fold <- y_train_n[test_indices]
     
     # run PCA on training data
     pca_train <- prcomp(X_train_fold, center = FALSE, scale. = FALSE)
@@ -50,14 +43,19 @@ runpcr <- function(Y, indice, lag, max_comp = 10, cv_folds = 5) {
       scores_train <- pca_train$x[, 1:ncomp, drop = FALSE]
       scores_test <- X_test_fold %*% pca_train$rotation[, 1:ncomp, drop = FALSE]
       
+      scores_train_df <- as.data.frame(scores_train)
+      scores_test_df  <- as.data.frame(scores_test)
+      
       # Fit PCR model
-      pcr_model <- lm(y_train_fold ~ scores_train - 1)
+      pcr_model <- glm(y_train_fold ~ ., data = scores_train_df, family = binomial)
       
       # Predict on test set
-      y_pred <- scores_test %*% coef(pcr_model)
+      y_pred_prob <- predict(pcr_model, newdata = scores_test_df, type = "response")
       
-      # Calculate MSE for this fold
-      cv_errors[fold, ncomp] <- mean((y_test_fold - y_pred)^2)
+      # Calculate logloss for CV, use small error to avoid log(0)
+      eps <- 1e-16
+      y_pp <- pmax(pmin(y_pred_prob, 1 - eps), eps)
+      cv_errors[fold, ncomp] <- -mean(y_test_fold * log(y_pp) + (1 - y_test_fold) * log(1 - y_pp))
     }
   }
   
@@ -67,19 +65,39 @@ runpcr <- function(Y, indice, lag, max_comp = 10, cv_folds = 5) {
   # Choose optimal number of components (minimum CV error)
   optimal_ncomp <- which.min(mean_cv_errors)
   
+  cat("Optimal number of components:", optimal_ncomp, "\n")
+  cat("CV log loss:", round(mean_cv_errors[optimal_ncomp], 4), "\n")
+  
   # Train final model with optimal ncomp on all data
   scores_all <- pca$x[, 1:optimal_ncomp, drop = FALSE]
-  pcr_model_final <- lm(y_centered ~ scores_all - 1) # consider changing to PCR
+  scores_test <- X_test_scaled %*% pca$rotation[, 1:optimal_ncomp, drop = FALSE]
+  
+  scores_all_df <- as.data.frame(scores_all)
+  scores_test_df <- as.data.frame(scores_test)
+  
+  pcr_model_final <- glm(y_train_n ~ ., data = scores_all_df, family = binomial)
+  pred_prob <- predict(pcr_model_final, newdata = scores_test_df, type = "response")
+  
+  pred_class <- ifelse(pred_prob >= 0.5, "1", "0")
+  pred_class <- factor(pred_class, levels = levels(y_test))
   
   #pcr_model <- pcr(y ~ X, data = train_data, ncomp = ncomp, validation = "none")
   #pred <- predict(pcr_model, newdata = new_data, ncomp = ncomp)
   
-  # Extract coefficients
-  coeff_pcr <- pca$rotation[, 1:optimal_ncomp, drop = FALSE] %*% coef(pcr_model_final)
+  # confusion matrix
+  cm <- table(Predicted = pred_class, Actual = y_test)
+  accuracy <- sum(diag(cm))/sum(cm)
   
-  # Prediction for new data
-  X.out_centered <- matrix(X.out - colMeans(X_train), nrow = 1)
-  pred <- mean(y_train) + as.numeric(X.out_centered %*% coeff_pcr)
+  # calculate log loss on test set
+  eps <- 1e-16
+  pp <- pmax(pmin(pred_prob, 1 - eps), eps)
+  logloss <- -mean(y_test_n * log(pp) + (1 - y_test_n) * log(1 - pp))
+  
+  # calculate coeff for original features
+  # need to remove intercept [-1] to avoid error "non-conformable arguments"
+  # note "rotation" are the PCA loadings 
+  coeff_pcr <- pca$rotation[, 1:optimal_ncomp, drop = FALSE] %*% coef(pcr_model_final)[-1]
+  coeff_org <- coeff_pcr / train_scale # convert back to original scale
   
   # Explained variance by each PC
   explained_variance <- pca$sdev^2 / sum(pca$sdev^2)
@@ -89,16 +107,58 @@ runpcr <- function(Y, indice, lag, max_comp = 10, cv_folds = 5) {
   pca_loadings <- pca$rotation[, 1:optimal_ncomp, drop = FALSE]
   rownames(pca_loadings) <- colnames(X_train)
   
-  return(list("model" = pcr_model_final,
-              "coefficients" = coeff_pcr,
-              "ncomp" = optimal_ncomp,
-              "pca" = pca,
-              "cv_errors" = mean_cv_errors,
-              "explained_variance" = explained_variance,
-              "cumulative_variance" = cumulative_variance,
-              "pca_loadings" = pca_loadings,
-              "pred" = pred))
+  cat("\n", title, "\n")
+  cat("Accuracy:", round(accuracy, 4), "\n")
+  cat("Log Loss:", round(logloss, 4), "\n")
+  print(cm)
+  
+  return(list(model = pcr_model_final,
+              pred_prob = pred_prob,
+              pred_class = pred_class,
+              ncomp = optimal_ncomp,
+              pca = pca,
+              cv_errors = mean_cv_errors,
+              explained_variance = explained_variance,
+              cumulative_variance = cumulative_variance,
+              pca_loadings = pca_loadings,
+              coefficients = coeff_org,
+              confusion_matrix = cm,
+              logloss = logloss))
 }
+
+
+runpcr_all <- function(dfw, coin_list, horizons) {
+  all_results <- list()
+  
+  for(coin in names(coin_list)) {
+    cat("RUNNING PCR FOR:", coin)
+    
+    coin_results <- list()
+    
+    for(h in horizons) {
+      cat("\n---", h, "---\n")
+      train_data <- dfw[[coin]][[h]]$train
+      test_data <- dfw[[coin]][[h]]$test
+      
+      cat("Training class distribution:")
+      print(table(train_data$y))
+      cat("\nTest class distribution:")
+      print(table(test_data$y))
+      
+      title <- paste(coin, ":", h)
+      pcr_results <- runpcr(train_data = train_data,
+                          test_data = test_data,
+                          title = title)
+      
+      coin_results[[h]] <- pcr_results
+    }
+    
+    all_results[[coin]] <- coin_results
+  }
+  
+  return(all_results)
+}
+
 
 
 pcr.rolling.window <- function(Y, nprev, indice, lag = 1, max_comp = 10, cv_folds = 5) {
@@ -188,8 +248,6 @@ plot_cv_curve <- function(cv_errors, title = "PCR Cross-Validation Error") {
          y = "Cross-Validation MSE") +
     theme_minimal()
 }
-
-
 
 
 
