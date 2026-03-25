@@ -156,61 +156,72 @@ depeg_metrics <- function(actual, predicted) {
 ### Plot OOS Results ###
 ########################
 
-# actual_y = data$test$y or data$train$y
-# need to include original stablecoin data which includes all variables (including OHLC, thresholds)
-plot_results <- function(data, actual_y, pred_y, title, f1,
-                         org_data = NULL, show_thresh = TRUE, test = TRUE) {
-  if(test){
-    dates <- data$test$dates
-  } else {
-    dates <- data$train$dates
-  }
+
+# might need to jitter points
+plot_results <- function(coin_data, org_data, title) {
   
-  # create base plot data with actual and predicted
-  plot_data <- data.frame(
-    date = dates, 
-    actual = as.vector(actual_y), 
-    predicted = as.vector(pred_y))
+  # coin_data should be a list containing results for each horizon
+  # E.g. list(
+  #   depeg_1d = list(test = list(dates = ..., y = ...), pred = ...),
+  #   depeg_3d = list(test = list(dates = ..., y = ...), pred = ...),
+  #   ...
+  # )
   
-  if(!is.null(org_data) && show_thresh) {
-    thresh_data <- org_data %>%
-      filter(date %in% dates) %>%
-      select(date, close, ThreshU, ThreshD)
+  combined <- data.frame()
+  
+  horizon_colours <- c("depeg_1d" = "blue",
+                       "depeg_3d" = "orange",
+                       "depeg_5d" = "forestgreen",
+                       "depeg_7d" = "red3")
+  shapes <- c("Actual" = 18, "Predicted" = 4)
+  
+  for(horizon in names(coin_data)){
+    horizon_data <- coin_data[[horizon]]
     
-    plot_data <- plot_data %>%
-      left_join(thresh_data, by = "date")
+    dates <- horizon_data$test$dates
+    actual_y <- as.vector(horizon_data$test$y)
+    pred_y <- as.vector(horizon_data$pred)
+    
+    temp <- data.frame(date = dates, actual = actual_y,
+                       pred = pred_y, horizon = horizon)
+    
+    combined <- rbind(combined, temp)
   }
   
-  plot <- ggplot(plot_data, aes(x = date)) +
-    # add threshold bands first (so they appear in background)
-    geom_ribbon(aes(ymin = ThreshD, ymax = ThreshU, fill = "Threshold Band"), 
-                alpha = 0.2) +
-    # add close price line
-    geom_line(aes(y = close, color = "Close Price"), linewidth = 0.8) +
-    # add actual depeg as points
-    geom_point(aes(y = actual_y * max(close, na.rm = TRUE) * 0.95, 
-                   color = "Actual Depeg"), 
-               size = 2, shape = 18, na.rm = TRUE) +
-    # add predicted depeg as points
-    geom_point(aes(y = pred_y * max(close, na.rm = TRUE) * 0.95, 
-                   color = "Predicted Depeg"), 
-               size = 1.5, shape = 4, na.rm = TRUE) +
-    # custom colors
-    scale_color_manual(name = "Series",
-                       values = c("Price" = "black", 
-                                  "Actual Depeg" = "red", 
-                                  "Predicted Depeg" = "blue")) +
-    scale_fill_manual(name = "",
+  all_dates <- unique(combined$date)
+  thresh_data <- org_data %>% 
+    filter(date %in% all_dates) %>%
+    select(date, close, ThreshU, ThreshD) %>%
+    arrange(date)
+  max_price <- max(thresh_data$close, na.rm = TRUE)
+  
+  plot <- ggplot() +
+    geom_ribbon(data = thresh_data,
+                aes(x = date, ymin = ThreshD, ymax = ThreshU, 
+                    fill = "Threshold Band"), alpha = 0.2) +
+    geom_line(data = thresh_data, 
+              aes(x = date, y = close, colour = "Close Price"),
+              linewidth = 0.8) +
+    geom_point(data = combined %>% filter(actual == 1),
+               aes(x = date, y = max_price * 0.999, 
+                   color = horizon,shape = "Actual"), 
+               size = 2, alpha = 0.3) +
+    geom_point(data = combined %>% filter(pred == 1),
+               aes(x = date, y = max_price * 0.998, 
+                   color = horizon,shape = "Predicted"), 
+               size = 2, alpha = 0.3) +
+    scale_color_manual(name = "Horizon",
+                       values = horizon_colours) +
+    scale_shape_manual(name = "Depeg Type", 
+                       values = shapes) +
+    scale_fill_manual(name = '',
                       values = c("Threshold Band" = "grey70")) +
     labs(title = title,
-         subtitle = paste("F1-Score:", round(f1, 4)),
-         x = "Date", 
-         y = "Price",
-         caption = "Note: Depeg indicators shown at 95% of max price for visibility") +
+         x = "Date",
+         y = "Close Price") +
     theme_minimal() +
     theme(legend.position = "bottom",
-          legend.box = "vertical",
-          plot.caption = element_text(size = 8, face = "italic"))
+          legend.box = "vertical")
   
   return(plot)
 }
@@ -223,6 +234,10 @@ plot_auc <- function(actual_y, pred_y, title,
   # convert actual to numeric if factor
   if(is.factor(actual_y)) {
     actual_y <- as.numeric(actual_y) - 1
+  }
+  
+  if(is.factor(pred_y)) {
+    pred_y <- as.numeric(pred_y) - 1
   }
   
   # calculate ROC
@@ -478,9 +493,8 @@ DAI_1 <- dfw1$DAI$depeg_1d
 #####################
 source("func-rf.R")
 
-
+# ===============================================================================
 ## Window 1: DAI
-# ===============
 rf_DAI_1 <- runrf(dfw1$DAI$depeg_1d$train, dfw1$DAI$depeg_1d$test, "DAI depeg_1d")
 rf_DAI_3 <- runrf(dfw1$DAI$depeg_3d$train, dfw1$DAI$depeg_3d$test, "DAI depeg_3d")
 rf_DAI_5 <- runrf(dfw1$DAI$depeg_5d$train, dfw1$DAI$depeg_5d$test, "DAI depeg_5d")
@@ -491,34 +505,296 @@ rf_DAI_3_metrics <- depeg_metrics(dfw1$DAI$depeg_3d$test$y, rf_DAI_3$pred_class)
 rf_DAI_5_metrics <- depeg_metrics(dfw1$DAI$depeg_5d$test$y, rf_DAI_5$pred_class)
 rf_DAI_7_metrics <- depeg_metrics(dfw1$DAI$depeg_7d$test$y, rf_DAI_7$pred_class)
 
-plot_rf_DAI_1 <- plot_results(dfw1$DAI$depeg_1d, dfw1$DAI$depeg_1d$test$y, rf_DAI_1$pred_class, 
-                              "Window 1: DAI depeg_1d", rf_DAI_1_metrics$f1,
-                              org_data = data_DAI, show_thresh = TRUE, test = TRUE)
-plot_rf_DAI_1
-
-plot_rf_DAI_3 <- plot_results(dfw1$DAI$depeg_3d, dfw1$DAI$depeg_3d$test$y, rf_DAI_3$pred_class, 
-                              "Window 1: DAI depeg_3d", rf_DAI_3_metrics$f1,
-                              org_data = data_DAI, show_thresh = TRUE, test = TRUE)
-plot_rf_DAI_3
-
-plot_rf_DAI_5 <- plot_results(dfw1$DAI$depeg_5d, dfw1$DAI$depeg_5d$test$y, rf_DAI_5$pred_class, 
-                              "Window 1: DAI depeg_5d", rf_DAI_5_metrics$f1,
-                              org_data = data_DAI, show_thresh = TRUE, test = TRUE)
-plot_rf_DAI_5
-
-plot_rf_DAI_7 <- plot_results(dfw1$DAI$depeg_7d, dfw1$DAI$depeg_7d$test$y, rf_DAI_7$pred_class, 
-                              "Window 1: DAI depeg_7d", rf_DAI_7_metrics$f1,
-                              org_data = data_DAI, show_thresh = TRUE, test = TRUE)
-plot_rf_DAI_7
+plot_rf_DAI_data <- list(depeg_1d = list(test = dfw1$DAI$depeg_1d$test,
+                                         pred = rf_DAI_1$pred_class),
+                         depeg_3d = list(test = dfw1$DAI$depeg_3d$test,
+                                         pred = rf_DAI_3$pred_class),
+                         depeg_5d = list(test = dfw1$DAI$depeg_5d$test,
+                                         pred = rf_DAI_5$pred_class),
+                         depeg_7d = list(test = dfw1$DAI$depeg_7d$test,
+                                         pred = rf_DAI_7$pred_class))
+plot_rf_DAI <- plot_results(coin_data = plot_rf_DAI_data,org_data = data_DAI,
+                            title = "Window 1: DAI Depeg Predictions")
+plot_rf_DAI
+                         
 
 # AUC has error here since all of it is just class 0
-# auc_rf_DAI_1 <- plot_auc(dfw1$DAI$depeg_1d$test$y, rf_DAI_1$pred_class, 
+#auc_rf_DAI_1 <- plot_auc(dfw1$DAI$depeg_1d$test$y, rf_DAI_1$pred_class, 
+#                         title = "ROC: DAI depeg_1d",
 #                         add_ci = TRUE, add_optimal = TRUE)
-#auc_rf_DAI_1
+# auc_rf_DAI_1
 
-# =======================
-#  OLD CODE: DO NOT RUN 
-# =======================
+auc_rf_DAI_3 <- plot_auc(dfw1$DAI$depeg_3d$test$y, rf_DAI_3$pred_class, 
+                         title = "ROC: DAI depeg_3d",
+                         add_ci = TRUE, add_optimal = TRUE)
+auc_rf_DAI_3
+
+auc_rf_DAI_5 <- plot_auc(dfw1$DAI$depeg_5d$test$y, rf_DAI_5$pred_class, 
+                         title = "ROC: DAI depeg_5d",
+                         add_ci = TRUE, add_optimal = TRUE)
+auc_rf_DAI_5
+
+auc_rf_DAI_7 <- plot_auc(dfw1$DAI$depeg_7d$test$y, rf_DAI_7$pred_class, 
+                         title = "ROC: DAI depeg_7d",
+                         add_ci = TRUE, add_optimal = TRUE)
+auc_rf_DAI_7
+# ===============================================================================
+
+# ===============================================================================
+## Window 1: PAX
+rf_PAX_1 <- runrf(dfw1$PAX$depeg_1d$train, dfw1$PAX$depeg_1d$test, "PAX depeg_1d")
+rf_PAX_3 <- runrf(dfw1$PAX$depeg_3d$train, dfw1$PAX$depeg_3d$test, "PAX depeg_3d")
+rf_PAX_5 <- runrf(dfw1$PAX$depeg_5d$train, dfw1$PAX$depeg_5d$test, "PAX depeg_5d")
+rf_PAX_7 <- runrf(dfw1$PAX$depeg_7d$train, dfw1$PAX$depeg_7d$test, "PAX depeg_7d")
+
+rf_PAX_1_metrics <- depeg_metrics(dfw1$PAX$depeg_1d$test$y, rf_PAX_1$pred_class)
+rf_PAX_3_metrics <- depeg_metrics(dfw1$PAX$depeg_3d$test$y, rf_PAX_3$pred_class)
+rf_PAX_5_metrics <- depeg_metrics(dfw1$PAX$depeg_5d$test$y, rf_PAX_5$pred_class)
+rf_PAX_7_metrics <- depeg_metrics(dfw1$PAX$depeg_7d$test$y, rf_PAX_7$pred_class)
+
+plot_rf_PAX_data <- list(depeg_1d = list(test = dfw1$PAX$depeg_1d$test,
+                                         pred = rf_PAX_1$pred_class),
+                         depeg_3d = list(test = dfw1$PAX$depeg_3d$test,
+                                         pred = rf_PAX_3$pred_class),
+                         depeg_5d = list(test = dfw1$PAX$depeg_5d$test,
+                                         pred = rf_PAX_5$pred_class),
+                         depeg_7d = list(test = dfw1$PAX$depeg_7d$test,
+                                         pred = rf_PAX_7$pred_class))
+plot_rf_PAX <- plot_results(coin_data = plot_rf_PAX_data,org_data = data_PAX,
+                            title = "Window 1: PAX Depeg Predictions")
+plot_rf_PAX
+
+# AUC has error here since all of it is just class 0
+# auc_rf_PAX_1 <- plot_auc(dfw1$PAX$depeg_1d$test$y, rf_PAX_1$pred_class, 
+#                          title = "ROC: PAX depeg_1d",
+#                          add_ci = TRUE, add_optimal = TRUE)
+# auc_rf_PAX_1
+# 
+# auc_rf_PAX_3 <- plot_auc(dfw1$PAX$depeg_3d$test$y, rf_PAX_3$pred_class, 
+#                          title = "ROC: PAX depeg_3d",
+#                          add_ci = TRUE, add_optimal = TRUE)
+# auc_rf_PAX_3
+# 
+# auc_rf_PAX_5 <- plot_auc(dfw1$PAX$depeg_5d$test$y, rf_PAX_5$pred_class, 
+#                          title = "ROC: PAX depeg_5d",
+#                          add_ci = TRUE, add_optimal = TRUE)
+# auc_rf_PAX_5
+# 
+# auc_rf_PAX_7 <- plot_auc(dfw1$PAX$depeg_7d$test$y, rf_PAX_7$pred_class, 
+#                          title = "ROC: PAX depeg_7d",
+#                          add_ci = TRUE, add_optimal = TRUE)
+# auc_rf_PAX_7
+# ===============================================================================
+
+# ===============================================================================
+## Window 1: USDC
+rf_USDC_1 <- runrf(dfw1$USDC$depeg_1d$train, dfw1$USDC$depeg_1d$test, "USDC depeg_1d")
+rf_USDC_3 <- runrf(dfw1$USDC$depeg_3d$train, dfw1$USDC$depeg_3d$test, "USDC depeg_3d")
+rf_USDC_5 <- runrf(dfw1$USDC$depeg_5d$train, dfw1$USDC$depeg_5d$test, "USDC depeg_5d")
+rf_USDC_7 <- runrf(dfw1$USDC$depeg_7d$train, dfw1$USDC$depeg_7d$test, "USDC depeg_7d")
+
+rf_USDC_1_metrics <- depeg_metrics(dfw1$USDC$depeg_1d$test$y, rf_USDC_1$pred_class)
+rf_USDC_3_metrics <- depeg_metrics(dfw1$USDC$depeg_3d$test$y, rf_USDC_3$pred_class)
+rf_USDC_5_metrics <- depeg_metrics(dfw1$USDC$depeg_5d$test$y, rf_USDC_5$pred_class)
+rf_USDC_7_metrics <- depeg_metrics(dfw1$USDC$depeg_7d$test$y, rf_USDC_7$pred_class)
+
+plot_rf_USDC_data <- list(depeg_1d = list(test = dfw1$USDC$depeg_1d$test,
+                                         pred = rf_USDC_1$pred_class),
+                         depeg_3d = list(test = dfw1$USDC$depeg_3d$test,
+                                         pred = rf_USDC_3$pred_class),
+                         depeg_5d = list(test = dfw1$USDC$depeg_5d$test,
+                                         pred = rf_USDC_5$pred_class),
+                         depeg_7d = list(test = dfw1$USDC$depeg_7d$test,
+                                         pred = rf_USDC_7$pred_class))
+plot_rf_USDC <- plot_results(coin_data = plot_rf_USDC_data,org_data = data_USDC,
+                            title = "Window 1: USDC Depeg Predictions")
+plot_rf_USDC
+
+# AUC has error here since all of it is just class 0
+auc_rf_USDC_1 <- plot_auc(dfw1$USDC$depeg_1d$test$y, rf_USDC_1$pred_class, 
+                         title = "ROC: USDC depeg_1d",
+                         add_ci = TRUE, add_optimal = TRUE)
+auc_rf_USDC_1
+
+auc_rf_USDC_3 <- plot_auc(dfw1$USDC$depeg_3d$test$y, rf_USDC_3$pred_class, 
+                         title = "ROC: USDC depeg_3d",
+                         add_ci = TRUE, add_optimal = TRUE)
+auc_rf_USDC_3
+
+auc_rf_USDC_5 <- plot_auc(dfw1$USDC$depeg_5d$test$y, rf_USDC_5$pred_class, 
+                         title = "ROC: USDC depeg_5d",
+                         add_ci = TRUE, add_optimal = TRUE)
+auc_rf_USDC_5
+
+auc_rf_USDC_7 <- plot_auc(dfw1$USDC$depeg_7d$test$y, rf_USDC_7$pred_class, 
+                         title = "ROC: USDC depeg_7d",
+                         add_ci = TRUE, add_optimal = TRUE)
+auc_rf_USDC_7
+# ===============================================================================
+
+# ===============================================================================
+## Window 1: USDT
+
+# ===============================================================================
+
+# ===============================================================================
+## Window 1: UST
+rf_UST_1 <- runrf(dfw1$UST$depeg_1d$train, dfw1$UST$depeg_1d$test, "UST depeg_1d")
+rf_UST_3 <- runrf(dfw1$UST$depeg_3d$train, dfw1$UST$depeg_3d$test, "UST depeg_3d")
+rf_UST_5 <- runrf(dfw1$UST$depeg_5d$train, dfw1$UST$depeg_5d$test, "UST depeg_5d")
+rf_UST_7 <- runrf(dfw1$UST$depeg_7d$train, dfw1$UST$depeg_7d$test, "UST depeg_7d")
+
+rf_UST_1_metrics <- depeg_metrics(dfw1$UST$depeg_1d$test$y, rf_UST_1$pred_class)
+rf_UST_3_metrics <- depeg_metrics(dfw1$UST$depeg_3d$test$y, rf_UST_3$pred_class)
+rf_UST_5_metrics <- depeg_metrics(dfw1$UST$depeg_5d$test$y, rf_UST_5$pred_class)
+rf_UST_7_metrics <- depeg_metrics(dfw1$UST$depeg_7d$test$y, rf_UST_7$pred_class)
+
+plot_rf_UST_data <- list(depeg_1d = list(test = dfw1$UST$depeg_1d$test,
+                                          pred = rf_UST_1$pred_class),
+                          depeg_3d = list(test = dfw1$UST$depeg_3d$test,
+                                          pred = rf_UST_3$pred_class),
+                          depeg_5d = list(test = dfw1$UST$depeg_5d$test,
+                                          pred = rf_UST_5$pred_class),
+                          depeg_7d = list(test = dfw1$UST$depeg_7d$test,
+                                          pred = rf_UST_7$pred_class))
+plot_rf_UST <- plot_results(coin_data = plot_rf_UST_data,org_data = data_UST,
+                             title = "Window 1: UST Depeg Predictions")
+plot_rf_UST
+
+# AUC has error here since all of it is just class 0
+auc_rf_UST_1 <- plot_auc(dfw1$UST$depeg_1d$test$y, rf_UST_1$pred_class, 
+                          title = "ROC: UST depeg_1d",
+                          add_ci = TRUE, add_optimal = TRUE)
+auc_rf_UST_1
+
+auc_rf_UST_3 <- plot_auc(dfw1$UST$depeg_3d$test$y, rf_UST_3$pred_class, 
+                          title = "ROC: UST depeg_3d",
+                          add_ci = TRUE, add_optimal = TRUE)
+auc_rf_UST_3
+
+auc_rf_UST_5 <- plot_auc(dfw1$UST$depeg_5d$test$y, rf_UST_5$pred_class, 
+                          title = "ROC: UST depeg_5d",
+                          add_ci = TRUE, add_optimal = TRUE)
+auc_rf_UST_5
+
+auc_rf_UST_7 <- plot_auc(dfw1$UST$depeg_7d$test$y, rf_UST_7$pred_class, 
+                          title = "ROC: UST depeg_7d",
+                          add_ci = TRUE, add_optimal = TRUE)
+auc_rf_UST_7
+# ===============================================================================
+
+# ------------------------------------------------------------------------------
+## Window 2: DAI
+
+rf_DAI_1l <- runrf(dfw2$DAI$depeg_1d$train, dfw2$DAI$depeg_1d$test, "DAI depeg_1d")
+rf_DAI_3l <- runrf(dfw2$DAI$depeg_3d$train, dfw2$DAI$depeg_3d$test, "DAI depeg_3d")
+rf_DAI_5l <- runrf(dfw2$DAI$depeg_5d$train, dfw2$DAI$depeg_5d$test, "DAI depeg_5d")
+rf_DAI_7l <- runrf(dfw2$DAI$depeg_7d$train, dfw2$DAI$depeg_7d$test, "DAI depeg_7d")
+
+rf_DAI_1l_metrics <- depeg_metrics(dfw2$DAI$depeg_1d$test$y, rf_DAI_1l$pred_class)
+rf_DAI_3l_metrics <- depeg_metrics(dfw2$DAI$depeg_3d$test$y, rf_DAI_3l$pred_class)
+rf_DAI_5l_metrics <- depeg_metrics(dfw2$DAI$depeg_5d$test$y, rf_DAI_5l$pred_class)
+rf_DAI_7l_metrics <- depeg_metrics(dfw2$DAI$depeg_7d$test$y, rf_DAI_7l$pred_class)
+
+plot_rf_DAI_datal <- list(depeg_1d = list(test = dfw2$DAI$depeg_1d$test,
+                                         pred = rf_DAI_1l$pred_class),
+                         depeg_3d = list(test = dfw2$DAI$depeg_3d$test,
+                                         pred = rf_DAI_3l$pred_class),
+                         depeg_5d = list(test = dfw2$DAI$depeg_5d$test,
+                                         pred = rf_DAI_5l$pred_class),
+                         depeg_7d = list(test = dfw2$DAI$depeg_7d$test,
+                                         pred = rf_DAI_7l$pred_class))
+plot_rf_DAIl <- plot_results(coin_data = plot_rf_DAI_datal,org_data = data_DAI,
+                            title = "Window 1: DAI Depeg Predictions")
+plot_rf_DAIl
+
+# AUC has error here since all of it is just class 0
+auc_rf_DAI_1l <- plot_auc(dfw2$DAI$depeg_1d$test$y, rf_DAI_1l$pred_class,
+                        title = "ROC: DAI depeg_1d",
+                        add_ci = TRUE, add_optimal = TRUE)
+auc_rf_DAI_1l
+
+auc_rf_DAI_3l <- plot_auc(dfw2$DAI$depeg_3d$test$y, rf_DAI_3l$pred_class, 
+                         title = "ROC: DAI depeg_3d",
+                         add_ci = TRUE, add_optimal = TRUE)
+auc_rf_DAI_3l
+
+auc_rf_DAI_5l <- plot_auc(dfw2$DAI$depeg_5d$test$y, rf_DAI_5l$pred_class, 
+                         title = "ROC: DAI depeg_5d",
+                         add_ci = TRUE, add_optimal = TRUE)
+auc_rf_DAI_5l
+
+auc_rf_DAI_7l <- plot_auc(dfw2$DAI$depeg_7d$test$y, rf_DAI_7l$pred_class, 
+                         title = "ROC: DAI depeg_7d",
+                         add_ci = TRUE, add_optimal = TRUE)
+auc_rf_DAI_7l
+# ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+## Window 2: PAX
+
+rf_PAX_1l <- runrf(dfw2$PAX$depeg_1d$train, dfw2$PAX$depeg_1d$test, "PAX depeg_1d")
+rf_PAX_3l <- runrf(dfw2$PAX$depeg_3d$train, dfw2$PAX$depeg_3d$test, "PAX depeg_3d")
+rf_PAX_5l <- runrf(dfw2$PAX$depeg_5d$train, dfw2$PAX$depeg_5d$test, "PAX depeg_5d")
+rf_PAX_7l <- runrf(dfw2$PAX$depeg_7d$train, dfw2$PAX$depeg_7d$test, "PAX depeg_7d")
+
+rf_PAX_1l_metrics <- depeg_metrics(dfw2$PAX$depeg_1d$test$y, rf_PAX_1l$pred_class)
+rf_PAX_3l_metrics <- depeg_metrics(dfw2$PAX$depeg_3d$test$y, rf_PAX_3l$pred_class)
+rf_PAX_5l_metrics <- depeg_metrics(dfw2$PAX$depeg_5d$test$y, rf_PAX_5l$pred_class)
+rf_PAX_7l_metrics <- depeg_metrics(dfw2$PAX$depeg_7d$test$y, rf_PAX_7l$pred_class)
+
+plot_rf_PAX_datal <- list(depeg_1d = list(test = dfw2$PAX$depeg_1d$test,
+                                          pred = rf_PAX_1l$pred_class),
+                          depeg_3d = list(test = dfw2$PAX$depeg_3d$test,
+                                          pred = rf_PAX_3l$pred_class),
+                          depeg_5d = list(test = dfw2$PAX$depeg_5d$test,
+                                          pred = rf_PAX_5l$pred_class),
+                          depeg_7d = list(test = dfw2$PAX$depeg_7d$test,
+                                          pred = rf_PAX_7l$pred_class))
+plot_rf_PAXl <- plot_results(coin_data = plot_rf_PAX_datal,org_data = data_PAX,
+                             title = "Window 1: PAX Depeg Predictions")
+plot_rf_PAXl
+
+# AUC has error here since all of it is just class 0
+auc_rf_PAX_1l <- plot_auc(dfw2$PAX$depeg_1d$test$y, rf_PAX_1l$pred_class,
+                          title = "ROC: PAX depeg_1d",
+                          add_ci = TRUE, add_optimal = TRUE)
+auc_rf_PAX_1l
+
+auc_rf_PAX_3l <- plot_auc(dfw2$PAX$depeg_3d$test$y, rf_PAX_3l$pred_class, 
+                          title = "ROC: PAX depeg_3d",
+                          add_ci = TRUE, add_optimal = TRUE)
+auc_rf_PAX_3l
+
+auc_rf_PAX_5l <- plot_auc(dfw2$PAX$depeg_5d$test$y, rf_PAX_5l$pred_class, 
+                          title = "ROC: PAX depeg_5d",
+                          add_ci = TRUE, add_optimal = TRUE)
+auc_rf_PAX_5l
+
+auc_rf_PAX_7l <- plot_auc(dfw2$PAX$depeg_7d$test$y, rf_PAX_7l$pred_class, 
+                          title = "ROC: PAX depeg_7d",
+                          add_ci = TRUE, add_optimal = TRUE)
+auc_rf_PAX_7l
+# ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+## Window 1: USDC
+
+# ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+## Window 1: USDT
+
+# ------------------------------------------------------------------------------
+
+
+
+# ++++++++++++++++++++++++++++++++++++++++++++
+#     OLD FEATURE IMPT CODE: DO NOT RUN
+# ++++++++++++++++++++++++++++++++++++++++++++
+
+# maybe include a heatmap of feature importance against probability of depeg
+
 plot_rf_list <- list(plot_rf_DAI, plot_rf_PAX, plot_rf_USDC, plot_rf_USDT, plot_rf_UST)
 rf_grid <- grid.arrange(grobs = plot_rf_list, nrow = 2, ncol = 3)
 ggsave("../../plots/RF_model_OOS.png", rf_grid, width = 12, height = 8)
@@ -597,16 +873,17 @@ plot_imp_rf_USDT <- ggplot(imp_df, aes(x = feature, y = mean_importance)) +
 ggsave("../../plots/RF_USDT_feature_importance.png", plot_imp_rf_USDT,
        width = 8, height = 6)
 
-# =======================
-#    END OF OLD CODE 
-# =======================
+# ++++++++++++++++++++++++++++++++++++++++++++
+#              END OF OLD CODE 
+# ++++++++++++++++++++++++++++++++++++++++++++
+
+
 
 
 #########################
 ### Gradient Boosting ###
 #########################
-#source("func-gradboost.R") # uncomment for old splitting logic
-source("func-gradboost_edited.R")
+source("func-gradboost.R")
 
 # Predicting the 6th column: close price
 # Note: using the data_(token)_num dataset for modelling to avoid errors
