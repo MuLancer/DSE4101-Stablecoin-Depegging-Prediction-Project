@@ -309,10 +309,9 @@ source("func-rf.R")
 
 ## WINDOW 1 ====================================================================
 # run random forest on all coins for all horizons
-rfw1 = run_rf_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
+rfw1 = runrf_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
 
-
-# ----------- DAI -----------
+# --------------------------------- DAI ----------------------------------------
 rfw1_DAI_1_metrics <- depeg_metrics(dfw1$DAI$depeg_1d$test$y, rfw1$DAI$depeg_1d$pred_class)
 rfw1_DAI_3_metrics <- depeg_metrics(dfw1$DAI$depeg_3d$test$y, rfw1$DAI$depeg_3d$pred_class)
 rfw1_DAI_5_metrics <- depeg_metrics(dfw1$DAI$depeg_5d$test$y, rfw1$DAI$depeg_5d$pred_class)
@@ -350,9 +349,9 @@ auc_rfw1_DAI_7 <- plot_auc(dfw1$DAI$depeg_7d$test$y, rfw1$DAI$depeg_7d$pred_clas
                          title = "ROC: DAI depeg_7d",
                          add_ci = TRUE, add_optimal = TRUE)
 auc_rfw1_DAI_7
-# ---------------------------
+# ------------------------------------------------------------------------------
 
-# ----------- PAX -----------
+# --------------------------------- PAX ----------------------------------------
 rfw1_PAX_1_metrics <- depeg_metrics(dfw1$PAX$depeg_1d$test$y, rfw1$PAX$depeg_1d$pred_class)
 rfw1_PAX_3_metrics <- depeg_metrics(dfw1$PAX$depeg_3d$test$y, rfw1$PAX$depeg_3d$pred_class)
 rfw1_PAX_5_metrics <- depeg_metrics(dfw1$PAX$depeg_5d$test$y, rfw1$PAX$depeg_5d$pred_class)
@@ -390,9 +389,9 @@ plot_rfw1_PAX
 #                          title = "ROC: PAX depeg_7d",
 #                          add_ci = TRUE, add_optimal = TRUE)
 # auc_rfw1_PAX_7
-# ---------------------------
+# ------------------------------------------------------------------------------
 
-# ----------- USDC -----------
+# --------------------------------- USDC ---------------------------------------
 rfw1_USDC_1_metrics <- depeg_metrics(dfw1$USDC$depeg_1d$test$y, rfw1$USDC$depeg_1d$pred_class)
 rfw1_USDC_3_metrics <- depeg_metrics(dfw1$USDC$depeg_3d$test$y, rfw1$USDC$depeg_3d$pred_class)
 rfw1_USDC_5_metrics <- depeg_metrics(dfw1$USDC$depeg_5d$test$y, rfw1$USDC$depeg_5d$pred_class)
@@ -430,15 +429,13 @@ auc_rfw1_USDC_7 <- plot_auc(dfw1$USDC$depeg_7d$test$y, rfw1$USDC$depeg_7d$pred_c
                          title = "ROC: USDC depeg_7d",
                          add_ci = TRUE, add_optimal = TRUE)
 auc_rfw1_USDC_7
-# ---------------------------
+# ------------------------------------------------------------------------------
 
+# --------------------------------- USDT ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
 
-# ----------- USDT -----------
-
-# ---------------------------
-
-
-# ----------- UST -----------
+# --------------------------------- UST ----------------------------------------
 rfw1_UST_1_metrics <- depeg_metrics(dfw1$UST$depeg_1d$test$y, rfw1$UST$depeg_1d$pred_class)
 rfw1_UST_3_metrics <- depeg_metrics(dfw1$UST$depeg_3d$test$y, rfw1$UST$depeg_3d$pred_class)
 rfw1_UST_5_metrics <- depeg_metrics(dfw1$UST$depeg_5d$test$y, rfw1$UST$depeg_5d$pred_class)
@@ -476,15 +473,15 @@ auc_rfw1_UST_7 <- plot_auc(dfw1$UST$depeg_7d$test$y, rfw1$UST$depeg_7d$pred_clas
                           title = "ROC: UST depeg_7d",
                           add_ci = TRUE, add_optimal = TRUE)
 auc_rfw1_UST_7
-# ---------------------------
+# ------------------------------------------------------------------------------
 # ==============================================================================
 
 
 ## WINDOW 2 ====================================================================
 # run random forest on all coins for all horizons
-rfw2 = run_rf_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
+rfw2 = runrf_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
 
-# ----------- DAI -----------
+# --------------------------------- DAI ----------------------------------------
 rfw2_DAI_1_metrics <- depeg_metrics(dfw2$DAI$depeg_1d$test$y, rfw2$DAI$depeg_1d$pred_class)
 rfw2_DAI_3_metrics <- depeg_metrics(dfw2$DAI$depeg_3d$test$y, rfw2$DAI$depeg_3d$pred_class)
 rfw2_DAI_5_metrics <- depeg_metrics(dfw2$DAI$depeg_5d$test$y, rfw2$DAI$depeg_5d$pred_class)
@@ -522,9 +519,9 @@ auc_rfw2_DAI_7 <- plot_auc(dfw2$DAI$depeg_7d$test$y, dfw2$DAI$depeg_7d$pred_clas
                          title = "ROC: DAI depeg_7d",
                          add_ci = TRUE, add_optimal = TRUE)
 auc_rfw2_DAI_7
-# ---------------------------
+# ------------------------------------------------------------------------------
 
-# ----------- PAX -----------
+# --------------------------------- PAX ----------------------------------------
 rfw2_PAX_1_metrics <- depeg_metrics(dfw2$PAX$depeg_1d$test$y, rfw2$PAX$depeg_1d$pred_class)
 rfw2_PAX_3_metrics <- depeg_metrics(dfw2$PAX$depeg_3d$test$y, rfw2$PAX$depeg_3d$pred_class)
 rfw2_PAX_5_metrics <- depeg_metrics(dfw2$PAX$depeg_5d$test$y, rfw2$PAX$depeg_5d$pred_class)
@@ -562,9 +559,9 @@ plot_rfw2_PAX
 #                          title = "ROC: PAX depeg_7d",
 #                          add_ci = TRUE, add_optimal = TRUE)
 # auc_rfw2_PAX_7
-# ---------------------------
+# ------------------------------------------------------------------------------
 
-# ----------- USDC -----------
+# --------------------------------- USDC ---------------------------------------
 rfw2_USDC_1_metrics <- depeg_metrics(dfw2$USDC$depeg_1d$test$y, rfw2$USDC$depeg_1d$pred_class)
 rfw2_USDC_3_metrics <- depeg_metrics(dfw2$USDC$depeg_3d$test$y, rfw2$USDC$depeg_3d$pred_class)
 rfw2_USDC_5_metrics <- depeg_metrics(dfw2$USDC$depeg_5d$test$y, rfw2$USDC$depeg_5d$pred_class)
@@ -602,53 +599,11 @@ auc_rfw2_USDC_7 <- plot_auc(dfw2$USDC$depeg_7d$test$y, dfw2$USDC$depeg_7d$pred_c
                           title = "ROC: USDC depeg_7d",
                           add_ci = TRUE, add_optimal = TRUE)
 auc_rfw2_USDC_7
-# ---------------------------
+# ------------------------------------------------------------------------------
 
-
-# ----------- USDT -----------
-
-# ---------------------------
-
-
-# ----------- UST -----------
-rfw2_UST_1_metrics <- depeg_metrics(dfw2$UST$depeg_1d$test$y, rfw2$UST$depeg_1d$pred_class)
-rfw2_UST_3_metrics <- depeg_metrics(dfw2$UST$depeg_3d$test$y, rfw2$UST$depeg_3d$pred_class)
-rfw2_UST_5_metrics <- depeg_metrics(dfw2$UST$depeg_5d$test$y, rfw2$UST$depeg_5d$pred_class)
-rfw2_UST_7_metrics <- depeg_metrics(dfw2$UST$depeg_7d$test$y, rfw2$UST$depeg_7d$pred_class)
-
-plot_rfw2_UST_data <- list(depeg_1d = list(test = dfw2$UST$depeg_1d$test,
-                                         pred = rfw2$UST$depeg_1d$pred_class),
-                         depeg_3d = list(test = dfw2$UST$depeg_3d$test,
-                                         pred = rfw2$UST$depeg_3d$pred_class),
-                         depeg_5d = list(test = dfw2$UST$depeg_5d$test,
-                                         pred = rfw2$UST$depeg_5d$pred_class),
-                         depeg_7d = list(test = dfw2$UST$depeg_7d$test,
-                                         pred = rfw2$UST$depeg_7d$pred_class))
-plot_rfw2_UST <- plot_results(coin_data = plot_rfw2_UST_data,org_data = data_UST,
-                            title = "Window 2: UST Depeg Predictions")
-plot_rfw2_UST
-
-
-auc_rfw2_UST_1 <- plot_auc(dfw2$UST$depeg_1d$test$y, dfw2$UST$depeg_1d$pred_class, 
-                         title = "ROC: UST depeg_1d",
-                         add_ci = TRUE, add_optimal = TRUE)
-auc_rfw2_UST_1
-
-auc_rfw2_UST_3 <- plot_auc(dfw2$UST$depeg_3d$test$y, dfw2$UST$depeg_3d$pred_class, 
-                         title = "ROC: UST depeg_3d",
-                         add_ci = TRUE, add_optimal = TRUE)
-auc_rfw2_UST_3
-
-auc_rfw2_UST_5 <- plot_auc(dfw2$UST$depeg_5d$test$y, dfw2$UST$depeg_5d$pred_class, 
-                         title = "ROC: UST depeg_5d",
-                         add_ci = TRUE, add_optimal = TRUE)
-auc_rfw2_UST_5
-
-auc_rfw2_UST_7 <- plot_auc(dfw2$UST$depeg_7d$test$y, dfw2$UST$depeg_7d$pred_class, 
-                         title = "ROC: UST depeg_7d",
-                         add_ci = TRUE, add_optimal = TRUE)
-auc_rfw2_UST_7
-# ---------------------------
+# --------------------------------- USDT ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
 # ==============================================================================
 
 
@@ -748,52 +703,55 @@ ggsave("../../plots/RF_USDT_feature_importance.png", plot_imp_rf_USDT,
 #########################
 source("func-gb.R")
 
-# ===============================================================================
-## Window 1: DAI
-gb_DAI_1 <- rungb(dfw1$DAI$depeg_1d$train, dfw1$DAI$depeg_1d$test, "DAI depeg_1d")
-gb_DAI_3 <- rungb(dfw1$DAI$depeg_3d$train, dfw1$DAI$depeg_3d$test, "DAI depeg_3d")
-gb_DAI_5 <- rungb(dfw1$DAI$depeg_5d$train, dfw1$DAI$depeg_5d$test, "DAI depeg_5d")
-gb_DAI_7 <- rungb(dfw1$DAI$depeg_7d$train, dfw1$DAI$depeg_7d$test, "DAI depeg_7d")
+## WINDOW 1 ====================================================================
+# run XGBoost on all coins for all horizons
+gbw1 = rungb_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
 
-gb_DAI_1_metrics <- depeg_metrics(dfw1$DAI$depeg_1d$test$y, gb_DAI_1$pred_class)
-gb_DAI_3_metrics <- depeg_metrics(dfw1$DAI$depeg_3d$test$y, gb_DAI_3$pred_class)
-gb_DAI_5_metrics <- depeg_metrics(dfw1$DAI$depeg_5d$test$y, gb_DAI_5$pred_class)
-gb_DAI_7_metrics <- depeg_metrics(dfw1$DAI$depeg_7d$test$y, gb_DAI_7$pred_class)
+# --------------------------------- DAI ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
 
-plot_gb_DAI_data <- list(depeg_1d = list(test = dfw1$DAI$depeg_1d$test,
-                                         pred = gb_DAI_1$pred_class),
-                         depeg_3d = list(test = dfw1$DAI$depeg_3d$test,
-                                         pred = gb_DAI_3$pred_class),
-                         depeg_5d = list(test = dfw1$DAI$depeg_5d$test,
-                                         pred = gb_DAI_5$pred_class),
-                         depeg_7d = list(test = dfw1$DAI$depeg_7d$test,
-                                         pred = gb_DAI_7$pred_class))
-plot_gb_DAI <- plot_results(coin_data = plot_gb_DAI_data,org_data = data_DAI,
-                            title = "Window 1: DAI Depeg Predictions")
-plot_gb_DAI
+# --------------------------------- PAX ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- USDC ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- USDT ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- UST ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# ==============================================================================
 
 
-# AUC has error here since all of it is just class 0
-#auc_gb_DAI_1 <- plot_auc(dfw1$DAI$depeg_1d$test$y, gb_DAI_1$pred_class, 
-#                         title = "ROC: DAI depeg_1d",
-#                         add_ci = TRUE, add_optimal = TRUE)
-# auc_gb_DAI_1
+## WINDOW 2 ====================================================================
+# run XGBoost on all coins for all horizons
+gbw2 = rungb_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
 
-auc_gb_DAI_3 <- plot_auc(dfw1$DAI$depeg_3d$test$y, gb_DAI_3$pred_class, 
-                         title = "ROC: DAI depeg_3d",
-                         add_ci = TRUE, add_optimal = TRUE)
-auc_gb_DAI_3
+# --------------------------------- DAI ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
 
-auc_gb_DAI_5 <- plot_auc(dfw1$DAI$depeg_5d$test$y, gb_DAI_5$pred_class, 
-                         title = "ROC: DAI depeg_5d",
-                         add_ci = TRUE, add_optimal = TRUE)
-auc_gb_DAI_5
+# --------------------------------- PAX ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
 
-auc_gb_DAI_7 <- plot_auc(dfw1$DAI$depeg_7d$test$y, gb_DAI_7$pred_class, 
-                         title = "ROC: DAI depeg_7d",
-                         add_ci = TRUE, add_optimal = TRUE)
-auc_gb_DAI_7
-# ===============================================================================
+# --------------------------------- USDC ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- USDT ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# ==============================================================================
+
 
 #plot_gb_list <- list(plot_gb_DAI, plot_gb_PAX, plot_gb_USDC, plot_gb_USDT, plot_gb_UST)
 #gb_grid <- grid.arrange(grobs = plot_gb_list, nrow = 2, ncol = 3)
@@ -835,10 +793,13 @@ plot_pcr_USDT <- plot_results(data_USDT, oos_USDT[[8]], nprev, pcr_USDT, pcr_rms
 plot_pcr_UST <- plot_results(data_UST, oos_UST[[8]], nprev, pcr_UST, pcr_rmse_UST, 
                              "PCR (UST Close)")
 
-plot_pcr_list <- list(plot_pcr_DAI, plot_pcr_PAX, plot_pcr_USDC, plot_pcr_USDT, plot_pcr_UST)
-pcr_grid <- grid.arrange(grobs = plot_pcr_list, nrow = 2, ncol = 3)
-ggsave("../../plots/PCR_model_OOS.png", pcr_grid, width = 12, height = 8)
+# plot_pcr_list <- list(plot_pcr_DAI, plot_pcr_PAX, plot_pcr_USDC, plot_pcr_USDT, plot_pcr_UST)
+# pcr_grid <- grid.arrange(grobs = plot_pcr_list, nrow = 2, ncol = 3)
+# ggsave("../../plots/PCR_model_OOS.png", pcr_grid, width = 12, height = 8)
 
+# ++++++++++++++++++++++++++++++++++++++++++++
+#         OLD PC CODE: DO NOT RUN
+# ++++++++++++++++++++++++++++++++++++++++++++
 
 # Some additional functions: show PCR components, plot CV error curve
 pcr_result_DAI <- runpcr(data_DAI_num, indice=6, lag=1)

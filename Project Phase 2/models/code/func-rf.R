@@ -41,7 +41,7 @@ runrf <- function(train_data, test_data, title){
 }
 
 
-run_rf_all <- function(dfw, coin_list, horizons) {
+runrf_all <- function(dfw, coin_list, horizons) {
   all_results <- list()
   
   for(coin in names(coin_list)) {

@@ -7,8 +7,16 @@ rungb <- function(train_data, test_data, title) {
   X_test <- test_data$X
   y_test <- test_data$y
   
-  dtrain <- xgb.DMatrix(data = as.matrix(X_train), label = as.numeric(as.character(y_train)))
-  dtest <- xgb.DMatrix(data = as.matrix(X_test))
+  X_train_scaled <- scale(X_train) # Need to scale to avoid issues (Input `inf` error)
+  train_center <- attr(X_train_scaled, "scaled:center")
+  train_scale  <- attr(X_train_scaled, "scaled:scale")
+  X_test_scaled <- scale(X_test, center = train_center, scale  = train_scale)
+  
+  #cat("Train range:", range(X_train_scaled), "\n")
+  #cat("Test range:", range(X_test_scaled), "\n")
+  
+  dtrain <- xgb.DMatrix(data = data.matrix(X_train_scaled), label = as.numeric(as.character(y_train)))
+  dtest <- xgb.DMatrix(data = data.matrix(X_test_scaled))
   
   # Fixed parameters
   gb_params <- list(
@@ -52,7 +60,7 @@ rungb <- function(train_data, test_data, title) {
 }
 
 
-run_gb_all <- function(dfw, coin_list, horizons) {
+rungb_all <- function(dfw, coin_list, horizons) {
   all_results <- list()
   
   for(coin in names(coin_list)) {
