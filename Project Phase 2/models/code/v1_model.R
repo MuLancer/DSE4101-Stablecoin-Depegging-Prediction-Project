@@ -116,7 +116,7 @@ data_UST <- read.csv("../../data/UST/UST_onchain_features.csv") %>%
 ### Depeg Prediction Metrics ###
 ################################
 
-depeg_metrics <- function(actual, predicted, threshold) {
+depeg_metrics <- function(actual, predicted) {
   
   # confusion matrix 
   TP <- sum(actual == 1 & predicted == 1, na.rm = TRUE)
@@ -186,13 +186,13 @@ plot_results <- function(data, actual_y, pred_y, title, f1,
     geom_ribbon(aes(ymin = ThreshD, ymax = ThreshU, fill = "Threshold Band"), 
                 alpha = 0.2) +
     # add close price line
-    geom_line(aes(y = close, color = "Close Price"), size = 0.8) +
+    geom_line(aes(y = close, color = "Close Price"), linewidth = 0.8) +
     # add actual depeg as points
-    geom_point(aes(y = actual * max(close, na.rm = TRUE) * 0.95, 
+    geom_point(aes(y = actual_y * max(close, na.rm = TRUE) * 0.95, 
                    color = "Actual Depeg"), 
                size = 2, shape = 18, na.rm = TRUE) +
     # add predicted depeg as points
-    geom_point(aes(y = predicted * max(close, na.rm = TRUE) * 0.95, 
+    geom_point(aes(y = pred_y * max(close, na.rm = TRUE) * 0.95, 
                    color = "Predicted Depeg"), 
                size = 1.5, shape = 4, na.rm = TRUE) +
     # custom colors
@@ -478,37 +478,47 @@ DAI_1 <- dfw1$DAI$depeg_1d
 #####################
 source("func-rf.R")
 
-# Predicting the 6th column: close price
-# Note: using the data_(token)_num dataset for modelling to avoid errors
-rf_DAI = rf.rolling.window(data_DAI_num,nprev,6,1)
-rf_PAX = rf.rolling.window(data_PAX_num,nprev,6,1)
-rf_USDC = rf.rolling.window(data_USDC_num,nprev,6,1)
-rf_USDT = rf.rolling.window(data_USDT_num,nprev,6,1)
-rf_UST = rf.rolling.window(data_UST_num,nprev,6,1)
 
-# Random Forest RMSE's, use errors[2] for MAE
-rf_rmse_DAI = rf_DAI$errors[1]
-rf_rmse_PAX = rf_PAX$errors[1]
-rf_rmse_USDC = rf_USDC$errors[1]
-rf_rmse_USDT = rf_USDT$errors[1]
-rf_rmse_UST = rf_UST$errors[1]
+## Window 1: DAI
+# ===============
+rf_DAI_1 <- runrf(dfw1$DAI$depeg_1d$train, dfw1$DAI$depeg_1d$test, "DAI depeg_1d")
+rf_DAI_3 <- runrf(dfw1$DAI$depeg_3d$train, dfw1$DAI$depeg_3d$test, "DAI depeg_3d")
+rf_DAI_5 <- runrf(dfw1$DAI$depeg_5d$train, dfw1$DAI$depeg_5d$test, "DAI depeg_5d")
+rf_DAI_7 <- runrf(dfw1$DAI$depeg_7d$train, dfw1$DAI$depeg_7d$test, "DAI depeg_7d")
 
-# Depeg Prediction
-# Note: Use the regular dataset for date column, so use 8th column to get close price
-#rf_depeg_DAI <- depeg_metrics(oos_DAI[[8]], rf_DAI$pred, threshold)
+rf_DAI_1_metrics <- depeg_metrics(dfw1$DAI$depeg_1d$test$y, rf_DAI_1$pred_class)
+rf_DAI_3_metrics <- depeg_metrics(dfw1$DAI$depeg_3d$test$y, rf_DAI_3$pred_class)
+rf_DAI_5_metrics <- depeg_metrics(dfw1$DAI$depeg_5d$test$y, rf_DAI_5$pred_class)
+rf_DAI_7_metrics <- depeg_metrics(dfw1$DAI$depeg_7d$test$y, rf_DAI_7$pred_class)
 
-# Plot OOS results, oos_DAI[[8]] is close price column
-plot_rf_DAI <- plot_results(data_DAI, oos_DAI[[8]], nprev, rf_DAI, rf_rmse_DAI, 
-                            "Random Forest (DAI Close)")
-plot_rf_PAX <- plot_results(data_PAX, oos_PAX[[8]], nprev, rf_PAX, rf_rmse_PAX, 
-                            "Random Forest (PAX Close)")
-plot_rf_USDC <- plot_results(data_USDC, oos_USDC[[8]], nprev, rf_USDC, rf_rmse_USDC, 
-                             "Random Forest (USDC Close)")
-plot_rf_USDT <- plot_results(data_USDT, oos_USDT[[8]], nprev, rf_USDT, rf_rmse_USDT, 
-                             "Random Forest (USDT Close)")
-plot_rf_UST <- plot_results(data_UST, oos_UST[[8]], nprev, rf_UST, rf_rmse_UST, 
-                            "Random Forest (UST Close)")
+plot_rf_DAI_1 <- plot_results(dfw1$DAI$depeg_1d, dfw1$DAI$depeg_1d$test$y, rf_DAI_1$pred_class, 
+                              "Window 1: DAI depeg_1d", rf_DAI_1_metrics$f1,
+                              org_data = data_DAI, show_thresh = TRUE, test = TRUE)
+plot_rf_DAI_1
 
+plot_rf_DAI_3 <- plot_results(dfw1$DAI$depeg_3d, dfw1$DAI$depeg_3d$test$y, rf_DAI_3$pred_class, 
+                              "Window 1: DAI depeg_3d", rf_DAI_3_metrics$f1,
+                              org_data = data_DAI, show_thresh = TRUE, test = TRUE)
+plot_rf_DAI_3
+
+plot_rf_DAI_5 <- plot_results(dfw1$DAI$depeg_5d, dfw1$DAI$depeg_5d$test$y, rf_DAI_5$pred_class, 
+                              "Window 1: DAI depeg_5d", rf_DAI_5_metrics$f1,
+                              org_data = data_DAI, show_thresh = TRUE, test = TRUE)
+plot_rf_DAI_5
+
+plot_rf_DAI_7 <- plot_results(dfw1$DAI$depeg_7d, dfw1$DAI$depeg_7d$test$y, rf_DAI_7$pred_class, 
+                              "Window 1: DAI depeg_7d", rf_DAI_7_metrics$f1,
+                              org_data = data_DAI, show_thresh = TRUE, test = TRUE)
+plot_rf_DAI_7
+
+# AUC has error here since all of it is just class 0
+# auc_rf_DAI_1 <- plot_auc(dfw1$DAI$depeg_1d$test$y, rf_DAI_1$pred_class, 
+#                         add_ci = TRUE, add_optimal = TRUE)
+#auc_rf_DAI_1
+
+# =======================
+#  OLD CODE: DO NOT RUN 
+# =======================
 plot_rf_list <- list(plot_rf_DAI, plot_rf_PAX, plot_rf_USDC, plot_rf_USDT, plot_rf_UST)
 rf_grid <- grid.arrange(grobs = plot_rf_list, nrow = 2, ncol = 3)
 ggsave("../../plots/RF_model_OOS.png", rf_grid, width = 12, height = 8)
@@ -587,6 +597,9 @@ plot_imp_rf_USDT <- ggplot(imp_df, aes(x = feature, y = mean_importance)) +
 ggsave("../../plots/RF_USDT_feature_importance.png", plot_imp_rf_USDT,
        width = 8, height = 6)
 
+# =======================
+#    END OF OLD CODE 
+# =======================
 
 
 #########################

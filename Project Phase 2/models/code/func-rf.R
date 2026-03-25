@@ -1,38 +1,47 @@
 
-#Inputs for the function:
 
-#1) Data matrix Y: includes all variables
-
-#2) indice - index for dependent variable: 1 
-
-#3) lag - the forecast horizon
-runrf <- function(Y, indice, lag){
-  Y2 <- as.matrix(Y)
-  n  <- nrow(Y2)
+runrf <- function(train_data, test_data, title){
   
-  # y_{t+lag}
-  y_all <- Y2[(1 + lag):n, indice]
+  X_train <- train_data$X
+  y_train <- train_data$y
   
-  # X_t (info available at time t)
-  X_all <- Y2[1:(n - lag), , drop = FALSE]
+  X_test <- test_data$X
+  y_test <- test_data$y
   
-  # remove the target column from predictors
-  X_all <- X_all[, -indice, drop = FALSE]
+  model <- randomForest(X_train, y_train,
+                        importance = TRUE,
+                        ntree = 500, 
+                        mtry = floor(sqrt(ncol(X_train))), 
+                        nodesize = 5,
+                        keep.forest = TRUE # store decision tree to be used later
+                        )
   
-  # train on all but last, predict last
-  X_train <- X_all[-nrow(X_all), , drop = FALSE]
-  y_train <- y_all[-length(y_all)]
-  X.out   <- X_all[nrow(X_all), , drop = FALSE]
+  # class prediction
+  pred_class <- predict(model, newdata = X_test)
   
-  model <- randomForest(
-    X_train, y_train,
-    importance = TRUE,
-    ntree = 500, mtry = sqrt(ncol(X_train)), nodesize = 5
-  )
-  pred <- predict(model, newdata = X.out)
+  # # type = "prob" gives the probability of class 1 (depeg)
+  pred_prob <- predict(model, newdata = X_test, type = "prob")
+  # pred_prob will be a matrix: [1,] P(y=0) P(y=1)
   
-  list(model = model, pred = pred)
+  pred <- pred_prob[, "1"] # extracts the prob of a depeg (y=1)
+  
+  # confusion matrix
+  cm <- table(Predicted = pred_class, Actual = y_test)
+  accuracy <- sum(diag(cm)) / sum(cm)
+  
+  cat("\n", title, "\n")
+  cat("Accuracy:", round(accuracy, 4), "\n")
+  print(cm)
+  
+  return(list(model = model, 
+              pred_prob = pred,
+              pred_class = pred_class,
+              importance = importance(model),
+              confusion_matrix = cm))
 }
+
+
+
 
 
 #Inputs for the function:
