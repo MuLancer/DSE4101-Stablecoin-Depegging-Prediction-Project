@@ -6,7 +6,9 @@ library(tidyverse)
 library(gridExtra)
 library(pROC)
 library(smotefamily)
+
 library(scales)
+library(zoo)
 
 rm(list=ls())
 
@@ -21,23 +23,93 @@ set.seed(99)
 
 # Data from 2019-11-22 to 2025-12-31
 data_DAI <- read.csv("../../data/Dai/DAI_onchain_features.csv") %>%
-  mutate(date = as.Date(date))
+  mutate(date = as.Date(date)) %>%
+  mutate(depeg_1d = ifelse(lead(low, 1) <= ThreshD | lead(high, 1) >= ThreshU, 1, 0),
+         
+         PL_3 = rollapply(lead(low, 1), width = 3, FUN = min, align = "left", fill = NA),
+         PH_3 = rollapply(lead(high, 1), width = 3, FUN = max, align = "left", fill = NA),
+         depeg_3d = ifelse(PL_3 <= ThreshD | PH_3 >= ThreshU, 1, 0),
+         
+         PL_5 = rollapply(lead(low, 1), width = 5, FUN = min, align = "left", fill = NA),
+         PH_5 = rollapply(lead(high, 1), width = 5, FUN = max, align = "left", fill = NA),
+         depeg_5d = ifelse(PL_5 <= ThreshD | PH_5 >= ThreshU, 1, 0),
+         
+         PL_7 = rollapply(lead(low, 1), width = 7, FUN = min, align = "left", fill = NA),
+         PH_7 = rollapply(lead(high, 1), width = 7, FUN = max, align = "left", fill = NA),
+         depeg_7d = ifelse(PL_7 <= ThreshD | PH_7 >= ThreshU, 1, 0)) %>%
+  select(-PL_3, -PH_3,-PL_5, -PH_5,-PL_7, -PH_7)
 
 # Data from 2018-09-27 to 2025-12-31
 data_PAX <- read.csv("../../data/PAX/PAX_onchain_features.csv") %>%
-  mutate(date = as.Date(date))
+  mutate(date = as.Date(date)) %>%
+  mutate(depeg_1d = ifelse(lead(low, 1) <= ThreshD | lead(high, 1) >= ThreshU, 1, 0),
+         
+         PL_3 = rollapply(lead(low, 1), width = 3, FUN = min, align = "left", fill = NA),
+         PH_3 = rollapply(lead(high, 1), width = 3, FUN = max, align = "left", fill = NA),
+         depeg_3d = ifelse(PL_3 <= ThreshD | PH_3 >= ThreshU, 1, 0),
+         
+         PL_5 = rollapply(lead(low, 1), width = 5, FUN = min, align = "left", fill = NA),
+         PH_5 = rollapply(lead(high, 1), width = 5, FUN = max, align = "left", fill = NA),
+         depeg_5d = ifelse(PL_5 <= ThreshD | PH_5 >= ThreshU, 1, 0),
+         
+         PL_7 = rollapply(lead(low, 1), width = 7, FUN = min, align = "left", fill = NA),
+         PH_7 = rollapply(lead(high, 1), width = 7, FUN = max, align = "left", fill = NA),
+         depeg_7d = ifelse(PL_7 <= ThreshD | PH_7 >= ThreshU, 1, 0)) %>%
+  select(-PL_3, -PH_3,-PL_5, -PH_5,-PL_7, -PH_7)
 
 # Data from 2018-10-08 to 2025-12-31
 data_USDC <- read.csv("../../data/USDC/USDC_onchain_features.csv") %>%
-  mutate(date = as.Date(date))
+  mutate(date = as.Date(date)) %>%
+  mutate(depeg_1d = ifelse(lead(low, 1) <= ThreshD | lead(high, 1) >= ThreshU, 1, 0),
+         
+         PL_3 = rollapply(lead(low, 1), width = 3, FUN = min, align = "left", fill = NA),
+         PH_3 = rollapply(lead(high, 1), width = 3, FUN = max, align = "left", fill = NA),
+         depeg_3d = ifelse(PL_3 <= ThreshD | PH_3 >= ThreshU, 1, 0),
+         
+         PL_5 = rollapply(lead(low, 1), width = 5, FUN = min, align = "left", fill = NA),
+         PH_5 = rollapply(lead(high, 1), width = 5, FUN = max, align = "left", fill = NA),
+         depeg_5d = ifelse(PL_5 <= ThreshD | PH_5 >= ThreshU, 1, 0),
+         
+         PL_7 = rollapply(lead(low, 1), width = 7, FUN = min, align = "left", fill = NA),
+         PH_7 = rollapply(lead(high, 1), width = 7, FUN = max, align = "left", fill = NA),
+         depeg_7d = ifelse(PL_7 <= ThreshD | PH_7 >= ThreshU, 1, 0)) %>%
+  select(-PL_3, -PH_3,-PL_5, -PH_5,-PL_7, -PH_7)
 
 # Data from 2017-11-27 to 2025-12-31
 data_USDT <- read.csv("../../data/USDT/USDT_onchain_features.csv") %>%
-  mutate(date = as.Date(date))
+  mutate(date = as.Date(date)) %>%
+  mutate(depeg_1d = ifelse(lead(low, 1) <= ThreshD | lead(high, 1) >= ThreshU, 1, 0),
+         
+         PL_3 = rollapply(lead(low, 1), width = 3, FUN = min, align = "left", fill = NA),
+         PH_3 = rollapply(lead(high, 1), width = 3, FUN = max, align = "left", fill = NA),
+         depeg_3d = ifelse(PL_3 <= ThreshD | PH_3 >= ThreshU, 1, 0),
+         
+         PL_5 = rollapply(lead(low, 1), width = 5, FUN = min, align = "left", fill = NA),
+         PH_5 = rollapply(lead(high, 1), width = 5, FUN = max, align = "left", fill = NA),
+         depeg_5d = ifelse(PL_5 <= ThreshD | PH_5 >= ThreshU, 1, 0),
+         
+         PL_7 = rollapply(lead(low, 1), width = 7, FUN = min, align = "left", fill = NA),
+         PH_7 = rollapply(lead(high, 1), width = 7, FUN = max, align = "left", fill = NA),
+         depeg_7d = ifelse(PL_7 <= ThreshD | PH_7 >= ThreshU, 1, 0)) %>%
+  select(-PL_3, -PH_3,-PL_5, -PH_5,-PL_7, -PH_7)
 
 # Data from 2020-11-25 to 2022-05-08 
 data_UST <- read.csv("../../data/UST/UST_onchain_features.csv") %>%
-  mutate(date = as.Date(date))
+  mutate(date = as.Date(date)) %>%
+  mutate(depeg_1d = ifelse(lead(low, 1) <= ThreshD | lead(high, 1) >= ThreshU, 1, 0),
+         
+         PL_3 = rollapply(lead(low, 1), width = 3, FUN = min, align = "left", fill = NA),
+         PH_3 = rollapply(lead(high, 1), width = 3, FUN = max, align = "left", fill = NA),
+         depeg_3d = ifelse(PL_3 <= ThreshD | PH_3 >= ThreshU, 1, 0),
+         
+         PL_5 = rollapply(lead(low, 1), width = 5, FUN = min, align = "left", fill = NA),
+         PH_5 = rollapply(lead(high, 1), width = 5, FUN = max, align = "left", fill = NA),
+         depeg_5d = ifelse(PL_5 <= ThreshD | PH_5 >= ThreshU, 1, 0),
+         
+         PL_7 = rollapply(lead(low, 1), width = 7, FUN = min, align = "left", fill = NA),
+         PH_7 = rollapply(lead(high, 1), width = 7, FUN = max, align = "left", fill = NA),
+         depeg_7d = ifelse(PL_7 <= ThreshD | PH_7 >= ThreshU, 1, 0)) %>%
+  select(-PL_3, -PH_3,-PL_5, -PH_5,-PL_7, -PH_7)
 
 ################################
 ### Depeg Prediction Metrics ###
@@ -82,6 +154,141 @@ depeg_metrics <- function(actual, predicted, threshold) {
 ########################
 ### Plot OOS Results ###
 ########################
+
+# actual_y = data$test$y or data$train$y
+# need to include original stablecoin data which includes all variables (including OHLC, thresholds)
+plot_results <- function(data, actual_y, pred_y, title, f1,
+                         org_data = NULL, show_thresh = TRUE, test = TRUE) {
+  if(test){
+    dates <- data$test$dates
+  } else {
+    dates <- data$train$dates
+  }
+  
+  # create base plot data with actual and predicted
+  plot_data <- data.frame(
+    date = dates, 
+    actual = as.vector(actual_y), 
+    predicted = as.vector(pred_y))
+  
+  if(!is.null(org_data) && show_thresh) {
+    thresh_data <- org_data %>%
+      filter(date %in% dates) %>%
+      select(date, close, ThreshU, ThreshD)
+    
+    plot_data <- plot_data %>%
+      left_join(thresh_data, by = "date")
+  }
+  
+  plot <- ggplot(plot_data, aes(x = date)) +
+    # add threshold bands first (so they appear in background)
+    geom_ribbon(aes(ymin = ThreshD, ymax = ThreshU, fill = "Threshold Band"), 
+                alpha = 0.2) +
+    # add close price line
+    geom_line(aes(y = close, color = "Close Price"), size = 0.8) +
+    # add actual depeg as points
+    geom_point(aes(y = actual * max(close, na.rm = TRUE) * 0.95, 
+                   color = "Actual Depeg"), 
+               size = 2, shape = 18, na.rm = TRUE) +
+    # add predicted depeg as points
+    geom_point(aes(y = predicted * max(close, na.rm = TRUE) * 0.95, 
+                   color = "Predicted Depeg"), 
+               size = 1.5, shape = 4, na.rm = TRUE) +
+    # custom colors
+    scale_color_manual(name = "Series",
+                       values = c("Price" = "black", 
+                                  "Actual Depeg" = "red", 
+                                  "Predicted Depeg" = "blue")) +
+    scale_fill_manual(name = "",
+                      values = c("Threshold Band" = "grey70")) +
+    labs(title = title,
+         subtitle = paste("F1-Score:", round(f1, 4)),
+         x = "Date", 
+         y = "Price",
+         caption = "Note: Depeg indicators shown at 95% of max price for visibility") +
+    theme_minimal() +
+    theme(legend.position = "bottom",
+          legend.box = "vertical",
+          plot.caption = element_text(size = 8, face = "italic"))
+  
+  return(plot)
+}
+
+
+
+plot_auc <- function(actual_y, pred_y, title, 
+                     add_ci = FALSE, add_optimal = FALSE) {
+  
+  # convert actual to numeric if factor
+  if(is.factor(actual_y)) {
+    actual_y <- as.numeric(actual_y) - 1
+  }
+  
+  # calculate ROC
+  roc_obj <- roc(actual_y, pred_y)
+  
+  # calculate AUC
+  auc_value <- auc(roc_obj)
+  auc_text <- paste("AUC =", round(auc_value, 4))
+  
+  # add confidence interval if add_ci = TRUE
+  if(add_ci) {
+    ci_obj <- ci.auc(roc_obj)
+    auc_text <- paste(auc_text, "\n95% CI: [", 
+                      round(ci_obj[1], 4), ", ", 
+                      round(ci_obj[3], 4), "]")
+  }
+  
+  # find optimal threshold if add_optimal = TRUE
+  if(add_optimal) {
+    optimal <- coords(roc_obj, "best", ret = c("threshold", "specificity", "sensitivity"))
+    optimal_thresh <- round(optimal$threshold, 4)
+    optimal_sens <- round(optimal$sensitivity, 4)
+    optimal_spec <- round(optimal$specificity, 4)
+  }
+  
+  # plot ROC
+  plot <- ggroc(roc_obj, color = "blue", size = 1) +
+    geom_abline(intercept = 1, slope = 1, linetype = "dashed", color = "gray50") +
+    coord_equal() +
+    labs(title = title,
+         subtitle = paste("AUC =", round(auc_value, 4)),
+         x = "1 - Specificity (False Positive Rate)",
+         y = "Sensitivity (True Positive Rate)") +
+    theme_minimal() +
+    theme(legend.position = "none",
+          plot.title = element_text(hjust = 0.5),
+          plot.subtitle = element_text(hjust = 0.5))
+  
+  # add optimal threshold annotation
+  if(add_optimal) {
+    plot <- plot +
+      annotate("point", 
+               x = 1 - optimal_spec, 
+               y = optimal_sens, 
+               color = "red", size = 3) +
+      annotate("text", 
+               x = 1 - optimal_spec + 0.05, 
+               y = optimal_sens, 
+               label = paste("Optimal threshold:", optimal_thresh),
+               hjust = 0, size = 3)
+  }
+  
+  # print additional metrics
+  cat("\n--- ROC Analysis ---\n")
+  cat("AUC:", round(auc_value, 4), "\n")
+  if(add_ci) {
+    cat("95% CI:", round(ci_obj[1], 4), "-", round(ci_obj[3], 4), "\n")
+  }
+  if(add_optimal) {
+    cat("Optimal threshold:", optimal_thresh, "\n")
+    cat("Sensitivity at optimal threshold:", optimal_sens, "\n")
+    cat("Specificity at optimal threshold:", optimal_spec, "\n")
+  }
+  
+  return(list(plot = plot, roc_obj = roc_obj, auc = auc_value))
+}
+
 
 
 ########################
@@ -131,7 +338,7 @@ prep_features <- function(data, target_col, remove_col, smote = FALSE){
         round(sum(y == 1) / length(y) * 100, 2), "%\n")
     
     # Note: duplicate size - 1 or 2, nearest neighbours - 3 or 5 
-    smote_out <- SMOTE(X, as.numeric(y), dup_size = 2, K = 3)
+    smote_out <- SMOTE(X, as.numeric(y)-1, dup_size = 2, K = 3)
     smote_data <- smote_out$data
     
     X <- smote_data[, 1:ncol(X), drop = FALSE]
@@ -183,15 +390,15 @@ w1 <- function(){
     dataset <- coin_dfw1[[coin]]
     split <- train_test_split(dataset, 
                               train_start = "2020-11-25", 
-                              train_end = "2021-12-31", 
-                              test_start = "2022-01-01", 
+                              train_end = "2021-05-01",  #2021-12-31
+                              test_start = "2021-05-02", #2022-01-01
                               test_end = "2022-05-08")
     
     # create a mini list for each horizon (for each coin)
     temp <- list()
     
     for(h in horizons) {
-      train_prep <- prep_features(split$train, h, remove_col, smote = TRUE)
+      train_prep <- prep_features(split$train, h, remove_col, smote = FALSE)
       test_prep <- prep_features(split$test, h, remove_col, smote = FALSE)
       
       # Store results
@@ -231,9 +438,9 @@ w2 <- function(){
     dataset <- coin_dfw2[[coin]]
     split <- train_test_split(dataset, 
                               train_start = "2019-11-22",
-                              train_end = "2023-12-31", 
-                              test_start = "2024-01-01", 
-                              test_end = "2025-12-24") # NA depeg values after
+                              train_end = "2022-12-31", #2023-12-31
+                              test_start = "2023-01-01", #2024-01-01
+                              test_end = "2025-12-31")
     
     # create a mini list for each horizon (for each coin)
     temp <- list()
@@ -263,11 +470,12 @@ w2 <- function(){
 
 dfw2 <- w2()
 
+DAI_1 <- dfw1$DAI$depeg_1d
+
 #####################
 ### Random Forest ###
 #####################
-#source("func-rf.R") # uncomment for old splitting logic
-source("func-rf_edited.R")
+source("func-rf.R")
 
 # Predicting the 6th column: close price
 # Note: using the data_(token)_num dataset for modelling to avoid errors
