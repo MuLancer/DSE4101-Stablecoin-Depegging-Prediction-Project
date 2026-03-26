@@ -805,3 +805,227 @@ plsw2 = runpls_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
 # ------------------------------------------------------------------------------
 
 # ==============================================================================
+
+
+
+###########################
+### Logistic Regression ###
+###########################
+source("func-logit.R")
+
+# Note warnings: "glm.fit: fitted probabilities numerically 0 or 1 occurred"
+# occurs when some PCs predict the class exactly (overfit)
+# happens due to small sample size and class imbalance (depeg rare)
+
+## WINDOW 1 ====================================================================
+# run Logit on all coins for all horizons
+logitw1 = runlogit_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
+
+# --------------------------------- DAI ----------------------------------------
+logit_DAI_1_metrics1 <- depeg_metrics(logitw1$DAI$depeg_1d$test$y, logitw1$DAI$depeg_1d$pred_class)
+logit_DAI_3_metrics1 <- depeg_metrics(logitw1$DAI$depeg_3d$test$y, logitw1$DAI$depeg_3d$pred_class)
+logit_DAI_5_metrics1 <- depeg_metrics(logitw1$DAI$depeg_5d$test$y, logitw1$DAI$depeg_5d$pred_class)
+logit_DAI_7_metrics1 <- depeg_metrics(logitw1$DAI$depeg_7d$test$y, logitw1$DAI$depeg_7d$pred_class)
+
+plot_logit_DAI_w1_data <- list(depeg_1d = list(test = dfw1$DAI$depeg_1d$test,
+                                               pred = logitw1$DAI$depeg_1d$pred_class),
+                               depeg_3d = list(test = dfw1$DAI$depeg_3d$test,
+                                               pred = logitw1$DAI$depeg_3d$pred_class),
+                               depeg_5d = list(test = dfw1$DAI$depeg_5d$test,
+                                               pred = logitw1$DAI$depeg_5d$pred_class),
+                               depeg_7d = list(test = dfw1$DAI$depeg_7d$test,
+                                               pred = logitw1$DAI$depeg_7d$pred_class))
+
+plot_logit_DAI_w1 <- plot_results(plot_logit_DAI_w1_data,org_data = data_DAI,
+                                  title = "Window 1: DAI Depeg Predictions")
+plot_logit_DAI_w1
+
+#comparing performance across horizons 
+plot_horizon_performance(logitw1$DAI$depeg_1d, logitw1$DAI$depeg_3d, logitw1$DAI$depeg_5d, logitw1$DAI$depeg_7d)
+
+#looking at top 10 coeffs (not stable, with odds ratio close to 0/+inf)
+show_logit_coeffs(logitw1$DAI$depeg_1d, 10)
+show_logit_coeffs(logitw1$DAI$depeg_3d, 10)
+show_logit_coeffs(logitw1$DAI$depeg_5d, 10)
+show_logit_coeffs(logitw1$DAI$depeg_7d, 10)
+
+# ------------------------------------------------------------------------------
+
+# --------------------------------- PAX ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- USDC ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- USDT ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- UST ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# ==============================================================================
+
+
+## WINDOW 2 ====================================================================
+# run Logit on all coins for all horizons
+logitw2 = runlogit_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
+
+# --------------------------------- DAI ----------------------------------------
+logit_DAI_1_metrics2 <- depeg_metrics(logitw2$DAI$depeg_1d$test$y, logitw2$DAI$depeg_1d$pred_class)
+logit_DAI_3_metrics2 <- depeg_metrics(logitw2$DAI$depeg_3d$test$y, logitw2$DAI$depeg_3d$pred_class)
+logit_DAI_5_metrics2 <- depeg_metrics(logitw2$DAI$depeg_5d$test$y, logitw2$DAI$depeg_5d$pred_class)
+logit_DAI_7_metrics2 <- depeg_metrics(logitw2$DAI$depeg_7d$test$y, logitw2$DAI$depeg_7d$pred_class)
+
+plot_logit_DAI_w2_data <- list(depeg_1d = list(test = dfw2$DAI$depeg_1d$test,
+                                               pred = logitw2$DAI$depeg_1d$pred_class),
+                               depeg_3d = list(test = dfw2$DAI$depeg_3d$test,
+                                               pred = logitw2$DAI$depeg_3d$pred_class),
+                               depeg_5d = list(test = dfw2$DAI$depeg_5d$test,
+                                               pred = logitw2$DAI$depeg_5d$pred_class),
+                               depeg_7d = list(test = dfw2$DAI$depeg_7d$test,
+                                               pred = logitw2$DAI$depeg_7d$pred_class))
+
+plot_logit_DAI_w2 <- plot_results(plot_logit_DAI_w2_data,org_data = data_DAI,
+                                  title = "Window 2: DAI Depeg Predictions")
+plot_logit_DAI_w2
+
+#comparing performance across horizons 
+plot_horizon_performance(logitw2$DAI$depeg_1d, logitw2$DAI$depeg_3d, logitw2$DAI$depeg_5d, logitw2$DAI$depeg_7d)
+
+#looking at top 10 coeffs (not stable, with odds ratio close to 0/+inf)
+show_logit_coeffs(logitw2$DAI$depeg_1d, 10)
+show_logit_coeffs(logitw2$DAI$depeg_3d, 10)
+show_logit_coeffs(logitw2$DAI$depeg_5d, 10)
+show_logit_coeffs(logitw2$DAI$depeg_7d, 10)
+# ------------------------------------------------------------------------------
+
+# --------------------------------- PAX ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- USDC ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- USDT ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# ==============================================================================
+
+
+#############
+### LASSO ###
+#############
+source("func-lasso.R") 
+
+# Note: glmnet can issue convergence warnings for some low-lambda fits.
+# These warnings usually affect only the least-regularized part of the path, while
+# the stronger-penalty solutions remain valid and are still returned by cv.glmnet().
+
+
+## WINDOW 1 ====================================================================
+# run LASSO on all coins for all horizons
+lassow1 = run_lasso_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
+
+# --------------------------------- DAI ----------------------------------------
+lasso_DAI_1_metrics1 <- depeg_metrics(lassow1$DAI$depeg_1d$test$y, lassow1$DAI$depeg_1d$pred_class)
+lasso_DAI_3_metrics1 <- depeg_metrics(lassow1$DAI$depeg_3d$test$y, lassow1$DAI$depeg_3d$pred_class)
+lasso_DAI_5_metrics1 <- depeg_metrics(lassow1$DAI$depeg_5d$test$y, lassow1$DAI$depeg_5d$pred_class)
+lasso_DAI_7_metrics1 <- depeg_metrics(lassow1$DAI$depeg_7d$test$y, lassow1$DAI$depeg_7d$pred_class)
+
+plot_lasso_DAI_w1_data <- list(depeg_1d = list(test = dfw1$DAI$depeg_1d$test,
+                                                     pred = lassow1$DAI$depeg_1d$pred_class),
+                                     depeg_3d = list(test = dfw1$DAI$depeg_3d$test,
+                                                     pred = lassow1$DAI$depeg_3d$pred_class),
+                                     depeg_5d = list(test = dfw1$DAI$depeg_5d$test,
+                                                     pred = lassow1$DAI$depeg_5d$pred_class),
+                                     depeg_7d = list(test = dfw1$DAI$depeg_7d$test,
+                                                     pred = lassow1$DAI$depeg_7d$pred_class))
+
+plot_lasso_DAI_w1 <- plot_results(plot_lasso_DAI_w1_data,org_data = data_DAI,
+                                        title = "Window 1: DAI Depeg Predictions")
+plot_lasso_DAI_w1
+
+#comparing performance across horizons 
+plot_horizon_performance(lassow1$DAI$depeg_1d, lassow1$DAI$depeg_3d, lassow1$DAI$depeg_5d, lassow1$DAI$depeg_7d)
+
+#looking at top 10 coeffs (not stable, with odds ratio close to 0/+inf)
+show_lasso_coeffs(lassow1$DAI$depeg_1d, 10)
+show_lasso_coeffs(lassow1$DAI$depeg_3d, 10)
+show_lasso_coeffs(lassow1$DAI$depeg_5d, 10)
+show_lasso_coeffs(lassow1$DAI$depeg_7d, 10)
+
+# ------------------------------------------------------------------------------
+
+# --------------------------------- PAX ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- USDC ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- USDT ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- UST ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# ==============================================================================
+
+
+## WINDOW 2 ====================================================================
+# run LASSO on all coins for all horizons
+lassow2 = run_lasso_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
+
+# --------------------------------- DAI ----------------------------------------
+#comparing performance across horizons 
+lasso_DAI_1_metrics2 <- depeg_metrics(lassow2$DAI$depeg_1d$test$y, lassow2$DAI$depeg_1d$pred_class)
+lasso_DAI_3_metrics2 <- depeg_metrics(lassow2$DAI$depeg_3d$test$y, lassow2$DAI$depeg_3d$pred_class)
+lasso_DAI_5_metrics2 <- depeg_metrics(lassow2$DAI$depeg_5d$test$y, lassow2$DAI$depeg_5d$pred_class)
+lasso_DAI_7_metrics2 <- depeg_metrics(lassow2$DAI$depeg_7d$test$y, lassow2$DAI$depeg_7d$pred_class)
+
+plot_lasso_DAI_w2_data <- list(depeg_1d = list(test = dfw2$DAI$depeg_1d$test,
+                                                     pred = lassow2$DAI$depeg_1d$pred_class),
+                                     depeg_3d = list(test = dfw2$DAI$depeg_3d$test,
+                                                     pred = lassow2$DAI$depeg_3d$pred_class),
+                                     depeg_5d = list(test = dfw2$DAI$depeg_5d$test,
+                                                     pred = lassow2$DAI$depeg_5d$pred_class),
+                                     depeg_7d = list(test = dfw2$DAI$depeg_7d$test,
+                                                     pred = lassow2$DAI$depeg_7d$pred_class))
+
+plot_lasso_DAI_w2 <- plot_results(plot_lasso_DAI_w2_data,org_data = data_DAI,
+                                        title = "Window 2: DAI Depeg Predictions")
+plot_logit_lasso_DAI_w2
+
+#comparing performance across horizons 
+plot_horizon_performance(lassow2$DAI$depeg_1d, lassow2$DAI$depeg_3d, lassow2$DAI$depeg_5d, lassow2$DAI$depeg_7d)
+
+#looking at top 10 coeffs (not stable, with odds ratio close to 0/+inf)
+show_lasso_coeffs(lassow2$DAI$depeg_1d, 10)
+show_lasso_coeffs(lassow2$DAI$depeg_3d, 10)
+show_lasso_coeffs(lassow2$DAI$depeg_5d, 10)
+show_lasso_coeffs(lassow2$DAI$depeg_7d, 10)
+# ------------------------------------------------------------------------------
+
+# --------------------------------- PAX ----------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- USDC ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# --------------------------------- USDT ---------------------------------------
+# COPY OVER CODE
+# ------------------------------------------------------------------------------
+
+# ==============================================================================
+
