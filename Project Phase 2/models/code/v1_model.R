@@ -7,6 +7,12 @@ library(pROC)
 library(smotefamily)
 library(scales)
 library(zoo)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(purrr)
+library(stringr)
+library(forcats)
 
 rm(list=ls())
 set.seed(99)
@@ -520,96 +526,446 @@ auc_rfw2_USDC_7
 # ==============================================================================
 
 
-# ++++++++++++++++++++++++++++++++++++++++++++
-#     OLD FEATURE IMPT CODE: DO NOT RUN
-# ++++++++++++++++++++++++++++++++++++++++++++
+############################################################
+### LOG-LOSS PERMUTATION FEATURE IMPORTANCE FOR RF / GB ####
+############################################################
 
-# maybe include a heatmap of feature importance against probability of depeg
+########################
+### 1) Helper funcs ####
+########################
 
-plot_rf_list <- list(plot_rf_DAI, plot_rf_PAX, plot_rf_USDC, plot_rf_USDT, plot_rf_UST)
-rf_grid <- grid.arrange(grobs = plot_rf_list, nrow = 2, ncol = 3)
-ggsave("../../plots/RF_model_OOS.png", rf_grid, width = 12, height = 8)
-
-# ---- RF Feature Importance Block (rolling-window averaged) ----
-rf_feature_importance_block <- function(rf_obj, top_n = 20, method = c("auto", "IncNodePurity", "%IncMSE")) {
-  method <- match.arg(method)
-  
-  # rf_obj is the output of rf.rolling.window(), e.g. rf_DAI
-  imps <- rf_obj$save.importance
-  imps <- imps[!sapply(imps, is.null)]
-  if (length(imps) == 0) stop("No importance found in rf_obj$save.importance")
-  
-  # Each element is a matrix: rows = features, cols = importance metrics
-  # Stack them into a 3D-like structure using names intersection
-  common_vars <- Reduce(intersect, lapply(imps, rownames))
-  if (length(common_vars) == 0) stop("No common variables across importance matrices")
-  
-  imps <- lapply(imps, function(m) m[common_vars, , drop = FALSE])
-  imp_cols <- colnames(imps[[1]])
-  
-  # Choose method
-  chosen <- method
-  if (method == "auto") {
-    if ("%IncMSE" %in% imp_cols) chosen <- "%IncMSE"
-    else if ("IncNodePurity" %in% imp_cols) chosen <- "IncNodePurity"
-    else chosen <- imp_cols[1]
+# Binary log loss
+log_loss_bin <- function(y_true, p_hat, eps = 1e-15) {
+  # Convert y to numeric 0/1 robustly
+  if (is.factor(y_true)) {
+    y_num <- as.numeric(as.character(y_true))
+  } else {
+    y_num <- as.numeric(y_true)
   }
   
-  # Build matrix [features x iterations] for chosen metric
-  M <- sapply(imps, function(m) m[, chosen])
-  avg <- rowMeans(M, na.rm = TRUE)
-  sdv <- apply(M, 1, sd, na.rm = TRUE)
-  
-  out <- data.frame(
-    feature = names(avg),
-    mean_importance = as.numeric(avg),
-    sd_importance = as.numeric(sdv),
-    stringsAsFactors = FALSE
-  )
-  
-  out <- out[order(out$mean_importance, decreasing = TRUE), ]
-  out_top <- head(out, top_n)
-  
-  list(
-    method = chosen,
-    table = out_top,
-    full_table = out
-  )
+  p_hat <- pmin(pmax(p_hat, eps), 1 - eps)
+  -mean(y_num * log(p_hat) + (1 - y_num) * log(1 - p_hat))
 }
 
+# Safely extract fitted model object
+get_model_obj <- function(model_entry) {
+  # Most likely your fitted object is stored as $model
+  if (!is.null(model_entry$model)) return(model_entry$model)
+  if (!is.null(model_entry$fit)) return(model_entry$fit)
+  stop("Could not find fitted model object. Expected $model or $fit.")
+}
 
-imp_rf_USDT <- rf_feature_importance_block(rf_USDT, top_n = 15)
+# Robust probability prediction for binary class = 1
+# This tries a few common cases:
+# - randomForest/ranger/caret style: predict(..., type='prob')
+# - xgboost style: predict(model, matrix)
+# - glm style: predict(..., type='response')
+get_prob_pred <- function(model_obj, X_new) {
+  
+  # xgboost-style models often need a matrix
+  try_xgb <- try({
+    p <- predict(model_obj, as.matrix(X_new))
+    if (is.numeric(p) && length(p) == nrow(X_new)) return(as.numeric(p))
+    NULL
+  }, silent = TRUE)
+  if (!inherits(try_xgb, "try-error") && !is.null(try_xgb)) return(try_xgb)
+  
+  # probability output
+  try_prob <- try({
+    p <- predict(model_obj, newdata = X_new, type = "prob")
+    
+    # if matrix/data.frame with class columns
+    if (is.matrix(p) || is.data.frame(p)) {
+      cn <- colnames(p)
+      if (!is.null(cn)) {
+        if ("1" %in% cn) return(as.numeric(p[, "1"]))
+        if ("yes" %in% tolower(cn)) return(as.numeric(p[, which(tolower(cn) == "yes")[1]]))
+        if ("true" %in% tolower(cn)) return(as.numeric(p[, which(tolower(cn) == "true")[1]]))
+      }
+      # fallback to second column if 2-class output
+      if (ncol(p) == 2) return(as.numeric(p[, 2]))
+    }
+    
+    # if vector already
+    if (is.numeric(p) && length(p) == nrow(X_new)) return(as.numeric(p))
+    NULL
+  }, silent = TRUE)
+  if (!inherits(try_prob, "try-error") && !is.null(try_prob)) return(try_prob)
+  
+  # response output (e.g. glm)
+  try_resp <- try({
+    p <- predict(model_obj, newdata = X_new, type = "response")
+    if (is.numeric(p) && length(p) == nrow(X_new)) return(as.numeric(p))
+    NULL
+  }, silent = TRUE)
+  if (!inherits(try_resp, "try-error") && !is.null(try_resp)) return(try_resp)
+  
+  stop("Could not get predicted probabilities from model.")
+}
 
-imp_df <- imp_rf_USDT$table
+# Permutation importance for one fitted model entry
+perm_importance_logloss_one <- function(model_entry, test_X, test_y,
+                                        n_repeats = 10, seed = 123) {
+  set.seed(seed)
+  
+  model_obj <- get_model_obj(model_entry)
+  
+  # baseline log loss
+  p_base <- get_prob_pred(model_obj, test_X)
+  base_ll <- log_loss_bin(test_y, p_base)
+  
+  feats <- colnames(test_X)
+  
+  imp_tbl <- lapply(feats, function(feat) {
+    perm_ll <- numeric(n_repeats)
+    
+    for (r in seq_len(n_repeats)) {
+      X_perm <- test_X
+      X_perm[[feat]] <- sample(X_perm[[feat]], replace = FALSE)
+      p_perm <- get_prob_pred(model_obj, X_perm)
+      perm_ll[r] <- log_loss_bin(test_y, p_perm)
+    }
+    
+    data.frame(
+      feature = feat,
+      baseline_logloss = base_ll,
+      perm_logloss_mean = mean(perm_ll),
+      perm_logloss_sd = sd(perm_ll),
+      importance_logloss = mean(perm_ll) - base_ll
+    )
+  }) %>% bind_rows()
+  
+  imp_tbl %>% arrange(desc(importance_logloss))
+}
 
-imp_df$feature <- factor(
-  imp_df$feature,
-  levels = imp_df$feature[order(imp_df$mean_importance)]
+############################################
+### 2) Run for all coins and all horizons ###
+############################################
+
+# model_results: e.g. rfw1, rfw2, gbw1, gbw2
+# dfw: e.g. dfw1, dfw2
+# coin_list: vector of coin names, e.g. names(dfw1)
+# horizons: e.g. c("depeg_1d","depeg_3d","depeg_5d","depeg_7d")
+
+run_logloss_importance_all <- function(model_results, dfw, coin_list, horizons,
+                                       n_repeats = 10, seed = 123,
+                                       model_name = "RF", window_name = "Window 1") {
+  
+  out <- list()
+  k <- 1
+  
+  for (coin in coin_list) {
+    for (h in horizons) {
+      cat("Running:", model_name, "|", window_name, "|", coin, "|", h, "\n")
+      
+      test_X <- dfw[[coin]][[h]]$test$X
+      test_y <- dfw[[coin]][[h]]$test$y
+      model_entry <- model_results[[coin]][[h]]
+      
+      imp_tbl <- perm_importance_logloss_one(
+        model_entry = model_entry,
+        test_X = test_X,
+        test_y = test_y,
+        n_repeats = n_repeats,
+        seed = seed
+      )
+      
+      imp_tbl$model <- model_name
+      imp_tbl$window <- window_name
+      imp_tbl$coin <- coin
+      imp_tbl$horizon <- h
+      
+      out[[k]] <- imp_tbl
+      k <- k + 1
+    }
+  }
+  
+  bind_rows(out) %>%
+    select(model, window, coin, horizon, feature,
+           baseline_logloss, perm_logloss_mean, perm_logloss_sd, importance_logloss)
+}
+
+#####################################################
+### 3) Summaries for plotting / reporting ###########
+#####################################################
+
+# Mean importance by coin-horizon-feature
+summarise_importance <- function(imp_all) {
+  imp_all %>%
+    group_by(model, window, coin, horizon, feature) %>%
+    summarise(
+      mean_importance = mean(importance_logloss, na.rm = TRUE),
+      sd_importance = sd(importance_logloss, na.rm = TRUE),
+      .groups = "drop"
+    )
+}
+
+# Top N features within each coin/horizon
+get_top_features_each_group <- function(imp_summary, top_n = 10) {
+  imp_summary %>%
+    group_by(model, window, coin, horizon) %>%
+    slice_max(order_by = mean_importance, n = top_n, with_ties = FALSE) %>%
+    ungroup()
+}
+
+###################################
+### 4) Plotting helper functions ###
+###################################
+
+# A) Heatmap: average importance by coin x horizon
+plot_importance_heatmap <- function(imp_all, model_name = NULL, window_name = NULL,
+                                    top_n_features = 15) {
+  df <- imp_all
+  
+  if (!is.null(model_name)) df <- df %>% filter(model == model_name)
+  if (!is.null(window_name)) df <- df %>% filter(window == window_name)
+  
+  # keep globally important features to reduce clutter
+  keep_feats <- df %>%
+    group_by(feature) %>%
+    summarise(global_imp = mean(importance_logloss, na.rm = TRUE), .groups = "drop") %>%
+    slice_max(order_by = global_imp, n = top_n_features, with_ties = FALSE) %>%
+    pull(feature)
+  
+  plot_df <- df %>%
+    filter(feature %in% keep_feats) %>%
+    group_by(model, window, coin, horizon, feature) %>%
+    summarise(mean_importance = mean(importance_logloss, na.rm = TRUE), .groups = "drop") %>%
+    mutate(coin_horizon = paste(coin, horizon, sep = " | "))
+  
+  ggplot(plot_df, aes(x = fct_reorder(feature, mean_importance, .fun = mean),
+                      y = fct_rev(coin_horizon),
+                      fill = mean_importance)) +
+    geom_tile() +
+    labs(
+      title = "Log-loss permutation importance heatmap",
+      subtitle = paste0(
+        ifelse(is.null(model_name), "All models", model_name), " | ",
+        ifelse(is.null(window_name), "All windows", window_name)
+      ),
+      x = "Feature",
+      y = "Coin | Horizon",
+      fill = "Δ Log Loss"
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+# B) Bar plot: top features for one coin/horizon
+plot_top_features_one <- function(imp_all, coin_name, horizon_name,
+                                  model_name, window_name, top_n = 15) {
+  
+  plot_df <- imp_all %>%
+    filter(
+      coin == coin_name,
+      horizon == horizon_name,
+      model == model_name,
+      window == window_name
+    ) %>%
+    group_by(feature) %>%
+    summarise(
+      mean_importance = mean(importance_logloss, na.rm = TRUE),
+      sd_importance = sd(importance_logloss, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    slice_max(order_by = mean_importance, n = top_n, with_ties = FALSE) %>%
+    mutate(feature = fct_reorder(feature, mean_importance))
+  
+  ggplot(plot_df, aes(x = feature, y = mean_importance)) +
+    geom_col() +
+    geom_errorbar(aes(ymin = mean_importance - sd_importance,
+                      ymax = mean_importance + sd_importance),
+                  width = 0.2) +
+    coord_flip() +
+    labs(
+      title = paste("Top log-loss feature importance:", coin_name, horizon_name),
+      subtitle = paste(model_name, "|", window_name),
+      x = NULL,
+      y = "Mean Δ Log Loss"
+    ) +
+    theme_minimal()
+}
+
+# C) Faceted plot: top features by coin/horizon
+plot_top_features_faceted <- function(imp_all, model_name, window_name, top_n = 8) {
+  
+  plot_df <- imp_all %>%
+    filter(model == model_name, window == window_name) %>%
+    group_by(coin, horizon, feature) %>%
+    summarise(mean_importance = mean(importance_logloss, na.rm = TRUE), .groups = "drop") %>%
+    group_by(coin, horizon) %>%
+    slice_max(order_by = mean_importance, n = top_n, with_ties = FALSE) %>%
+    ungroup() %>%
+    mutate(panel = paste(coin, horizon, sep = " | "),
+           feature_panel = paste(feature, panel, sep = "___"))
+  
+  # reorder within panel
+  plot_df <- plot_df %>%
+    group_by(panel) %>%
+    mutate(feature_panel = fct_reorder(feature_panel, mean_importance)) %>%
+    ungroup()
+  
+  ggplot(plot_df, aes(x = feature_panel, y = mean_importance)) +
+    geom_col() +
+    coord_flip() +
+    facet_wrap(~ panel, scales = "free_y") +
+    scale_x_discrete(labels = function(x) str_replace(x, "___.*$", "")) +
+    labs(
+      title = "Top log-loss feature importance by coin and horizon",
+      subtitle = paste(model_name, "|", window_name),
+      x = NULL,
+      y = "Mean Δ Log Loss"
+    ) +
+    theme_minimal()
+}
+
+##########################################
+### 5)Run on RF ###
+##########################################
+
+# coin vectors
+coins_w1 <- names(dfw1)
+coins_w2 <- names(dfw2)
+
+# horizons <- c("depeg_1d", "depeg_3d", "depeg_5d", "depeg_7d")
+
+# -----------------------------
+# Random Forest - Window 1
+# -----------------------------
+rf_logloss_imp_w1 <- run_logloss_importance_all(
+  model_results = rfw1,
+  dfw = dfw1,
+  coin_list = coins_w1,
+  horizons = horizons,
+  n_repeats = 10,
+  seed = 123,
+  model_name = "RF",
+  window_name = "Window 1"
 )
 
-plot_imp_rf_USDT <- ggplot(imp_df, aes(x = feature, y = mean_importance)) +
-  geom_col(fill = "steelblue") +
-  geom_errorbar(aes(ymin = mean_importance - sd_importance,
-                    ymax = mean_importance + sd_importance),
-                width = 0.2) +
-  coord_flip() +
-  labs(
-    title = "Random Forest Feature Importance (USDT)",
-    subtitle = paste("Mean Permutation Importance (± SD) | Method:", imp_rf_USDT$method),
-    x = "",
-    y = "Mean Importance"
-  ) +
-  theme_minimal()
+# -----------------------------
+# Random Forest - Window 2
+# -----------------------------
+rf_logloss_imp_w2 <- run_logloss_importance_all(
+  model_results = rfw2,
+  dfw = dfw2,
+  coin_list = coins_w2,
+  horizons = horizons,
+  n_repeats = 10,
+  seed = 123,
+  model_name = "RF",
+  window_name = "Window 2"
+)
 
-ggsave("../../plots/RF_USDT_feature_importance.png", plot_imp_rf_USDT,
-       width = 8, height = 6)
+# combine RF
+rf_logloss_imp_all <- bind_rows(rf_logloss_imp_w1, rf_logloss_imp_w2)
 
-# ++++++++++++++++++++++++++++++++++++++++++++
-#              END OF OLD CODE 
-# ++++++++++++++++++++++++++++++++++++++++++++
+write.csv(rf_logloss_imp_all, "../../plots/rf_logloss_importance_all.csv", row.names = FALSE)
 
+##########################################
+### 6) run on GB / XGBoost #####
+##########################################
+gb_logloss_imp_w1 <- run_logloss_importance_all(
+  model_results = gbw1,
+  dfw = dfw1,
+  coin_list = coins_w1,
+  horizons = horizons,
+  n_repeats = 10,
+  seed = 123,
+  model_name = "GB",
+  window_name = "Window 1"
+)
 
+gb_logloss_imp_w2 <- run_logloss_importance_all(
+  model_results = gbw2,
+  dfw = dfw2,
+  coin_list = coins_w2,
+  horizons = horizons,
+  n_repeats = 10,
+  seed = 123,
+  model_name = "GB",
+  window_name = "Window 2"
+)
 
+gb_logloss_imp_all <- bind_rows(gb_logloss_imp_w1, gb_logloss_imp_w2)
+write.csv(gb_logloss_imp_all, "../../plots/gb_logloss_importance_all.csv", row.names = FALSE)
+
+#################################
+### 7) plots #####
+#################################
+
+# ---- RF heatmap, window 1 ----
+p_rf_heat_w1 <- plot_importance_heatmap(
+  imp_all = rf_logloss_imp_w1,
+  model_name = "RF",
+  window_name = "Window 1",
+  top_n_features = 15
+)
+p_rf_heat_w1
+ggsave("../../plots/RF_logloss_importance_heatmap_w1.png", p_rf_heat_w1, width = 12, height = 8)
+
+# ---- RF heatmap, window 2 ----
+p_rf_heat_w2 <- plot_importance_heatmap(
+  imp_all = rf_logloss_imp_all,
+  model_name = "RF",
+  window_name = "Window 2",
+  top_n_features = 15
+)
+p_rf_heat_w2
+ggsave("../../plots/RF_logloss_importance_heatmap_w2.png", p_rf_heat_w2, width = 12, height = 8)
+
+# ---- Example: one coin/horizon bar plot ----
+p_rf_dai_3d_w1 <- plot_top_features_one(
+  imp_all = rf_logloss_imp_w1,
+  coin_name = "DAI",
+  horizon_name = "depeg_3d",
+  model_name = "RF",
+  window_name = "Window 1",
+  top_n = 15
+)
+p_rf_dai_3d_w1
+ggsave("../../plots/RF_DAI_depeg3d_logloss_importance_w1.png", p_rf_dai_3d_w1, width = 8, height = 6)
+
+# ---- Faceted plot across all coin/horizon combos ----
+p_rf_faceted_w1 <- plot_top_features_faceted(
+  imp_all = rf_logloss_imp_all,
+  model_name = "RF",
+  window_name = "Window 1",
+  top_n = 8
+)
+p_rf_faceted_w1
+ggsave("../../plots/RF_logloss_importance_faceted_w1.png", p_rf_faceted_w1, width = 14, height = 10)
+
+p_rf_faceted_w2 <- plot_top_features_faceted(
+  imp_all = rf_logloss_imp_all,
+  model_name = "RF",
+  window_name = "Window 2",
+  top_n = 8
+)
+p_rf_faceted_w2
+ggsave("../../plots/RF_logloss_importance_faceted_w2.png", p_rf_faceted_w2, width = 14, height = 10)
+
+###########################################
+### 8) Quick summary tables for report ####
+###########################################
+
+# Average importance across all coins/horizons
+rf_global_feature_rank <- rf_logloss_imp_all %>%
+  group_by(model, window, feature) %>%
+  summarise(mean_importance = mean(importance_logloss, na.rm = TRUE), .groups = "drop") %>%
+  arrange(model, window, desc(mean_importance))
+
+print(head(rf_global_feature_rank, 20))
+
+# Top 10 per coin/horizon
+rf_top10_by_group <- rf_logloss_imp_all %>%
+  group_by(model, window, coin, horizon) %>%
+  summarise(mean_importance = mean(importance_logloss, na.rm = TRUE), .by = c(model, window, coin, horizon, feature)) %>%
+  group_by(model, window, coin, horizon) %>%
+  slice_max(order_by = mean_importance, n = 10, with_ties = FALSE) %>%
+  ungroup()
+
+write.csv(rf_top10_by_group, "../../plots/rf_top10_logloss_importance_by_group.csv", row.names = FALSE)
 
 #########################
 ### Gradient Boosting ###
