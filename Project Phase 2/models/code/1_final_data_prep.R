@@ -43,7 +43,7 @@ data_DAI  <- load_and_prep("data/Dai/DAI_onchain_features.csv")
 data_PAX  <- load_and_prep("data/PAX/PAX_onchain_features.csv")
 
 # Data from 2018-10-08 to 2025-12-31
-data_USDC <- load_and_prep("../../data/USDC/USDC_onchain_features.csv")
+data_USDC <- load_and_prep("data/USDC/USDC_onchain_features.csv")
 
 # Data from 2017-11-27 to 2025-12-31
 data_USDT <- load_and_prep("data/USDT/USDT_onchain_features.csv")
@@ -55,10 +55,10 @@ data_UST  <- load_and_prep("data/UST/UST_onchain_features.csv")
 ### Save Files ###
 ##################
 
-write.csv(data_DAI,  "data/DAI_onchain_features.csv",  row.names = FALSE)
-write.csv(data_PAX,  "data/PAX_onchain_features.csv",  row.names = FALSE)
-write.csv(data_USDC, "data/USDC_onchain_features.csv", row.names = FALSE)
-write.csv(data_USDT, "data/USDT_onchain_features.csv", row.names = FALSE)
-write.csv(data_UST,  "data/UST_onchain_features.csv",  row.names = FALSE)
+write.csv(data_DAI,  "data/DAI/DAI_onchain_features.csv",  row.names = FALSE)
+write.csv(data_PAX,  "data/PAX/PAX_onchain_features.csv",  row.names = FALSE)
+write.csv(data_USDC, "data/USDC/USDC_onchain_features.csv", row.names = FALSE)
+write.csv(data_USDT, "data/USDT/USDT_onchain_features.csv", row.names = FALSE)
+write.csv(data_UST,  "data/UST/UST_onchain_features.csv",  row.names = FALSE)
 
 cat("All 5 datasets saved to data/\n")
