@@ -15,11 +15,14 @@ plot_results <- function(coin_data, org_data, title) {
   
   combined <- data.frame()
   
-  horizon_colours <- c("depeg_1d" = "blue",
-                       "depeg_3d" = "orange",
-                       "depeg_5d" = "forestgreen",
-                       "depeg_7d" = "red3")
-  shapes <- c("Actual" = 18, "Predicted" = 4)
+  #horizon_colours <- c("depeg_1d" = "blue",
+  #                     "depeg_3d" = "orange",
+  #                     "depeg_5d" = "forestgreen",
+  #                     "depeg_7d" = "red3")
+  
+  price_colours <- c("close" = "blue",
+                     "high" = "forestgreen",
+                     "low" = "orange")
   
   for(horizon in names(coin_data)){
     horizon_data <- coin_data[[horizon]]
@@ -37,34 +40,57 @@ plot_results <- function(coin_data, org_data, title) {
   all_dates <- unique(combined$date)
   thresh_data <- org_data %>% 
     filter(date %in% all_dates) %>%
-    select(date, close, ThreshU, ThreshD) %>%
+    select(date, close, high, low, ThreshU, ThreshD) %>%
     arrange(date)
   max_price <- max(thresh_data$close, na.rm = TRUE)
   
   plot <- ggplot() +
+    facet_wrap(~ horizon, ncol = 2) +
+    
+    # threshold band
     geom_ribbon(data = thresh_data,
                 aes(x = date, ymin = ThreshD, ymax = ThreshU, 
-                    fill = "Threshold Band"), alpha = 0.2) +
+                    fill = "Threshold Band"), alpha = 0.4) +
+    
+    geom_line(data = thresh_data,aes(x = date, y = ThreshD), 
+              alpha = 0.4, linetype = "dotted") + 
+    geom_line(data = thresh_data,aes(x = date, y = ThreshU), 
+              alpha = 0.4, linetype = "dotted") + 
+    
+    # depeg lines
+    geom_vline(data = combined %>% filter(actual == 1),
+               aes(xintercept = date),
+               linetype = "solid", alpha = 0.4, color = "forestgreen") +
+    geom_vline(data = combined %>% filter(pred == 1),
+               aes(xintercept = date),
+               linetype = "dashed", alpha = 0.4, color = "red") +
+    
+    # price lines
     geom_line(data = thresh_data, 
-              aes(x = date, y = close, colour = "Close Price"),
+              aes(x = date, y = close, colour = "Close"),
               linewidth = 0.8) +
-    geom_point(data = combined %>% filter(actual == 1),
-               aes(x = date, y = max_price * 0.999, 
-                   color = horizon,shape = "Actual"), 
-               size = 2, alpha = 0.3) +
-    geom_point(data = combined %>% filter(pred == 1),
-               aes(x = date, y = max_price * 0.998, 
-                   color = horizon,shape = "Predicted"), 
-               size = 2, alpha = 0.3) +
-    scale_color_manual(name = "Horizon",
-                       values = horizon_colours) +
-    scale_shape_manual(name = "Depeg Type", 
-                       values = shapes) +
+    geom_line(data = thresh_data, 
+              aes(x = date, y = high, colour = "High"),
+              linewidth = 0.8) +
+    geom_line(data = thresh_data, 
+              aes(x = date, y = low, colour = "Low"),
+              linewidth = 0.8) +
+    
+    #scale_color_manual(name = "Horizon",
+    #                   values = horizon_colours) +
+    scale_linetype_manual(values = c("Actual" = "solid", "Predicted" = "dashed")) +
     scale_fill_manual(name = '',
-                      values = c("Threshold Band" = "grey70")) +
+                      values = c("Threshold Band" = "grey80")) +
+    scale_color_manual(name = "Price", 
+                       values = c("Close" = "grey20",
+                                  "High" = "blue",
+                                  "Low" = "orange")) +
+    scale_x_date(date_labels = "%Y-%m-%d") + 
     labs(title = title,
+         caption = "Depeg occurs when low price < ThreshD or high price > ThreshU
+         \nActual depegs (green solid lines) | Predicted depegs (red dashed lines)",
          x = "Date",
-         y = "Close Price") +
+         y = "Price") +
     theme_minimal() +
     theme(legend.position = "bottom",
           legend.box = "vertical")
