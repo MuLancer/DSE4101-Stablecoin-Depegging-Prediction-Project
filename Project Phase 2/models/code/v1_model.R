@@ -83,19 +83,19 @@ prep_features <- function(data, target_col, remove_col, smote = FALSE){
   
   if(smote){
     # Class balance before and after smote (only for train set)
-    cat("TRAIN before SMOTE:\n")
+    cat("TRAIN before SMOTE", target_col, ":\n")
     print(table(y))
     cat("Proportion of depegs:", 
         round(sum(y == 1) / length(y) * 100, 2), "%\n")
     
     # Note: duplicate size - 1 or 2, nearest neighbours - 3 or 5 
-    smote_out <- SMOTE(X, as.numeric(y)-1, dup_size = 2, K = 3)
+    smote_out <- SMOTE(X, as.numeric(y)-1, dup_size = 1, K = 3)
     smote_data <- smote_out$data
     
     X <- smote_data[, 1:ncol(X), drop = FALSE]
     y <- as.factor(smote_data[, ncol(smote_data)])
     
-    cat("TRAIN after SMOTE:\n")
+    cat("TRAIN after SMOTE", target_col, ":\n")
     print(table(y))
     cat("Proportion of depegs:", 
         round(sum(y == 1) / length(y) * 100, 2), "%\n")
@@ -141,8 +141,8 @@ w1 <- function(){
     dataset <- coin_dfw1[[coin]]
     split <- train_test_split(dataset, 
                               train_start = "2020-11-25", 
-                              train_end = "2021-12-31",
-                              test_start = "2022-01-01", 
+                              train_end = "2021-11-25",
+                              test_start = "2021-11-26", 
                               test_end = "2022-05-08")
     
     # create a mini list for each horizon (for each coin)
@@ -189,8 +189,8 @@ w2 <- function(){
     dataset <- coin_dfw2[[coin]]
     split <- train_test_split(dataset, 
                               train_start = "2019-11-22",
-                              train_end = "2023-12-31",
-                              test_start = "2024-01-01",
+                              train_end = "2022-12-31",
+                              test_start = "2023-01-01",
                               test_end = "2025-12-31")
     
     # create a mini list for each horizon (for each coin)
