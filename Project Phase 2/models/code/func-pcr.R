@@ -189,8 +189,8 @@ show_pcr_comps <- function(pcr_result, top_n) {
 }
 
 
-# Plot CV error curve
-plot_cv_curve <- function(cv_errors, title = "PCR Cross-Validation Error") {
+# Plot CV error curve -- same code as in func-pls.R
+plot_cv_curve <- function(cv_errors, title) {
   ncomp_range <- 1:length(cv_errors)
   cv_df <- data.frame(ncomp = ncomp_range, CV_Error = cv_errors)
   
@@ -207,7 +207,7 @@ plot_cv_curve <- function(cv_errors, title = "PCR Cross-Validation Error") {
              hjust = -0.1, color = "red", fontface = "bold") +
     labs(title = title,
          x = "Number of Principal Components",
-         y = "Cross-Validation MSE") +
+         y = "Cross-Validation Log-loss") +
     theme_minimal()
 }
 

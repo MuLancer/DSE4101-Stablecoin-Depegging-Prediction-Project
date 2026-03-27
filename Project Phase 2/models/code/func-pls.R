@@ -33,19 +33,43 @@ runpls <- function(train_data, test_data, title, max_comp = 10, cv_folds = 5) {
   # Cross-validation to choose ncomp
   # -------------------------
   
-  pls_model <- plsr(y ~ ., data = train_df, 
-                    ncomp = max_comp, 
-                    validation = "CV", 
-                    segments = cv_folds)
+  n_obs <- nrow(X_train_scaled)
+  fold_size <- floor(n_obs / cv_folds)
+  max_comp <- min(max_comp, ncol(X_train_scaled), n_obs - 1)
+  cv_errors <- matrix(NA, nrow = cv_folds, ncol = min(max_comp, ncol(X_train_scaled), n_obs-1))
   
-  # Extract CV RMSEP
-  rmsep <- RMSEP(pls_model)
-  cv_errors <- rmsep$val[1, , -1]  # remove intercept
+  for (fold in 1:cv_folds) {
+    
+    test_indices <- ((fold - 1) * fold_size + 1):min(fold * fold_size, n_obs)
+    train_indices <- setdiff(1:n_obs, test_indices)
+    
+    train_fold <- train_df[train_indices, ]
+    test_fold  <- train_df[test_indices, ]
+    y_test_fold <- test_fold$y
+    
+    for (ncomp in 1:min(max_comp, ncol(train_fold))) {
+      
+      # Fit PLS
+      pls_model <- plsr(y ~ ., data = train_fold, ncomp = ncomp)
+      
+      # Predict
+      pred <- predict(pls_model, newdata = test_fold, ncomp = ncomp)
+      pred <- as.vector(pred)
+      
+      # Clip probabilities
+      eps <- 1e-16
+      pred <- pmax(pmin(pred, 1 - eps), eps)
+      # Log-loss
+      cv_errors[fold, ncomp] <- -mean(y_test_fold * log(pred) + (1 - y_test_fold) * log(1 - pred))
+    }
+  }
   
-  optimal_ncomp <- which.min(cv_errors)
+  # Average CV errors across folds
+  mean_cv_errors <- colMeans(cv_errors, na.rm = TRUE)
+  optimal_ncomp <- which.min(mean_cv_errors)
   
   cat("Optimal number of components:", optimal_ncomp, "\n")
-  cat("CV RMSEP:", round(cv_errors[optimal_ncomp], 4), "\n")
+  cat("CV log loss:", round(mean_cv_errors[optimal_ncomp], 4), "\n")
   
   # -------------------------
   # Final model
@@ -60,6 +84,9 @@ runpls <- function(train_data, test_data, title, max_comp = 10, cv_folds = 5) {
   # Clip probabilities
   eps <- 1e-16
   pred_prob <- pmax(pmin(pred_prob, 1 - eps), eps)
+  # Log loss
+  logloss <- -mean(y_test_n * log(pred_prob) + 
+                     (1 - y_test_n) * log(1 - pred_prob))
   
   # Classification
   pred_class <- ifelse(pred_prob >= 0.5, "1", "0")
@@ -68,10 +95,6 @@ runpls <- function(train_data, test_data, title, max_comp = 10, cv_folds = 5) {
   # Confusion matrix
   cm <- table(Predicted = pred_class, Actual = y_test)
   accuracy <- sum(diag(cm)) / sum(cm)
-  
-  # Log loss
-  logloss <- -mean(y_test_n * log(pred_prob) + 
-                     (1 - y_test_n) * log(1 - pred_prob))
   
   # -------------------------
   # Coefficients
@@ -95,6 +118,7 @@ runpls <- function(train_data, test_data, title, max_comp = 10, cv_folds = 5) {
               pred_class = pred_class,
               ncomp = optimal_ncomp,
               cv_errors = cv_errors,
+              pls_loadings = pls_final$loading.weights,
               coefficients = coeff_pls,
               explained_variance = expl_var,
               cumulative_variance = cum_var,
@@ -133,4 +157,56 @@ runpls_all <- function(dfw, coin_list, horizons) {
   }
   
   return(all_results)
+}
+
+
+# top_n refers to the no. of variables in each component 
+show_pls_comps <- function(pls_result, top_n) {
+  # Get PLS loadings
+  loadings <- pls_result$pls_loadings
+  
+  cat("=== PLS Principal Components - Important Predictors ===\n\n")
+  
+  # Show top predictors for each component
+  for(comp in 1:ncol(loadings)) {
+    cat(sprintf("PRINCIPAL COMPONENT %d:\n", comp))
+    
+    # Get loadings for this component
+    comp_loadings <- loadings[, comp]
+    
+    # Sort by absolute value (most important first)
+    top_indices <- order(abs(comp_loadings), decreasing = TRUE)[1:top_n]
+    top_loadings <- comp_loadings[top_indices]
+    
+    # Print results
+    for(i in 1:length(top_loadings)) {
+      cat(sprintf("  %2d. %-30s: %7.4f\n",
+                  i,
+                  names(top_loadings)[i],
+                  top_loadings[i]))}
+    cat("\n")
+  }
+}
+
+
+# Plot CV error curve -- same code as in func-pcr.R
+plot_cv_curve <- function(cv_errors, title) {
+  ncomp_range <- 1:length(cv_errors)
+  cv_df <- data.frame(ncomp = ncomp_range, CV_Error = cv_errors)
+  
+  optimal_ncomp <- which.min(cv_errors)
+  
+  ggplot(cv_df, aes(x = ncomp, y = CV_Error)) +
+    geom_line(color = "steelblue", size = 1) +
+    geom_point(color = "steelblue", size = 2) +
+    geom_vline(xintercept = optimal_ncomp, linetype = "dashed", color = "red", size = 1) +
+    geom_point(aes(x = optimal_ncomp, y = cv_errors[optimal_ncomp]), 
+               color = "red", size = 3) +
+    annotate("text", x = optimal_ncomp, y = max(cv_errors),
+             label = paste("Optimal:", optimal_ncomp, "PCs"),
+             hjust = -0.1, color = "red", fontface = "bold") +
+    labs(title = title,
+         x = "Number of Principal Components",
+         y = "Cross-Validation Log-loss") +
+    theme_minimal()
 }

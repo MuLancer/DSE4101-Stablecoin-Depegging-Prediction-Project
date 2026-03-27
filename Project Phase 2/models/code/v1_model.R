@@ -1163,6 +1163,19 @@ plsw2 = runpls_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
 # ==============================================================================
 
 
+## Some additional functions: show PLS components
+summary(plsw1$DAI$depeg_1d$model)
+cat("Optimal No. of components for DAI 1d:", plsw1$DAI$depeg_1d$ncomp, "\n")
+show_pls_comps(plsw1$DAI$depeg_1d, top_n = 5)
+
+summary(plsw1$UST$depeg_5d$model)
+cat("Optimal No. of components for UST 5d:", plsw1$UST$depeg_5d$ncomp, "\n")
+show_pls_comps(plsw1$UST$depeg_5d, top_n = 5)
+
+summary(plsw1$UST$depeg_7d$model)
+cat("Optimal No. of components for UST 7d:", plsw1$UST$depeg_7d$ncomp, "\n")
+show_pls_comps(plsw1$UST$depeg_7d, top_n = 5)
+
 
 ###########################
 ### Logistic Regression ###
