@@ -13,6 +13,7 @@ library(ggplot2)
 library(purrr)
 library(stringr)
 library(forcats)
+library(tidytext)
 
 rm(list=ls())
 set.seed(99)
@@ -319,7 +320,7 @@ rfw1_USDC_7_metrics <- depeg_metrics(dfw1$USDC$depeg_7d$test$y, rfw1$USDC$depeg_
 plot_rfw1_USDC_data <- list(depeg_1d = list(test = dfw1$USDC$depeg_1d$test,
                                          pred = rfw1$USDC$depeg_1d$pred_class),
                          depeg_3d = list(test = dfw1$USDC$depeg_3d$test,
-                                         pred = fw1$USDC$depeg_3d$pred_class),
+                                         pred = rfw1$USDC$depeg_3d$pred_class),
                          depeg_5d = list(test = dfw1$USDC$depeg_5d$test,
                                          pred = rfw1$USDC$depeg_5d$pred_class),
                          depeg_7d = list(test = dfw1$USDC$depeg_7d$test,
@@ -424,7 +425,7 @@ plot_rfw2_DAI
 #                         add_ci = TRUE, add_optimal = TRUE)
 # auc_rfw2_DAI_1
 
-auc_rfw2_DAI_3 <- plot_auc(dfw2$DAI$depeg_3d$test$y, dfw2$DAI$depeg_3d$pred_class, 
+auc_rfw2_DAI_3 <- plot_auc(dfw2$DAI$depeg_3d$pred_class, dfw2$DAI$depeg_3d$pred_class, 
                          title = "ROC: DAI depeg_3d",
                          add_ci = TRUE, add_optimal = TRUE)
 auc_rfw2_DAI_3
@@ -944,6 +945,72 @@ p_rf_faceted_w2 <- plot_top_features_faceted(
 )
 p_rf_faceted_w2
 ggsave("../../plots/RF_logloss_importance_faceted_w2.png", p_rf_faceted_w2, width = 14, height = 10)
+
+# One plot per coin, 4 subplots for each horizon (1d/3d/5d/7d), top 10 features each
+plot_coin_feature_importance <- function(imp_data, 
+                                         coin_name,
+                                         model_name = "RF", 
+                                         window_name = "Window 1",
+                                         top_n = 10) {
+  
+  plot_df <- imp_data %>%
+    filter(model == model_name, window == window_name, coin == coin_name) %>%
+    group_by(horizon, feature) %>%
+    summarise(mean_importance = mean(importance_logloss, na.rm = TRUE),
+              .groups = "drop") %>%
+    group_by(horizon) %>%
+    slice_max(order_by = mean_importance, n = top_n, with_ties = FALSE) %>%
+    ungroup() %>%
+    mutate(
+      horizon_label = case_when(
+        horizon == "depeg_1d" ~ "1 Day",
+        horizon == "depeg_3d" ~ "3 Day",
+        horizon == "depeg_5d" ~ "5 Day",
+        horizon == "depeg_7d" ~ "7 Day"
+      ),
+      horizon_label = factor(horizon_label, 
+                             levels = c("1 Day", "3 Day", "5 Day", "7 Day"))
+    )
+  
+  ggplot(plot_df, aes(x = reorder_within(feature, mean_importance, horizon), 
+                      y = mean_importance)) +
+    geom_col(fill = "#2E86AB") +
+    coord_flip() +
+    facet_wrap(~ horizon_label, nrow = 2, scales = "free_y") +
+    scale_x_reordered() +
+    labs(
+      title = paste(coin_name, "Top", top_n, "Feature Importance by Horizon"),
+      subtitle = paste(model_name, "|", window_name),
+      x = NULL,
+      y = "Mean Log Loss Increase"
+    ) +
+    theme_minimal() +
+    theme(
+      axis.text.y = element_text(size = 8),
+      strip.text = element_text(size = 11, face = "bold"),
+      panel.spacing = unit(1, "lines"),
+      plot.title = element_text(size = 14, face = "bold")
+    )
+}
+
+# ============================================
+# Generate plots for all coins
+# ============================================
+
+# RF Window 1
+for (coin in c("DAI", "PAX", "USDC", "USDT", "UST")) {
+  p <- plot_coin_feature_importance(rf_logloss_imp_all, coin, "RF", "Window 1", top_n = 10)
+  print(p)
+  ggsave(paste0("../../plots/feature_importance/RF_", coin, "_feature_importance_w1.png"), p, width = 10, height = 8)
+}
+
+# RF Window 2 (no UST)
+for (coin in c("DAI", "PAX", "USDC", "USDT")) {
+  p <- plot_coin_feature_importance(rf_logloss_imp_all, coin, "RF", "Window 2", top_n = 10)
+  print(p)
+  ggsave(paste0("../../plots/feature_importance/RF_", coin, "_feature_importance_w2.png"), p, width = 10, height = 8)
+}
+
 
 ###########################################
 ### 8) Quick summary tables for report ####
