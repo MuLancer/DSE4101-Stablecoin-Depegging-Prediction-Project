@@ -77,6 +77,16 @@ runpls <- function(train_data, test_data, title, max_comp = 10, cv_folds = 5) {
   
   pls_final <- plsr(y ~ ., data = train_df, ncomp = optimal_ncomp)
   
+  # Save train/test PLS component scores
+  train_pls_scores <- pls_final$scores[, 1:optimal_ncomp, drop = FALSE]
+  test_pls_scores <- X_test_scaled %*% pls_final$projection[, 1:optimal_ncomp, drop = FALSE]
+  
+  colnames(train_pls_scores) <- paste0("Comp", seq_len(ncol(train_pls_scores)))
+  colnames(test_pls_scores) <- paste0("Comp", seq_len(ncol(test_pls_scores)))
+  
+  train_pls_scores <- as.data.frame(train_pls_scores)
+  test_pls_scores <- as.data.frame(test_pls_scores)
+  
   # Predict probabilities
   pred_prob <- predict(pls_final, newdata = test_df, ncomp = optimal_ncomp)
   pred_prob <- as.vector(pred_prob)
@@ -119,6 +129,8 @@ runpls <- function(train_data, test_data, title, max_comp = 10, cv_folds = 5) {
               ncomp = optimal_ncomp,
               cv_errors = cv_errors,
               pls_loadings = pls_final$loading.weights,
+              train_pls_scores = train_pls_scores,
+              test_pls_scores = test_pls_scores,
               coefficients = coeff_pls,
               explained_variance = expl_var,
               cumulative_variance = cum_var,
@@ -209,4 +221,93 @@ plot_cv_curve <- function(cv_errors, title) {
          x = "Number of Principal Components",
          y = "Cross-Validation Log-loss") +
     theme_minimal()
+}
+
+
+#Plot Comps against test set dates
+plot_test_comps <- function(result_data, test_data, coin_df, coin, horizon, title = NULL,
+                            show_labels = TRUE, depeg_linetype = "solid") {
+  library(ggplot2)
+  library(tidyr)
+  library(dplyr)
+  
+  pls_result <- result_data[[coin]][[horizon]]
+  scores <- as.data.frame(pls_result$test_pls_scores)
+  colnames(scores) <- paste0("Comp", seq_len(ncol(scores)))
+  
+  test_dates <- as.Date(test_data[[coin]][[horizon]]$test$dates)
+  
+  if (length(test_dates) != nrow(scores)) {
+    stop("Length of test dates must match number of rows in test_pls_scores")
+  }
+  
+  scores$time <- test_dates
+  
+  plot_df <- pivot_longer(
+    scores,
+    cols = -time,
+    names_to = "Component",
+    values_to = "score"
+  )
+  
+  test_start <- min(test_dates)
+  test_end <- max(test_dates)
+  
+  depeg_df <- coin_df %>%
+    mutate(
+      date = as.Date(date),
+      depeg_flag = as.integer(as.character(.data[[horizon]]))
+    ) %>%
+    filter(date >= test_start, date <= test_end) %>%
+    arrange(date) %>%
+    mutate(
+      prev_flag = dplyr::lag(depeg_flag, default = 0),
+      event_start = depeg_flag == 1 & prev_flag == 0
+    ) %>%
+    filter(event_start) %>%
+    select(date)
+  
+  p <- ggplot() +
+    geom_line(
+      data = plot_df,
+      aes(x = time, y = score),
+      color = "steelblue",
+      linewidth = 0.9
+    ) +
+    facet_wrap(~ Component, scales = "free_y") +
+    geom_vline(
+      data = depeg_df,
+      aes(xintercept = date),
+      color = "red",
+      linetype = depeg_linetype,
+      linewidth = 1.2,
+      alpha = 0.9
+    ) +
+    scale_x_date(date_labels = "%b %Y", date_breaks = "1 month") +
+    theme_minimal() +
+    labs(
+      title = if (is.null(title)) paste(coin, "-", horizon, ": test PLS scores") else title,
+      x = "Time",
+      y = "PLS score"
+    ) +
+    theme(
+      plot.margin = margin(20, 30, 10, 10)
+    )
+  
+  if (show_labels && nrow(depeg_df) > 0) {
+    p <- p +
+      geom_text(
+        data = depeg_df,
+        aes(x = date, y = Inf, label = format(date, "%Y-%m-%d")),
+        color = "red",
+        angle = 90,
+        vjust = -0.8,
+        hjust = 1,
+        size = 3.2,
+        fontface = "bold"
+      ) +
+      coord_cartesian(clip = "off")
+  }
+  
+  print(p)
 }
