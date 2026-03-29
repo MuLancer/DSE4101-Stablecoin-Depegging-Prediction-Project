@@ -72,6 +72,9 @@ runpcr <- function(train_data, test_data, title, max_comp = 10, cv_folds = 5) {
   scores_all <- pca$x[, 1:optimal_ncomp, drop = FALSE]
   scores_test <- X_test_scaled %*% pca$rotation[, 1:optimal_ncomp, drop = FALSE]
   
+  colnames(scores_all) <- paste0("PC", seq_len(ncol(scores_all)))
+  colnames(scores_test) <- paste0("PC", seq_len(ncol(scores_test)))
+  
   scores_all_df <- as.data.frame(scores_all)
   scores_test_df <- as.data.frame(scores_test)
   
@@ -121,6 +124,8 @@ runpcr <- function(train_data, test_data, title, max_comp = 10, cv_folds = 5) {
               explained_variance = explained_variance,
               cumulative_variance = cumulative_variance,
               pca_loadings = pca_loadings,
+              train_pc_scores = scores_all_df,
+              test_pc_scores = scores_test_df,
               coefficients = coeff_org,
               confusion_matrix = cm,
               logloss = logloss))
@@ -212,6 +217,93 @@ plot_cv_curve <- function(cv_errors, title) {
 }
 
 
+#Plot PCs against test set date
+plot_test_pcs <- function(result_data, test_data, coin_df, coin, horizon, title = NULL,
+                          show_labels = TRUE) {
+  library(ggplot2)
+  library(tidyr)
+  library(dplyr)
+  
+  pcr_result <- result_data[[coin]][[horizon]]
+  scores <- as.data.frame(pcr_result$test_pc_scores)
+  colnames(scores) <- paste0("PC", seq_len(ncol(scores)))
+  
+  test_dates <- as.Date(test_data[[coin]][[horizon]]$test$dates)
+  
+  if (length(test_dates) != nrow(scores)) {
+    stop("Length of test dates must match number of rows in test_pc_scores")
+  }
+  
+  scores$time <- test_dates
+  
+  plot_df <- pivot_longer(
+    scores,
+    cols = -time,
+    names_to = "PC",
+    values_to = "score"
+  )
+  
+  test_start <- min(test_dates)
+  test_end <- max(test_dates)
+  
+  depeg_df <- coin_df %>%
+    mutate(
+      date = as.Date(date),
+      depeg_flag = as.integer(as.character(.data[[horizon]]))
+    ) %>%
+    filter(date >= test_start, date <= test_end) %>%
+    arrange(date) %>%
+    mutate(
+      prev_flag = dplyr::lag(depeg_flag, default = 0),
+      event_start = depeg_flag == 1 & prev_flag == 0
+    ) %>%
+    filter(event_start) %>%
+    select(date)
+  
+  p <- ggplot() +
+    geom_line(
+      data = plot_df,
+      aes(x = time, y = score),
+      color = "steelblue",
+      linewidth = 0.9
+    ) +
+    facet_wrap(~ PC, scales = "free_y") +
+    geom_vline(
+      data = depeg_df,
+      aes(xintercept = date),
+      color = "red",
+      linetype = "solid",
+      linewidth = 1,
+      alpha = 0.9
+    ) +
+    scale_x_date(date_labels = "%b %Y", date_breaks = "1 month") +
+    theme_minimal() +
+    labs(
+      title = if (is.null(title)) paste(coin, "-", horizon, ": test PC scores") else title,
+      x = "Time",
+      y = "PC score"
+    ) +
+    theme(
+      plot.margin = margin(20, 30, 10, 10)
+    )
+  
+  if (show_labels && nrow(depeg_df) > 0) {
+    p <- p +
+      geom_text(
+        data = depeg_df,
+        aes(x = date, y = Inf, label = format(date, "%Y-%m-%d")),
+        color = "red",
+        angle = 90,
+        vjust = -0.8,
+        hjust = 1,
+        size = 3.2,
+        fontface = "bold"
+      ) +
+      coord_cartesian(clip = "off")
+  }
+  
+  print(p)
+}
 
 
 pcr.rolling.window <- function(Y, nprev, indice, lag = 1, max_comp = 10, cv_folds = 5) {
