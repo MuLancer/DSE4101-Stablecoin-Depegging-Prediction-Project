@@ -11,13 +11,14 @@ depeg_metrics <- function(actual, predicted) {
   FN <- sum(actual == 1 & predicted == 0, na.rm = TRUE)
   
   # performance metrics
-  accuracy <- (TP + TN) / (TP + FP + TN + FN) 
+  accuracy <- (TP + TN) / (TP + FP + TN + FN)
   misclass_rate <- 1 - accuracy
-  sensitivity <- TP / (TP + FN) # want to maximise 
-  specificity <- TN / (TN + FP)
-  precision <- TP / (TP + FP)
-  recall <- sensitivity
-  f1 <- 2 * (precision * recall) / (precision + recall)
+  sensitivity <- ifelse((TP + FN) == 0, 0, TP / (TP + FN))
+  specificity <- ifelse((TN + FP) == 0, 0, TN / (TN + FP))
+  precision <- ifelse((TP + FP) == 0, 0, TP / (TP + FP))
+  recall    <- ifelse((TP + FN) == 0, 0, TP / (TP + FN))
+  f1  <- ifelse((precision + recall) == 0, 0, 
+                      2 * precision * recall / (precision + recall))
   
   # cost ratios (FP vs FN): In the case of our project, FN is more detrimental
   FP_cost_ratio <- FP / (FP + FN)
