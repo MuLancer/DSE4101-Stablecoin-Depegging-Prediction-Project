@@ -15,7 +15,7 @@ library(stringr)
 library(forcats)
 library(tidytext)
 library(tibble)
-
+library(scales)
 
 rm(list=ls())
 set.seed(99)
@@ -1746,3 +1746,130 @@ summary_compare <- summary_main %>%
   )
 
 summary_compare
+
+#plots
+summary_plot <- summary_main %>%
+  mutate(
+    horizon = factor(horizon, levels = c("1d", "3d", "5d", "7d")),
+    window = factor(window, levels = c("Window 1", "Window 2")),
+    model = factor(model, levels = c("RF", "GB", "PCR", "PLS")),
+    coin = factor(coin, levels = c("DAI", "PAX", "USDT", "USDC", "UST"))
+  )
+p_f1_heatmap <- ggplot(summary_plot, aes(x = horizon, y = coin, fill = f1_score)) +
+  geom_tile(color = "white", linewidth = 0.4) +
+  geom_text(aes(label = round(f1_score, 2)), size = 3) +
+  facet_grid(window ~ model) +
+  scale_fill_viridis_c(labels = number_format(accuracy = 0.01)) +
+  labs(
+    title = "F1 Score by Model, Window, Coin, and Horizon",
+    x = "Forecast Horizon",
+    y = "Coin",
+    fill = "F1 Score"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid = element_blank(),
+    strip.text = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 0, hjust = 0.5)
+  )
+
+p_f1_heatmap
+
+p_recall_heatmap <- ggplot(summary_plot, aes(x = horizon, y = coin, fill = recall)) +
+  geom_tile(color = "white", linewidth = 0.4) +
+  geom_text(aes(label = round(recall, 2)), size = 3) +
+  facet_grid(window ~ model) +
+  scale_fill_viridis_c(labels = number_format(accuracy = 0.01)) +
+  labs(
+    title = "Recall by Model, Window, Coin, and Horizon",
+    x = "Forecast Horizon",
+    y = "Coin",
+    fill = "Recall"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid = element_blank(),
+    strip.text = element_text(face = "bold")
+  )
+
+p_recall_heatmap
+
+p_f1_lines <- ggplot(summary_plot, aes(x = horizon, y = f1_score, color = model, group = model)) +
+  geom_line(linewidth = 0.9) +
+  geom_point(size = 2) +
+  facet_grid(window ~ coin) +
+  scale_y_continuous(labels = number_format(accuracy = 0.01), limits = c(0, 1)) +
+  labs(
+    title = "F1 Score Across Forecast Horizons",
+    x = "Forecast Horizon",
+    y = "F1 Score",
+    color = "Model"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    strip.text = element_text(face = "bold")
+  )
+
+p_f1_lines
+
+p_pr_scatter <- ggplot(summary_plot, aes(x = recall, y = precision, color = model, shape = window)) +
+  geom_point(size = 3, alpha = 0.9) +
+  facet_wrap(~ coin) +
+  scale_x_continuous(limits = c(0, 1), labels = number_format(accuracy = 0.01)) +
+  scale_y_continuous(limits = c(0, 1), labels = number_format(accuracy = 0.01)) +
+  labs(
+    title = "Precision vs Recall by Model",
+    x = "Recall",
+    y = "Precision",
+    color = "Model",
+    shape = "Window"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    strip.text = element_text(face = "bold")
+  )
+
+p_pr_scatter
+
+conf_long <- summary_plot %>%
+  select(model, window, coin, horizon, TP, TN, FP, FN) %>%
+  pivot_longer(cols = c(TP, TN, FP, FN), names_to = "type", values_to = "count")
+
+p_confusion <- ggplot(conf_long, aes(x = horizon, y = count, fill = type)) +
+  geom_col(position = "stack") +
+  facet_grid(window + coin ~ model, scales = "free_y") +
+  labs(
+    title = "Confusion Matrix Components by Model",
+    x = "Forecast Horizon",
+    y = "Count",
+    fill = "Component"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    strip.text = element_text(face = "bold")
+  )
+
+p_confusion
+
+best_models <- summary_plot %>%
+  group_by(window, coin, horizon) %>%
+  slice_max(order_by = f1_score, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+p_best_models <- ggplot(best_models, aes(x = horizon, y = f1_score, fill = model)) +
+  geom_col() +
+  facet_grid(window ~ coin) +
+  scale_y_continuous(limits = c(0, 1), labels = number_format(accuracy = 0.01)) +
+  labs(
+    title = "Best Model by F1 Score",
+    x = "Forecast Horizon",
+    y = "Best F1 Score",
+    fill = "Winning Model"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    strip.text = element_text(face = "bold")
+  )
+
+p_best_models
+
