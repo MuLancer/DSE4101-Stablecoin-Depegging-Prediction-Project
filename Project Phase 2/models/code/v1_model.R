@@ -1105,23 +1105,158 @@ source("func-pcr.R")
 pcrw1 = runpcr_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
 
 # --------------------------------- DAI ----------------------------------------
-# COPY OVER CODE
+# depeg_1d 
+summary(pcrw1$DAI$depeg_1d$model)
+cat("Optimal No. of components for DAI 1d:", pcrw1$DAI$depeg_1d$ncomp, "\n")
+show_pcr_comps(pcrw1$DAI$depeg_1d, top_n = 5)
+plot_cv_curve(pcrw1$DAI$depeg_1d$cv_errors, title = "DAI 1d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1,test_data = dfw1,coin_df = data_DAI, coin = "DAI",horizon = "depeg_1d", title = "DAI depeg_1d: test PC scores")
+
+# depeg_3d 
+summary(pcrw1$DAI$depeg_3d$model)
+cat("Optimal No. of components for DAI 3d:", pcrw1$DAI$depeg_3d$ncomp, "\n")
+show_pcr_comps(pcrw1$DAI$depeg_3d, top_n = 5)
+plot_cv_curve(pcrw1$DAI$depeg_3d$cv_errors, title = "DAI 3d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1,test_data = dfw1,coin_df = data_DAI, coin = "DAI",horizon = "depeg_3d", title = "DAI depeg_3d: test PC scores")
+
+# depeg_5d 
+summary(pcrw1$DAI$depeg_5d$model)
+cat("Optimal No. of components for DAI 5d:", pcrw1$DAI$depeg_5d$ncomp, "\n")
+show_pcr_comps(pcrw1$DAI$depeg_5d, top_n = 5)
+plot_cv_curve(pcrw1$DAI$depeg_5d$cv_errors, title = "DAI 5d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1,test_data = dfw1,coin_df = data_DAI, coin = "DAI",horizon = "depeg_5d", title = "DAI depeg_5d: test PC scores")
+
+# depeg_7d 
+summary(pcrw1$DAI$depeg_7d$model)
+cat("Optimal No. of components for DAI 7d:", pcrw1$DAI$depeg_7d$ncomp, "\n")
+show_pcr_comps(pcrw1$DAI$depeg_7d, top_n = 5)
+plot_cv_curve(pcrw1$DAI$depeg_7d$cv_errors, title = "DAI 7d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1,test_data = dfw1,coin_df = data_DAI, coin = "DAI",horizon = "depeg_7d", title = "DAI depeg_7d: test PC scores")
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- PAX ----------------------------------------
-# COPY OVER CODE
+# depeg_1d 
+summary(pcrw1$PAX$depeg_1d$model)
+cat("Optimal No. of components for PAX 1d:", pcrw1$PAX$depeg_1d$ncomp, "\n")
+show_pcr_comps(pcrw1$PAX$depeg_1d, top_n = 5)
+plot_cv_curve(pcrw1$PAX$depeg_1d$cv_errors, title = "PAX 1d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1, test_data = dfw1, coin_df = data_PAX, coin = "PAX", horizon = "depeg_1d", title = "PAX depeg_1d: test PC scores")
+
+# depeg_3d 
+summary(pcrw1$PAX$depeg_3d$model)
+cat("Optimal No. of components for PAX 3d:", pcrw1$PAX$depeg_3d$ncomp, "\n")
+show_pcr_comps(pcrw1$PAX$depeg_3d, top_n = 5)
+plot_cv_curve(pcrw1$PAX$depeg_3d$cv_errors, title = "PAX 3d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1, test_data = dfw1, coin_df = data_PAX, coin = "PAX", horizon = "depeg_3d", title = "PAX depeg_3d: test PC scores")
+
+# depeg_5d 
+summary(pcrw1$PAX$depeg_5d$model)
+cat("Optimal No. of components for PAX 5d:", pcrw1$PAX$depeg_5d$ncomp, "\n")
+show_pcr_comps(pcrw1$PAX$depeg_5d, top_n = 5)
+plot_cv_curve(pcrw1$PAX$depeg_5d$cv_errors, title = "PAX 5d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1, test_data = dfw1, coin_df = data_PAX, coin = "PAX", horizon = "depeg_5d", title = "PAX depeg_5d: test PC scores")
+
+# depeg_7d 
+summary(pcrw1$PAX$depeg_7d$model)
+cat("Optimal No. of components for PAX 7d:", pcrw1$PAX$depeg_7d$ncomp, "\n")
+show_pcr_comps(pcrw1$PAX$depeg_7d, top_n = 5)
+plot_cv_curve(pcrw1$PAX$depeg_7d$cv_errors, title = "PAX 7d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1, test_data = dfw1, coin_df = data_PAX, coin = "PAX", horizon = "depeg_7d", title = "PAX depeg_7d: test PC scores")
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- USDC ---------------------------------------
-# COPY OVER CODE
+# depeg_1d 
+summary(pcrw1$USDC$depeg_1d$model)
+cat("Optimal No. of components for USDC 1d:", pcrw1$USDC$depeg_1d$ncomp, "\n")
+show_pcr_comps(pcrw1$USDC$depeg_1d, top_n = 5)
+plot_cv_curve(pcrw1$USDC$depeg_1d$cv_errors, title = "USDC 1d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1, test_data = dfw1, coin_df = data_USDC, coin = "USDC", horizon = "depeg_1d", title = "USDC depeg_1d: test PC scores")
+
+# depeg_3d 
+summary(pcrw1$USDC$depeg_3d$model)
+cat("Optimal No. of components for USDC 3d:", pcrw1$USDC$depeg_3d$ncomp, "\n")
+show_pcr_comps(pcrw1$USDC$depeg_3d, top_n = 5)
+plot_cv_curve(pcrw1$USDC$depeg_3d$cv_errors, title = "USDC 3d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1, test_data = dfw1, coin_df = data_USDC, coin = "USDC", horizon = "depeg_3d", title = "USDC depeg_3d: test PC scores")
+
+# depeg_5d 
+summary(pcrw1$USDC$depeg_5d$model)
+cat("Optimal No. of components for USDC 5d:", pcrw1$USDC$depeg_5d$ncomp, "\n")
+show_pcr_comps(pcrw1$USDC$depeg_5d, top_n = 5)
+plot_cv_curve(pcrw1$USDC$depeg_5d$cv_errors, title = "USDC 5d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1, test_data = dfw1, coin_df = data_USDC, coin = "USDC", horizon = "depeg_5d", title = "USDC depeg_5d: test PC scores")
+
+# depeg_7d 
+summary(pcrw1$USDC$depeg_7d$model)
+cat("Optimal No. of components for USDC 7d:", pcrw1$USDC$depeg_7d$ncomp, "\n")
+show_pcr_comps(pcrw1$USDC$depeg_7d, top_n = 5)
+plot_cv_curve(pcrw1$USDC$depeg_7d$cv_errors, title = "USDC 7d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1, test_data = dfw1, coin_df = data_USDC, coin = "USDC", horizon = "depeg_7d", title = "USDC depeg_7d: test PC scores")
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- USDT ---------------------------------------
-# COPY OVER CODE
+# depeg_1d 
+summary(pcrw1$USDT$depeg_1d$model)
+cat("Optimal No. of components for USDT 1d:", pcrw1$USDT$depeg_1d$ncomp, "\n")
+show_pcr_comps(pcrw1$USDT$depeg_1d, top_n = 5)
+plot_cv_curve(pcrw1$USDT$depeg_1d$cv_errors, title = "USDT 1d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1, test_data = dfw1, coin_df = data_USDT, coin = "USDT", horizon = "depeg_1d", title = "USDT depeg_1d: test PC scores")
+
+# depeg_3d 
+summary(pcrw1$USDT$depeg_3d$model)
+cat("Optimal No. of components for USDT 3d:", pcrw1$USDT$depeg_3d$ncomp, "\n")
+show_pcr_comps(pcrw1$USDT$depeg_3d, top_n = 5)
+plot_cv_curve(pcrw1$USDT$depeg_3d$cv_errors, title = "USDT 3d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1, test_data = dfw1, coin_df = data_USDT, coin = "USDT", horizon = "depeg_3d", title = "USDT depeg_3d: test PC scores")
+
+# depeg_5d 
+summary(pcrw1$USDT$depeg_5d$model)
+cat("Optimal No. of components for USDT 5d:", pcrw1$USDT$depeg_5d$ncomp, "\n")
+show_pcr_comps(pcrw1$USDT$depeg_5d, top_n = 5)
+plot_cv_curve(pcrw1$USDT$depeg_5d$cv_errors, title = "USDT 5d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1, test_data = dfw1, coin_df = data_USDT, coin = "USDT", horizon = "depeg_5d", title = "USDT depeg_5d: test PC scores")
+
+# depeg_7d 
+summary(pcrw1$USDT$depeg_7d$model)
+cat("Optimal No. of components for USDT 7d:", pcrw1$USDT$depeg_7d$ncomp, "\n")
+show_pcr_comps(pcrw1$USDT$depeg_7d, top_n = 5)
+plot_cv_curve(pcrw1$USDT$depeg_7d$cv_errors, title = "USDT 7d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1, test_data = dfw1, coin_df = data_USDT, coin = "USDT", horizon = "depeg_7d", title = "USDT depeg_7d: test PC scores")
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- UST ----------------------------------------
-# COPY OVER CODE
+# depeg_1d 
+summary(pcrw1$UST$depeg_1d$model)
+cat("Optimal No. of components for UST 1d:", pcrw1$UST$depeg_1d$ncomp, "\n")
+show_pcr_comps(pcrw1$UST$depeg_1d, top_n = 5)
+plot_cv_curve(pcrw1$UST$depeg_1d$cv_errors, title = "UST 1d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1, test_data = dfw1, coin_df = data_UST, coin = "UST", horizon = "depeg_1d", title = "UST depeg_1d: test PC scores")
+
+# depeg_3d 
+summary(pcrw1$UST$depeg_3d$model)
+cat("Optimal No. of components for UST 3d:", pcrw1$UST$depeg_3d$ncomp, "\n")
+show_pcr_comps(pcrw1$UST$depeg_3d, top_n = 5)
+plot_cv_curve(pcrw1$UST$depeg_3d$cv_errors, title = "UST 3d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1, test_data = dfw1, coin_df = data_UST, coin = "UST", horizon = "depeg_3d", title = "UST depeg_3d: test PC scores")
+
+# depeg_5d 
+summary(pcrw1$UST$depeg_5d$model)
+cat("Optimal No. of components for UST 5d:", pcrw1$UST$depeg_5d$ncomp, "\n")
+show_pcr_comps(pcrw1$UST$depeg_5d, top_n = 5)
+plot_cv_curve(pcrw1$UST$depeg_5d$cv_errors, title = "UST 5d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1, test_data = dfw1, coin_df = data_UST, coin = "UST", horizon = "depeg_5d", title = "UST depeg_5d: test PC scores")
+
+# depeg_7d 
+summary(pcrw1$UST$depeg_7d$model)
+cat("Optimal No. of components for UST 7d:", pcrw1$UST$depeg_7d$ncomp, "\n")
+show_pcr_comps(pcrw1$UST$depeg_7d, top_n = 5)
+plot_cv_curve(pcrw1$UST$depeg_7d$cv_errors, title = "UST 7d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw1, test_data = dfw1, coin_df = data_UST, coin = "UST", horizon = "depeg_7d", title = "UST depeg_7d: test PC scores")
+
 # ------------------------------------------------------------------------------
 
 # ==============================================================================
@@ -1132,39 +1267,130 @@ pcrw1 = runpcr_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
 pcrw2 = runpcr_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
 
 # --------------------------------- DAI ----------------------------------------
-# COPY OVER CODE
+# depeg_1d 
+summary(pcrw2$DAI$depeg_1d$model)
+cat("Optimal No. of components for DAI 1d:", pcrw2$DAI$depeg_1d$ncomp, "\n")
+show_pcr_comps(pcrw2$DAI$depeg_1d, top_n = 5)
+plot_cv_curve(pcrw2$DAI$depeg_1d$cv_errors, title = "DAI 1d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw2, test_data = dfw2, coin_df = data_DAI, coin = "DAI", horizon = "depeg_1d", title = "DAI depeg_1d: test PC scores")
+
+# depeg_3d 
+summary(pcrw2$DAI$depeg_3d$model)
+cat("Optimal No. of components for DAI 3d:", pcrw2$DAI$depeg_3d$ncomp, "\n")
+show_pcr_comps(pcrw2$DAI$depeg_3d, top_n = 5)
+plot_cv_curve(pcrw2$DAI$depeg_3d$cv_errors, title = "DAI 3d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw2, test_data = dfw2, coin_df = data_DAI, coin = "DAI", horizon = "depeg_3d", title = "DAI depeg_3d: test PC scores")
+
+# depeg_5d 
+summary(pcrw2$DAI$depeg_5d$model)
+cat("Optimal No. of components for DAI 5d:", pcrw2$DAI$depeg_5d$ncomp, "\n")
+show_pcr_comps(pcrw2$DAI$depeg_5d, top_n = 5)
+plot_cv_curve(pcrw2$DAI$depeg_5d$cv_errors, title = "DAI 5d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw2, test_data = dfw2, coin_df = data_DAI, coin = "DAI", horizon = "depeg_5d", title = "DAI depeg_5d: test PC scores")
+
+# depeg_7d 
+summary(pcrw2$DAI$depeg_7d$model)
+cat("Optimal No. of components for DAI 7d:", pcrw2$DAI$depeg_7d$ncomp, "\n")
+show_pcr_comps(pcrw2$DAI$depeg_7d, top_n = 5)
+plot_cv_curve(pcrw2$DAI$depeg_7d$cv_errors, title = "DAI 7d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw2, test_data = dfw2, coin_df = data_DAI, coin = "DAI", horizon = "depeg_7d", title = "DAI depeg_7d: test PC scores")
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- PAX ----------------------------------------
-# COPY OVER CODE
+# depeg_1d 
+summary(pcrw2$PAX$depeg_1d$model)
+cat("Optimal No. of components for PAX 1d:", pcrw2$PAX$depeg_1d$ncomp, "\n")
+show_pcr_comps(pcrw2$PAX$depeg_1d, top_n = 5)
+plot_cv_curve(pcrw2$PAX$depeg_1d$cv_errors, title = "PAX 1d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw2, test_data = dfw2, coin_df = data_PAX, coin = "PAX", horizon = "depeg_1d", title = "PAX depeg_1d: test PC scores")
+
+# depeg_3d 
+summary(pcrw2$PAX$depeg_3d$model)
+cat("Optimal No. of components for PAX 3d:", pcrw2$PAX$depeg_3d$ncomp, "\n")
+show_pcr_comps(pcrw2$PAX$depeg_3d, top_n = 5)
+plot_cv_curve(pcrw2$PAX$depeg_3d$cv_errors, title = "PAX 3d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw2, test_data = dfw2, coin_df = data_PAX, coin = "PAX", horizon = "depeg_3d", title = "PAX depeg_3d: test PC scores")
+
+# depeg_5d 
+summary(pcrw2$PAX$depeg_5d$model)
+cat("Optimal No. of components for PAX 5d:", pcrw2$PAX$depeg_5d$ncomp, "\n")
+show_pcr_comps(pcrw2$PAX$depeg_5d, top_n = 5)
+plot_cv_curve(pcrw2$PAX$depeg_5d$cv_errors, title = "PAX 5d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw2, test_data = dfw2, coin_df = data_PAX, coin = "PAX", horizon = "depeg_5d", title = "PAX depeg_5d: test PC scores")
+
+# depeg_7d 
+summary(pcrw2$PAX$depeg_7d$model)
+cat("Optimal No. of components for PAX 7d:", pcrw2$PAX$depeg_7d$ncomp, "\n")
+show_pcr_comps(pcrw2$PAX$depeg_7d, top_n = 5)
+plot_cv_curve(pcrw2$PAX$depeg_7d$cv_errors, title = "PAX 7d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw2, test_data = dfw2, coin_df = data_PAX, coin = "PAX", horizon = "depeg_7d", title = "PAX depeg_7d: test PC scores")
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- USDC ---------------------------------------
-# COPY OVER CODE
+# depeg_1d 
+summary(pcrw2$USDC$depeg_1d$model)
+cat("Optimal No. of components for USDC 1d:", pcrw2$USDC$depeg_1d$ncomp, "\n")
+show_pcr_comps(pcrw2$USDC$depeg_1d, top_n = 5)
+plot_cv_curve(pcrw2$USDC$depeg_1d$cv_errors, title = "USDC 1d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw2, test_data = dfw2, coin_df = data_USDC, coin = "USDC", horizon = "depeg_1d", title = "USDC depeg_1d: test PC scores")
+
+# depeg_3d 
+summary(pcrw2$USDC$depeg_3d$model)
+cat("Optimal No. of components for USDC 3d:", pcrw2$USDC$depeg_3d$ncomp, "\n")
+show_pcr_comps(pcrw2$USDC$depeg_3d, top_n = 5)
+plot_cv_curve(pcrw2$USDC$depeg_3d$cv_errors, title = "USDC 3d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw2, test_data = dfw2, coin_df = data_USDC, coin = "USDC", horizon = "depeg_3d", title = "USDC depeg_3d: test PC scores")
+
+# depeg_5d 
+summary(pcrw2$USDC$depeg_5d$model)
+cat("Optimal No. of components for USDC 5d:", pcrw2$USDC$depeg_5d$ncomp, "\n")
+show_pcr_comps(pcrw2$USDC$depeg_5d, top_n = 5)
+plot_cv_curve(pcrw2$USDC$depeg_5d$cv_errors, title = "USDC 5d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw2, test_data = dfw2, coin_df = data_USDC, coin = "USDC", horizon = "depeg_5d", title = "USDC depeg_5d: test PC scores")
+
+# depeg_7d 
+summary(pcrw2$USDC$depeg_7d$model)
+cat("Optimal No. of components for USDC 7d:", pcrw2$USDC$depeg_7d$ncomp, "\n")
+show_pcr_comps(pcrw2$USDC$depeg_7d, top_n = 5)
+plot_cv_curve(pcrw2$USDC$depeg_7d$cv_errors, title = "USDC 7d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw2, test_data = dfw2, coin_df = data_USDC, coin = "USDC", horizon = "depeg_7d", title = "USDC depeg_7d: test PC scores")
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- USDT ---------------------------------------
-# COPY OVER CODE
+# depeg_1d 
+summary(pcrw2$USDT$depeg_1d$model)
+cat("Optimal No. of components for USDT 1d:", pcrw2$USDT$depeg_1d$ncomp, "\n")
+show_pcr_comps(pcrw2$USDT$depeg_1d, top_n = 5)
+plot_cv_curve(pcrw2$USDT$depeg_1d$cv_errors, title = "USDT 1d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw2, test_data = dfw2, coin_df = data_USDT, coin = "USDT", horizon = "depeg_1d", title = "USDT depeg_1d: test PC scores")
+
+# depeg_3d 
+summary(pcrw2$USDT$depeg_3d$model)
+cat("Optimal No. of components for USDT 3d:", pcrw2$USDT$depeg_3d$ncomp, "\n")
+show_pcr_comps(pcrw2$USDT$depeg_3d, top_n = 5)
+plot_cv_curve(pcrw2$USDT$depeg_3d$cv_errors, title = "USDT 3d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw2, test_data = dfw2, coin_df = data_USDT, coin = "USDT", horizon = "depeg_3d", title = "USDT depeg_3d: test PC scores")
+
+# depeg_5d 
+summary(pcrw2$USDT$depeg_5d$model)
+cat("Optimal No. of components for USDT 5d:", pcrw2$USDT$depeg_5d$ncomp, "\n")
+show_pcr_comps(pcrw2$USDT$depeg_5d, top_n = 5)
+plot_cv_curve(pcrw2$USDT$depeg_5d$cv_errors, title = "USDT 5d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw2, test_data = dfw2, coin_df = data_USDT, coin = "USDT", horizon = "depeg_5d", title = "USDT depeg_5d: test PC scores")
+
+# depeg_7d 
+summary(pcrw2$USDT$depeg_7d$model)
+cat("Optimal No. of components for USDT 7d:", pcrw2$USDT$depeg_7d$ncomp, "\n")
+show_pcr_comps(pcrw2$USDT$depeg_7d, top_n = 5)
+plot_cv_curve(pcrw2$USDT$depeg_7d$cv_errors, title = "USDT 7d: PCR Cross-Validation Error")
+plot_test_pcs(result_data = pcrw2, test_data = dfw2, coin_df = data_USDT, coin = "USDT", horizon = "depeg_7d", title = "USDT depeg_7d: test PC scores")
+
 # ------------------------------------------------------------------------------
 
 # ==============================================================================
-
-
-## Some additional functions: show PCR components, plot CV error curve
-summary(pcrw1$DAI$depeg_1d$model)
-cat("Optimal No. of components for DAI 1d:", pcrw1$DAI$depeg_1d$ncomp, "\n")
-show_pcr_comps(pcrw1$DAI$depeg_1d, top_n = 5)
-plot_cv_curve(pcrw1$DAI$depeg_1d$cv_errors, title = "DAI 1d: PCR Cross-Validation Error")
-
-summary(pcrw1$UST$depeg_5d$model)
-cat("Optimal No. of components for UST 5d:", pcrw1$UST$depeg_5d$ncomp, "\n")
-show_pcr_comps(pcrw1$UST$depeg_5d, top_n = 5)
-plot_cv_curve(pcrw1$UST$depeg_5d$cv_errors, title = "UST 5d: PCR Cross-Validation Error")
-
-summary(pcrw1$UST$depeg_7d$model)
-cat("Optimal No. of components for UST 7d:", pcrw1$UST$depeg_7d$ncomp, "\n")
-show_pcr_comps(pcrw1$UST$depeg_7d, top_n = 5)
-plot_cv_curve(pcrw1$UST$depeg_7d$cv_errors, title = "UST 7d: PCR Cross-Validation Error")
 
 
 # plot_pcr_list <- list(plot_pcr_DAI, plot_pcr_PAX, plot_pcr_USDC, plot_pcr_USDT, plot_pcr_UST)
@@ -1182,23 +1408,158 @@ source("func-pls.R")
 plsw1 = runpls_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
 
 # --------------------------------- DAI ----------------------------------------
-# COPY OVER CODE
+# depeg_1d 
+summary(plsw1$DAI$depeg_1d$model)
+cat("Optimal No. of components for DAI 1d:", plsw1$DAI$depeg_1d$ncomp, "\n")
+show_pls_comps(plsw1$DAI$depeg_1d, top_n = 5)
+plot_cv_curve(plsw1$DAI$depeg_1d$cv_errors_plot, title = "DAI 1d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_DAI, coin = "DAI", horizon = "depeg_1d", title = "DAI depeg_1d: test PLS scores")
+
+# depeg_3d 
+summary(plsw1$DAI$depeg_3d$model)
+cat("Optimal No. of components for DAI 3d:", plsw1$DAI$depeg_3d$ncomp, "\n")
+show_pls_comps(plsw1$DAI$depeg_3d, top_n = 5)
+plot_cv_curve(plsw1$DAI$depeg_3d$cv_errors_plot, title = "DAI 3d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_DAI, coin = "DAI", horizon = "depeg_3d", title = "DAI depeg_3d: test PLS scores")
+
+# depeg_5d 
+summary(plsw1$DAI$depeg_5d$model)
+cat("Optimal No. of components for DAI 5d:", plsw1$DAI$depeg_5d$ncomp, "\n")
+show_pls_comps(plsw1$DAI$depeg_5d, top_n = 5)
+plot_cv_curve(plsw1$DAI$depeg_5d$cv_errors_plot, title = "DAI 5d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_DAI, coin = "DAI", horizon = "depeg_5d", title = "DAI depeg_5d: test PLS scores")
+
+# depeg_7d 
+summary(plsw1$DAI$depeg_7d$model)
+cat("Optimal No. of components for DAI 7d:", plsw1$DAI$depeg_7d$ncomp, "\n")
+show_pls_comps(plsw1$DAI$depeg_7d, top_n = 5)
+plot_cv_curve(plsw1$DAI$depeg_7d$cv_errors_plot, title = "DAI 7d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_DAI, coin = "DAI", horizon = "depeg_7d", title = "DAI depeg_7d: test PLS scores")
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- PAX ----------------------------------------
-# COPY OVER CODE
+# depeg_1d 
+summary(plsw1$PAX$depeg_1d$model)
+cat("Optimal No. of components for PAX 1d:", plsw1$PAX$depeg_1d$ncomp, "\n")
+show_pls_comps(plsw1$PAX$depeg_1d, top_n = 5)
+plot_cv_curve(plsw1$PAX$depeg_1d$cv_errors_plot, title = "PAX 1d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_PAX, coin = "PAX", horizon = "depeg_1d", title = "PAX depeg_1d: test PLS scores")
+
+# depeg_3d 
+summary(plsw1$PAX$depeg_3d$model)
+cat("Optimal No. of components for PAX 3d:", plsw1$PAX$depeg_3d$ncomp, "\n")
+show_pls_comps(plsw1$PAX$depeg_3d, top_n = 5)
+plot_cv_curve(plsw1$PAX$depeg_3d$cv_errors_plot, title = "PAX 3d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_PAX, coin = "PAX", horizon = "depeg_3d", title = "PAX depeg_3d: test PLS scores")
+
+# depeg_5d 
+summary(plsw1$PAX$depeg_5d$model)
+cat("Optimal No. of components for PAX 5d:", plsw1$PAX$depeg_5d$ncomp, "\n")
+show_pls_comps(plsw1$PAX$depeg_5d, top_n = 5)
+plot_cv_curve(plsw1$PAX$depeg_5d$cv_errors_plot, title = "PAX 5d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_PAX, coin = "PAX", horizon = "depeg_5d", title = "PAX depeg_5d: test PLS scores")
+
+# depeg_7d 
+summary(plsw1$PAX$depeg_7d$model)
+cat("Optimal No. of components for PAX 7d:", plsw1$PAX$depeg_7d$ncomp, "\n")
+show_pls_comps(plsw1$PAX$depeg_7d, top_n = 5)
+plot_cv_curve(plsw1$PAX$depeg_7d$cv_errors_plot, title = "PAX 7d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_PAX, coin = "PAX", horizon = "depeg_7d", title = "PAX depeg_7d: test PLS scores")
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- USDC ---------------------------------------
-# COPY OVER CODE
+# depeg_1d 
+summary(plsw1$USDC$depeg_1d$model)
+cat("Optimal No. of components for USDC 1d:", plsw1$USDC$depeg_1d$ncomp, "\n")
+show_pls_comps(plsw1$USDC$depeg_1d, top_n = 5)
+plot_cv_curve(plsw1$USDC$depeg_1d$cv_errors_plot, title = "USDC 1d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_USDC, coin = "USDC", horizon = "depeg_1d", title = "USDC depeg_1d: test PLS scores")
+
+# depeg_3d 
+summary(plsw1$USDC$depeg_3d$model)
+cat("Optimal No. of components for USDC 3d:", plsw1$USDC$depeg_3d$ncomp, "\n")
+show_pls_comps(plsw1$USDC$depeg_3d, top_n = 5)
+plot_cv_curve(plsw1$USDC$depeg_3d$cv_errors_plot, title = "USDC 3d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_USDC, coin = "USDC", horizon = "depeg_3d", title = "USDC depeg_3d: test PLS scores")
+
+# depeg_5d 
+summary(plsw1$USDC$depeg_5d$model)
+cat("Optimal No. of components for USDC 5d:", plsw1$USDC$depeg_5d$ncomp, "\n")
+show_pls_comps(plsw1$USDC$depeg_5d, top_n = 5)
+plot_cv_curve(plsw1$USDC$depeg_5d$cv_errors_plot, title = "USDC 5d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_USDC, coin = "USDC", horizon = "depeg_5d", title = "USDC depeg_5d: test PLS scores")
+
+# depeg_7d 
+summary(plsw1$USDC$depeg_7d$model)
+cat("Optimal No. of components for USDC 7d:", plsw1$USDC$depeg_7d$ncomp, "\n")
+show_pls_comps(plsw1$USDC$depeg_7d, top_n = 5)
+plot_cv_curve(plsw1$USDC$depeg_7d$cv_errors_plot, title = "USDC 7d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_USDC, coin = "USDC", horizon = "depeg_7d", title = "USDC depeg_7d: test PLS scores")
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- USDT ---------------------------------------
-# COPY OVER CODE
+# depeg_1d 
+summary(plsw1$USDT$depeg_1d$model)
+cat("Optimal No. of components for USDT 1d:", plsw1$USDT$depeg_1d$ncomp, "\n")
+show_pls_comps(plsw1$USDT$depeg_1d, top_n = 5)
+plot_cv_curve(plsw1$USDT$depeg_1d$cv_errors_plot, title = "USDT 1d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_USDT, coin = "USDT", horizon = "depeg_1d", title = "USDT depeg_1d: test PLS scores")
+
+# depeg_3d 
+summary(plsw1$USDT$depeg_3d$model)
+cat("Optimal No. of components for USDT 3d:", plsw1$USDT$depeg_3d$ncomp, "\n")
+show_pls_comps(plsw1$USDT$depeg_3d, top_n = 5)
+plot_cv_curve(plsw1$USDT$depeg_3d$cv_errors_plot, title = "USDT 3d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_USDT, coin = "USDT", horizon = "depeg_3d", title = "USDT depeg_3d: test PLS scores")
+
+# depeg_5d 
+summary(plsw1$USDT$depeg_5d$model)
+cat("Optimal No. of components for USDT 5d:", plsw1$USDT$depeg_5d$ncomp, "\n")
+show_pls_comps(plsw1$USDT$depeg_5d, top_n = 5)
+plot_cv_curve(plsw1$USDT$depeg_5d$cv_errors_plot, title = "USDT 5d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_USDT, coin = "USDT", horizon = "depeg_5d", title = "USDT depeg_5d: test PLS scores")
+
+# depeg_7d 
+summary(plsw1$USDT$depeg_7d$model)
+cat("Optimal No. of components for USDT 7d:", plsw1$USDT$depeg_7d$ncomp, "\n")
+show_pls_comps(plsw1$USDT$depeg_7d, top_n = 5)
+plot_cv_curve(plsw1$USDT$depeg_7d$cv_errors_plot, title = "USDT 7d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_USDT, coin = "USDT", horizon = "depeg_7d", title = "USDT depeg_7d: test PLS scores")
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- UST ----------------------------------------
-# COPY OVER CODE
+# depeg_1d 
+summary(plsw1$UST$depeg_1d$model)
+cat("Optimal No. of components for UST 1d:", plsw1$UST$depeg_1d$ncomp, "\n")
+show_pls_comps(plsw1$UST$depeg_1d, top_n = 5)
+plot_cv_curve(plsw1$UST$depeg_1d$cv_errors_plot, title = "UST 1d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_UST, coin = "UST", horizon = "depeg_1d", title = "UST depeg_1d: test PLS scores")
+
+# depeg_3d 
+summary(plsw1$UST$depeg_3d$model)
+cat("Optimal No. of components for UST 3d:", plsw1$UST$depeg_3d$ncomp, "\n")
+show_pls_comps(plsw1$UST$depeg_3d, top_n = 5)
+plot_cv_curve(plsw1$UST$depeg_3d$cv_errors_plot, title = "UST 3d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_UST, coin = "UST", horizon = "depeg_3d", title = "UST depeg_3d: test PLS scores")
+
+# depeg_5d 
+summary(plsw1$UST$depeg_5d$model)
+cat("Optimal No. of components for UST 5d:", plsw1$UST$depeg_5d$ncomp, "\n")
+show_pls_comps(plsw1$UST$depeg_5d, top_n = 5)
+plot_cv_curve(plsw1$UST$depeg_5d$cv_errors_plot, title = "UST 5d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_UST, coin = "UST", horizon = "depeg_5d", title = "UST depeg_5d: test PLS scores")
+
+# depeg_7d 
+summary(plsw1$UST$depeg_7d$model)
+cat("Optimal No. of components for UST 7d:", plsw1$UST$depeg_7d$ncomp, "\n")
+show_pls_comps(plsw1$UST$depeg_7d, top_n = 5)
+plot_cv_curve(plsw1$UST$depeg_7d$cv_errors_plot, title = "UST 7d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw1, test_data = dfw1, coin_df = data_UST, coin = "UST", horizon = "depeg_7d", title = "UST depeg_7d: test PLS scores")
+
 # ------------------------------------------------------------------------------
 
 # ==============================================================================
@@ -1209,36 +1570,134 @@ plsw1 = runpls_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
 plsw2 = runpls_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
 
 # --------------------------------- DAI ----------------------------------------
-# COPY OVER CODE
+# depeg_1d 
+summary(plsw2$DAI$depeg_1d$model)
+cat("Optimal No. of components for DAI 1d:", plsw2$DAI$depeg_1d$ncomp, "\n")
+show_pls_comps(plsw2$DAI$depeg_1d, top_n = 5)
+plot_cv_curve(plsw2$DAI$depeg_1d$cv_errors_plot, title = "DAI 1d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw2, test_data = dfw2, coin_df = data_DAI, coin = "DAI", horizon = "depeg_1d", title = "DAI depeg_1d: test PLS scores")
+
+# depeg_3d 
+summary(plsw2$DAI$depeg_3d$model)
+cat("Optimal No. of components for DAI 3d:", plsw2$DAI$depeg_3d$ncomp, "\n")
+show_pls_comps(plsw2$DAI$depeg_3d, top_n = 5)
+plot_cv_curve(plsw2$DAI$depeg_3d$cv_errors_plot, title = "DAI 3d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw2, test_data = dfw2, coin_df = data_DAI, coin = "DAI", horizon = "depeg_3d", title = "DAI depeg_3d: test PLS scores")
+
+# depeg_5d 
+summary(plsw2$DAI$depeg_5d$model)
+cat("Optimal No. of components for DAI 5d:", plsw2$DAI$depeg_5d$ncomp, "\n")
+show_pls_comps(plsw2$DAI$depeg_5d, top_n = 5)
+plot_cv_curve(plsw2$DAI$depeg_5d$cv_errors_plot, title = "DAI 5d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw2, test_data = dfw2, coin_df = data_DAI, coin = "DAI", horizon = "depeg_5d", title = "DAI depeg_5d: test PLS scores")
+
+# depeg_7d 
+summary(plsw2$DAI$depeg_7d$model)
+cat("Optimal No. of components for DAI 7d:", plsw2$DAI$depeg_7d$ncomp, "\n")
+show_pls_comps(plsw2$DAI$depeg_7d, top_n = 5)
+plot_cv_curve(plsw2$DAI$depeg_7d$cv_errors_plot, title = "DAI 7d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw2, test_data = dfw2, coin_df = data_DAI, coin = "DAI", horizon = "depeg_7d", title = "DAI depeg_7d: test PLS scores")
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- PAX ----------------------------------------
-# COPY OVER CODE
+# depeg_1d 
+summary(plsw2$PAX$depeg_1d$model)
+cat("Optimal No. of components for PAX 1d:", plsw2$PAX$depeg_1d$ncomp, "\n")
+show_pls_comps(plsw2$PAX$depeg_1d, top_n = 5)
+plot_cv_curve(plsw2$PAX$depeg_1d$cv_errors_plot, title = "PAX 1d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw2, test_data = dfw2, coin_df = data_PAX, coin = "PAX", horizon = "depeg_1d", title = "PAX depeg_1d: test PLS scores")
+
+# depeg_3d 
+summary(plsw2$PAX$depeg_3d$model)
+cat("Optimal No. of components for PAX 3d:", plsw2$PAX$depeg_3d$ncomp, "\n")
+show_pls_comps(plsw2$PAX$depeg_3d, top_n = 5)
+plot_cv_curve(plsw2$PAX$depeg_3d$cv_errors_plot, title = "PAX 3d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw2, test_data = dfw2, coin_df = data_PAX, coin = "PAX", horizon = "depeg_3d", title = "PAX depeg_3d: test PLS scores")
+
+# depeg_5d 
+summary(plsw2$PAX$depeg_5d$model)
+cat("Optimal No. of components for PAX 5d:", plsw2$PAX$depeg_5d$ncomp, "\n")
+show_pls_comps(plsw2$PAX$depeg_5d, top_n = 5)
+plot_cv_curve(plsw2$PAX$depeg_5d$cv_errors_plot, title = "PAX 5d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw2, test_data = dfw2, coin_df = data_PAX, coin = "PAX", horizon = "depeg_5d", title = "PAX depeg_5d: test PLS scores")
+
+# depeg_7d 
+summary(plsw2$PAX$depeg_7d$model)
+cat("Optimal No. of components for PAX 7d:", plsw2$PAX$depeg_7d$ncomp, "\n")
+show_pls_comps(plsw2$PAX$depeg_7d, top_n = 5)
+plot_cv_curve(plsw2$PAX$depeg_7d$cv_errors_plot, title = "PAX 7d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw2, test_data = dfw2, coin_df = data_PAX, coin = "PAX", horizon = "depeg_7d", title = "PAX depeg_7d: test PLS scores")
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- USDC ---------------------------------------
-# COPY OVER CODE
+# depeg_1d 
+summary(plsw2$USDC$depeg_1d$model)
+cat("Optimal No. of components for USDC 1d:", plsw2$USDC$depeg_1d$ncomp, "\n")
+show_pls_comps(plsw2$USDC$depeg_1d, top_n = 5)
+plot_cv_curve(plsw2$USDC$depeg_1d$cv_errors_plot, title = "USDC 1d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw2, test_data = dfw2, coin_df = data_USDC, coin = "USDC", horizon = "depeg_1d", title = "USDC depeg_1d: test PLS scores")
+
+# depeg_3d 
+summary(plsw2$USDC$depeg_3d$model)
+cat("Optimal No. of components for USDC 3d:", plsw2$USDC$depeg_3d$ncomp, "\n")
+show_pls_comps(plsw2$USDC$depeg_3d, top_n = 5)
+plot_cv_curve(plsw2$USDC$depeg_3d$cv_errors_plot, title = "USDC 3d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw2, test_data = dfw2, coin_df = data_USDC, coin = "USDC", horizon = "depeg_3d", title = "USDC depeg_3d: test PLS scores")
+
+# depeg_5d 
+summary(plsw2$USDC$depeg_5d$model)
+cat("Optimal No. of components for USDC 5d:", plsw2$USDC$depeg_5d$ncomp, "\n")
+show_pls_comps(plsw2$USDC$depeg_5d, top_n = 5)
+plot_cv_curve(plsw2$USDC$depeg_5d$cv_errors_plot, title = "USDC 5d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw2, test_data = dfw2, coin_df = data_USDC, coin = "USDC", horizon = "depeg_5d", title = "USDC depeg_5d: test PLS scores")
+
+# depeg_7d 
+summary(plsw2$USDC$depeg_7d$model)
+cat("Optimal No. of components for USDC 7d:", plsw2$USDC$depeg_7d$ncomp, "\n")
+show_pls_comps(plsw2$USDC$depeg_7d, top_n = 5)
+plot_cv_curve(plsw2$USDC$depeg_7d$cv_errors_plot, title = "USDC 7d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw2, test_data = dfw2, coin_df = data_USDC, coin = "USDC", horizon = "depeg_7d", title = "USDC depeg_7d: test PLS scores")
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- USDT ---------------------------------------
-# COPY OVER CODE
+# depeg_1d 
+summary(plsw2$USDT$depeg_1d$model)
+cat("Optimal No. of components for USDT 1d:", plsw2$USDT$depeg_1d$ncomp, "\n")
+show_pls_comps(plsw2$USDT$depeg_1d, top_n = 5)
+plot_cv_curve(plsw2$USDT$depeg_1d$cv_errors_plot, title = "USDT 1d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw2, test_data = dfw2, coin_df = data_USDT, coin = "USDT", horizon = "depeg_1d", title = "USDT depeg_1d: test PLS scores")
+
+# depeg_3d 
+summary(plsw2$USDT$depeg_3d$model)
+cat("Optimal No. of components for USDT 3d:", plsw2$USDT$depeg_3d$ncomp, "\n")
+show_pls_comps(plsw2$USDT$depeg_3d, top_n = 5)
+plot_cv_curve(plsw2$USDT$depeg_3d$cv_errors_plot, title = "USDT 3d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw2, test_data = dfw2, coin_df = data_USDT, coin = "USDT", horizon = "depeg_3d", title = "USDT depeg_3d: test PLS scores")
+
+# depeg_5d 
+summary(plsw2$USDT$depeg_5d$model)
+cat("Optimal No. of components for USDT 5d:", plsw2$USDT$depeg_5d$ncomp, "\n")
+show_pls_comps(plsw2$USDT$depeg_5d, top_n = 5)
+plot_cv_curve(plsw2$USDT$depeg_5d$cv_errors_plot, title = "USDT 5d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw2, test_data = dfw2, coin_df = data_USDT, coin = "USDT", horizon = "depeg_5d", title = "USDT depeg_5d: test PLS scores")
+
+# depeg_7d 
+summary(plsw2$USDT$depeg_7d$model)
+cat("Optimal No. of components for USDT 7d:", plsw2$USDT$depeg_7d$ncomp, "\n")
+show_pls_comps(plsw2$USDT$depeg_7d, top_n = 5)
+plot_cv_curve(plsw2$USDT$depeg_7d$cv_errors_plot, title = "USDT 7d: PLS Cross-Validation Error")
+plot_test_comps(result_data = plsw2, test_data = dfw2, coin_df = data_USDT, coin = "USDT", horizon = "depeg_7d", title = "USDT depeg_7d: test PLS scores")
+
 # ------------------------------------------------------------------------------
 
+# plot_pcr_list <- list(plot_pcr_DAI, plot_pcr_PAX, plot_pcr_USDC, plot_pcr_USDT, plot_pcr_UST)
+# pcr_grid <- grid.arrange(grobs = plot_pcr_list, nrow = 2, ncol = 3)
+# ggsave("../../plots/PCR_model_OOS.png", pcr_grid, width = 12, height = 8)
+
 # ==============================================================================
-
-
-## Some additional functions: show PLS components
-summary(plsw1$DAI$depeg_1d$model)
-cat("Optimal No. of components for DAI 1d:", plsw1$DAI$depeg_1d$ncomp, "\n")
-show_pls_comps(plsw1$DAI$depeg_1d, top_n = 5)
-
-summary(plsw1$UST$depeg_5d$model)
-cat("Optimal No. of components for UST 5d:", plsw1$UST$depeg_5d$ncomp, "\n")
-show_pls_comps(plsw1$UST$depeg_5d, top_n = 5)
-
-summary(plsw1$UST$depeg_7d$model)
-cat("Optimal No. of components for UST 7d:", plsw1$UST$depeg_7d$ncomp, "\n")
-show_pls_comps(plsw1$UST$depeg_7d, top_n = 5)
 
 
 ###########################
@@ -1276,28 +1735,132 @@ plot_logit_DAI_w1
 #comparing performance across horizons 
 plot_horizon_performance(logitw1$DAI$depeg_1d, logitw1$DAI$depeg_3d, logitw1$DAI$depeg_5d, logitw1$DAI$depeg_7d)
 
-#looking at top 10 coeffs (not stable, with odds ratio close to 0/+inf)
-show_logit_coeffs(logitw1$DAI$depeg_1d, 10)
-show_logit_coeffs(logitw1$DAI$depeg_3d, 10)
-show_logit_coeffs(logitw1$DAI$depeg_5d, 10)
-show_logit_coeffs(logitw1$DAI$depeg_7d, 10)
+#looking at top 5 coeffs (not stable, with odds ratio close to 0/+inf)
+show_logit_coeffs(logitw1$DAI$depeg_1d, 5)
+show_logit_coeffs(logitw1$DAI$depeg_3d, 5)
+show_logit_coeffs(logitw1$DAI$depeg_5d, 5)
+show_logit_coeffs(logitw1$DAI$depeg_7d, 5)
 
 # ------------------------------------------------------------------------------
 
 # --------------------------------- PAX ----------------------------------------
-# COPY OVER CODE
+logit_PAX_1_metrics1 <- depeg_metrics(logitw1$PAX$depeg_1d$test$y, logitw1$PAX$depeg_1d$pred_class)
+logit_PAX_3_metrics1 <- depeg_metrics(logitw1$PAX$depeg_3d$test$y, logitw1$PAX$depeg_3d$pred_class)
+logit_PAX_5_metrics1 <- depeg_metrics(logitw1$PAX$depeg_5d$test$y, logitw1$PAX$depeg_5d$pred_class)
+logit_PAX_7_metrics1 <- depeg_metrics(logitw1$PAX$depeg_7d$test$y, logitw1$PAX$depeg_7d$pred_class)
+
+plot_logit_PAX_w1_data <- list(depeg_1d = list(test = dfw1$PAX$depeg_1d$test,
+                                               pred = logitw1$PAX$depeg_1d$pred_class),
+                               depeg_3d = list(test = dfw1$PAX$depeg_3d$test,
+                                               pred = logitw1$PAX$depeg_3d$pred_class),
+                               depeg_5d = list(test = dfw1$PAX$depeg_5d$test,
+                                               pred = logitw1$PAX$depeg_5d$pred_class),
+                               depeg_7d = list(test = dfw1$PAX$depeg_7d$test,
+                                               pred = logitw1$PAX$depeg_7d$pred_class))
+
+plot_logit_PAX_w1 <- plot_results(plot_logit_PAX_w1_data, org_data = data_PAX,
+                                  title = "Window 1: PAX Depeg Predictions")
+plot_logit_PAX_w1
+
+# comparing performance across horizons
+plot_horizon_performance(logitw1$PAX$depeg_1d, logitw1$PAX$depeg_3d, logitw1$PAX$depeg_5d, logitw1$PAX$depeg_7d)
+
+# looking at top 5 coeffs (not stable, with odds ratio close to 0/+inf)
+show_logit_coeffs(logitw1$PAX$depeg_1d, 5)
+show_logit_coeffs(logitw1$PAX$depeg_3d, 5)
+show_logit_coeffs(logitw1$PAX$depeg_5d, 5)
+show_logit_coeffs(logitw1$PAX$depeg_7d, 5)
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- USDC ---------------------------------------
-# COPY OVER CODE
+logit_USDC_1_metrics1 <- depeg_metrics(logitw1$USDC$depeg_1d$test$y, logitw1$USDC$depeg_1d$pred_class)
+logit_USDC_3_metrics1 <- depeg_metrics(logitw1$USDC$depeg_3d$test$y, logitw1$USDC$depeg_3d$pred_class)
+logit_USDC_5_metrics1 <- depeg_metrics(logitw1$USDC$depeg_5d$test$y, logitw1$USDC$depeg_5d$pred_class)
+logit_USDC_7_metrics1 <- depeg_metrics(logitw1$USDC$depeg_7d$test$y, logitw1$USDC$depeg_7d$pred_class)
+
+plot_logit_USDC_w1_data <- list(depeg_1d = list(test = dfw1$USDC$depeg_1d$test,
+                                                pred = logitw1$USDC$depeg_1d$pred_class),
+                                depeg_3d = list(test = dfw1$USDC$depeg_3d$test,
+                                                pred = logitw1$USDC$depeg_3d$pred_class),
+                                depeg_5d = list(test = dfw1$USDC$depeg_5d$test,
+                                                pred = logitw1$USDC$depeg_5d$pred_class),
+                                depeg_7d = list(test = dfw1$USDC$depeg_7d$test,
+                                                pred = logitw1$USDC$depeg_7d$pred_class))
+
+plot_logit_USDC_w1 <- plot_results(plot_logit_USDC_w1_data, org_data = data_USDC,
+                                   title = "Window 1: USDC Depeg Predictions")
+plot_logit_USDC_w1
+
+# comparing performance across horizons
+plot_horizon_performance(logitw1$USDC$depeg_1d, logitw1$USDC$depeg_3d, logitw1$USDC$depeg_5d, logitw1$USDC$depeg_7d)
+
+# looking at top 5 coeffs (not stable, with odds ratio close to 0/+inf)
+show_logit_coeffs(logitw1$USDC$depeg_1d, 5)
+show_logit_coeffs(logitw1$USDC$depeg_3d, 5)
+show_logit_coeffs(logitw1$USDC$depeg_5d, 5)
+show_logit_coeffs(logitw1$USDC$depeg_7d, 5)
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- USDT ---------------------------------------
-# COPY OVER CODE
+logit_USDT_1_metrics1 <- depeg_metrics(logitw1$USDT$depeg_1d$test$y, logitw1$USDT$depeg_1d$pred_class)
+logit_USDT_3_metrics1 <- depeg_metrics(logitw1$USDT$depeg_3d$test$y, logitw1$USDT$depeg_3d$pred_class)
+logit_USDT_5_metrics1 <- depeg_metrics(logitw1$USDT$depeg_5d$test$y, logitw1$USDT$depeg_5d$pred_class)
+logit_USDT_7_metrics1 <- depeg_metrics(logitw1$USDT$depeg_7d$test$y, logitw1$USDT$depeg_7d$pred_class)
+
+plot_logit_USDT_w1_data <- list(depeg_1d = list(test = dfw1$USDT$depeg_1d$test,
+                                                pred = logitw1$USDT$depeg_1d$pred_class),
+                                depeg_3d = list(test = dfw1$USDT$depeg_3d$test,
+                                                pred = logitw1$USDT$depeg_3d$pred_class),
+                                depeg_5d = list(test = dfw1$USDT$depeg_5d$test,
+                                                pred = logitw1$USDT$depeg_5d$pred_class),
+                                depeg_7d = list(test = dfw1$USDT$depeg_7d$test,
+                                                pred = logitw1$USDT$depeg_7d$pred_class))
+
+plot_logit_USDT_w1 <- plot_results(plot_logit_USDT_w1_data, org_data = data_USDT,
+                                   title = "Window 1: USDT Depeg Predictions")
+plot_logit_USDT_w1
+
+# comparing performance across horizons
+plot_horizon_performance(logitw1$USDT$depeg_1d, logitw1$USDT$depeg_3d, logitw1$USDT$depeg_5d, logitw1$USDT$depeg_7d)
+
+# looking at top 5 coeffs (not stable, with odds ratio close to 0/+inf)
+show_logit_coeffs(logitw1$USDT$depeg_1d, 5)
+show_logit_coeffs(logitw1$USDT$depeg_3d, 5)
+show_logit_coeffs(logitw1$USDT$depeg_5d, 5)
+show_logit_coeffs(logitw1$USDT$depeg_7d, 5)
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- UST ----------------------------------------
-# COPY OVER CODE
+logit_UST_1_metrics1 <- depeg_metrics(logitw1$UST$depeg_1d$test$y, logitw1$UST$depeg_1d$pred_class)
+logit_UST_3_metrics1 <- depeg_metrics(logitw1$UST$depeg_3d$test$y, logitw1$UST$depeg_3d$pred_class)
+logit_UST_5_metrics1 <- depeg_metrics(logitw1$UST$depeg_5d$test$y, logitw1$UST$depeg_5d$pred_class)
+logit_UST_7_metrics1 <- depeg_metrics(logitw1$UST$depeg_7d$test$y, logitw1$UST$depeg_7d$pred_class)
+
+plot_logit_UST_w1_data <- list(depeg_1d = list(test = dfw1$UST$depeg_1d$test,
+                                               pred = logitw1$UST$depeg_1d$pred_class),
+                               depeg_3d = list(test = dfw1$UST$depeg_3d$test,
+                                               pred = logitw1$UST$depeg_3d$pred_class),
+                               depeg_5d = list(test = dfw1$UST$depeg_5d$test,
+                                               pred = logitw1$UST$depeg_5d$pred_class),
+                               depeg_7d = list(test = dfw1$UST$depeg_7d$test,
+                                               pred = logitw1$UST$depeg_7d$pred_class))
+
+plot_logit_UST_w1 <- plot_results(plot_logit_UST_w1_data, org_data = data_UST,
+                                  title = "Window 1: UST Depeg Predictions")
+plot_logit_UST_w1
+
+# comparing performance across horizons
+plot_horizon_performance(logitw1$UST$depeg_1d, logitw1$UST$depeg_3d, logitw1$UST$depeg_5d, logitw1$UST$depeg_7d)
+
+# looking at top 5 coeffs (not stable, with odds ratio close to 0/+inf)
+show_logit_coeffs(logitw1$UST$depeg_1d, 5)
+show_logit_coeffs(logitw1$UST$depeg_3d, 5)
+show_logit_coeffs(logitw1$UST$depeg_5d, 5)
+show_logit_coeffs(logitw1$UST$depeg_7d, 5)
+
 # ------------------------------------------------------------------------------
 
 # ==============================================================================
@@ -1329,23 +1892,100 @@ plot_logit_DAI_w2
 #comparing performance across horizons 
 plot_horizon_performance(logitw2$DAI$depeg_1d, logitw2$DAI$depeg_3d, logitw2$DAI$depeg_5d, logitw2$DAI$depeg_7d)
 
-#looking at top 10 coeffs (not stable, with odds ratio close to 0/+inf)
-show_logit_coeffs(logitw2$DAI$depeg_1d, 10)
-show_logit_coeffs(logitw2$DAI$depeg_3d, 10)
-show_logit_coeffs(logitw2$DAI$depeg_5d, 10)
-show_logit_coeffs(logitw2$DAI$depeg_7d, 10)
+#looking at top 5 coeffs (not stable, with odds ratio close to 0/+inf)
+show_logit_coeffs(logitw2$DAI$depeg_1d, 5)
+show_logit_coeffs(logitw2$DAI$depeg_3d, 5)
+show_logit_coeffs(logitw2$DAI$depeg_5d, 5)
+show_logit_coeffs(logitw2$DAI$depeg_7d, 5)
 # ------------------------------------------------------------------------------
 
 # --------------------------------- PAX ----------------------------------------
-# COPY OVER CODE
+logit_PAX_1_metrics2 <- depeg_metrics(logitw2$PAX$depeg_1d$test$y, logitw2$PAX$depeg_1d$pred_class)
+logit_PAX_3_metrics2 <- depeg_metrics(logitw2$PAX$depeg_3d$test$y, logitw2$PAX$depeg_3d$pred_class)
+logit_PAX_5_metrics2 <- depeg_metrics(logitw2$PAX$depeg_5d$test$y, logitw2$PAX$depeg_5d$pred_class)
+logit_PAX_7_metrics2 <- depeg_metrics(logitw2$PAX$depeg_7d$test$y, logitw2$PAX$depeg_7d$pred_class)
+
+plot_logit_PAX_w2_data <- list(depeg_1d = list(test = dfw2$PAX$depeg_1d$test,
+                                               pred = logitw2$PAX$depeg_1d$pred_class),
+                               depeg_3d = list(test = dfw2$PAX$depeg_3d$test,
+                                               pred = logitw2$PAX$depeg_3d$pred_class),
+                               depeg_5d = list(test = dfw2$PAX$depeg_5d$test,
+                                               pred = logitw2$PAX$depeg_5d$pred_class),
+                               depeg_7d = list(test = dfw2$PAX$depeg_7d$test,
+                                               pred = logitw2$PAX$depeg_7d$pred_class))
+
+plot_logit_PAX_w2 <- plot_results(plot_logit_PAX_w2_data, org_data = data_PAX,
+                                  title = "Window 2: PAX Depeg Predictions")
+plot_logit_PAX_w2
+
+# comparing performance across horizons 
+plot_horizon_performance(logitw2$PAX$depeg_1d, logitw2$PAX$depeg_3d, logitw2$PAX$depeg_5d, logitw2$PAX$depeg_7d)
+
+# looking at top 5 coeffs (not stable, with odds ratio close to 0/+inf)
+show_logit_coeffs(logitw2$PAX$depeg_1d, 5)
+show_logit_coeffs(logitw2$PAX$depeg_3d, 5)
+show_logit_coeffs(logitw2$PAX$depeg_5d, 5)
+show_logit_coeffs(logitw2$PAX$depeg_7d, 5)
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- USDC ---------------------------------------
-# COPY OVER CODE
+logit_USDC_1_metrics2 <- depeg_metrics(logitw2$USDC$depeg_1d$test$y, logitw2$USDC$depeg_1d$pred_class)
+logit_USDC_3_metrics2 <- depeg_metrics(logitw2$USDC$depeg_3d$test$y, logitw2$USDC$depeg_3d$pred_class)
+logit_USDC_5_metrics2 <- depeg_metrics(logitw2$USDC$depeg_5d$test$y, logitw2$USDC$depeg_5d$pred_class)
+logit_USDC_7_metrics2 <- depeg_metrics(logitw2$USDC$depeg_7d$test$y, logitw2$USDC$depeg_7d$pred_class)
+
+plot_logit_USDC_w2_data <- list(depeg_1d = list(test = dfw2$USDC$depeg_1d$test,
+                                                pred = logitw2$USDC$depeg_1d$pred_class),
+                                depeg_3d = list(test = dfw2$USDC$depeg_3d$test,
+                                                pred = logitw2$USDC$depeg_3d$pred_class),
+                                depeg_5d = list(test = dfw2$USDC$depeg_5d$test,
+                                                pred = logitw2$USDC$depeg_5d$pred_class),
+                                depeg_7d = list(test = dfw2$USDC$depeg_7d$test,
+                                                pred = logitw2$USDC$depeg_7d$pred_class))
+
+plot_logit_USDC_w2 <- plot_results(plot_logit_USDC_w2_data, org_data = data_USDC,
+                                   title = "Window 2: USDC Depeg Predictions")
+plot_logit_USDC_w2
+
+# comparing performance across horizons 
+plot_horizon_performance(logitw2$USDC$depeg_1d, logitw2$USDC$depeg_3d, logitw2$USDC$depeg_5d, logitw2$USDC$depeg_7d)
+
+# looking at top 5 coeffs (not stable, with odds ratio close to 0/+inf)
+show_logit_coeffs(logitw2$USDC$depeg_1d, 5)
+show_logit_coeffs(logitw2$USDC$depeg_3d, 5)
+show_logit_coeffs(logitw2$USDC$depeg_5d, 5)
+show_logit_coeffs(logitw2$USDC$depeg_7d, 5)
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- USDT ---------------------------------------
-# COPY OVER CODE
+logit_USDT_1_metrics2 <- depeg_metrics(logitw2$USDT$depeg_1d$test$y, logitw2$USDT$depeg_1d$pred_class)
+logit_USDT_3_metrics2 <- depeg_metrics(logitw2$USDT$depeg_3d$test$y, logitw2$USDT$depeg_3d$pred_class)
+logit_USDT_5_metrics2 <- depeg_metrics(logitw2$USDT$depeg_5d$test$y, logitw2$USDT$depeg_5d$pred_class)
+logit_USDT_7_metrics2 <- depeg_metrics(logitw2$USDT$depeg_7d$test$y, logitw2$USDT$depeg_7d$pred_class)
+
+plot_logit_USDT_w2_data <- list(depeg_1d = list(test = dfw2$USDT$depeg_1d$test,
+                                                pred = logitw2$USDT$depeg_1d$pred_class),
+                                depeg_3d = list(test = dfw2$USDT$depeg_3d$test,
+                                                pred = logitw2$USDT$depeg_3d$pred_class),
+                                depeg_5d = list(test = dfw2$USDT$depeg_5d$test,
+                                                pred = logitw2$USDT$depeg_5d$pred_class),
+                                depeg_7d = list(test = dfw2$USDT$depeg_7d$test,
+                                                pred = logitw2$USDT$depeg_7d$pred_class))
+
+plot_logit_USDT_w2 <- plot_results(plot_logit_USDT_w2_data, org_data = data_USDT,
+                                   title = "Window 2: USDT Depeg Predictions")
+plot_logit_USDT_w2
+
+# comparing performance across horizons 
+plot_horizon_performance(logitw2$USDT$depeg_1d, logitw2$USDT$depeg_3d, logitw2$USDT$depeg_5d, logitw2$USDT$depeg_7d)
+
+# looking at top 5 coeffs (not stable, with odds ratio close to 0/+inf)
+show_logit_coeffs(logitw2$USDT$depeg_1d, 5)
+show_logit_coeffs(logitw2$USDT$depeg_3d, 5)
+show_logit_coeffs(logitw2$USDT$depeg_5d, 5)
+show_logit_coeffs(logitw2$USDT$depeg_7d, 5)
 # ------------------------------------------------------------------------------
 
 # ==============================================================================
@@ -1387,28 +2027,132 @@ plot_lasso_DAI_w1
 #comparing performance across horizons 
 plot_horizon_performance(lassow1$DAI$depeg_1d, lassow1$DAI$depeg_3d, lassow1$DAI$depeg_5d, lassow1$DAI$depeg_7d)
 
-#looking at top 10 coeffs (not stable, with odds ratio close to 0/+inf)
-show_lasso_coeffs(lassow1$DAI$depeg_1d, 10)
-show_lasso_coeffs(lassow1$DAI$depeg_3d, 10)
-show_lasso_coeffs(lassow1$DAI$depeg_5d, 10)
-show_lasso_coeffs(lassow1$DAI$depeg_7d, 10)
+#looking at top 5 coeffs (not stable, with odds ratio close to 0/+inf)
+show_lasso_coeffs(lassow1$DAI$depeg_1d, 5)
+show_lasso_coeffs(lassow1$DAI$depeg_3d, 5)
+show_lasso_coeffs(lassow1$DAI$depeg_5d, 5)
+show_lasso_coeffs(lassow1$DAI$depeg_7d, 5)
 
 # ------------------------------------------------------------------------------
 
 # --------------------------------- PAX ----------------------------------------
-# COPY OVER CODE
+lasso_PAX_1_metrics1 <- depeg_metrics(lassow1$PAX$depeg_1d$test$y, lassow1$PAX$depeg_1d$pred_class)
+lasso_PAX_3_metrics1 <- depeg_metrics(lassow1$PAX$depeg_3d$test$y, lassow1$PAX$depeg_3d$pred_class)
+lasso_PAX_5_metrics1 <- depeg_metrics(lassow1$PAX$depeg_5d$test$y, lassow1$PAX$depeg_5d$pred_class)
+lasso_PAX_7_metrics1 <- depeg_metrics(lassow1$PAX$depeg_7d$test$y, lassow1$PAX$depeg_7d$pred_class)
+
+plot_lasso_PAX_w1_data <- list(depeg_1d = list(test = dfw1$PAX$depeg_1d$test,
+                                               pred = lassow1$PAX$depeg_1d$pred_class),
+                               depeg_3d = list(test = dfw1$PAX$depeg_3d$test,
+                                               pred = lassow1$PAX$depeg_3d$pred_class),
+                               depeg_5d = list(test = dfw1$PAX$depeg_5d$test,
+                                               pred = lassow1$PAX$depeg_5d$pred_class),
+                               depeg_7d = list(test = dfw1$PAX$depeg_7d$test,
+                                               pred = lassow1$PAX$depeg_7d$pred_class))
+
+plot_lasso_PAX_w1 <- plot_results(plot_lasso_PAX_w1_data, org_data = data_PAX,
+                                  title = "Window 1: PAX Depeg Predictions")
+plot_lasso_PAX_w1
+
+# comparing performance across horizons 
+plot_horizon_performance(lassow1$PAX$depeg_1d, lassow1$PAX$depeg_3d, lassow1$PAX$depeg_5d, lassow1$PAX$depeg_7d)
+
+# looking at top 5 coeffs (not stable, with odds ratio close to 0/+inf)
+show_lasso_coeffs(lassow1$PAX$depeg_1d, 5)
+show_lasso_coeffs(lassow1$PAX$depeg_3d, 5)
+show_lasso_coeffs(lassow1$PAX$depeg_5d, 5)
+show_lasso_coeffs(lassow1$PAX$depeg_7d, 5)
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- USDC ---------------------------------------
-# COPY OVER CODE
+lasso_USDC_1_metrics1 <- depeg_metrics(lassow1$USDC$depeg_1d$test$y, lassow1$USDC$depeg_1d$pred_class)
+lasso_USDC_3_metrics1 <- depeg_metrics(lassow1$USDC$depeg_3d$test$y, lassow1$USDC$depeg_3d$pred_class)
+lasso_USDC_5_metrics1 <- depeg_metrics(lassow1$USDC$depeg_5d$test$y, lassow1$USDC$depeg_5d$pred_class)
+lasso_USDC_7_metrics1 <- depeg_metrics(lassow1$USDC$depeg_7d$test$y, lassow1$USDC$depeg_7d$pred_class)
+
+plot_lasso_USDC_w1_data <- list(depeg_1d = list(test = dfw1$USDC$depeg_1d$test,
+                                                pred = lassow1$USDC$depeg_1d$pred_class),
+                                depeg_3d = list(test = dfw1$USDC$depeg_3d$test,
+                                                pred = lassow1$USDC$depeg_3d$pred_class),
+                                depeg_5d = list(test = dfw1$USDC$depeg_5d$test,
+                                                pred = lassow1$USDC$depeg_5d$pred_class),
+                                depeg_7d = list(test = dfw1$USDC$depeg_7d$test,
+                                                pred = lassow1$USDC$depeg_7d$pred_class))
+
+plot_lasso_USDC_w1 <- plot_results(plot_lasso_USDC_w1_data, org_data = data_USDC,
+                                   title = "Window 1: USDC Depeg Predictions")
+plot_lasso_USDC_w1
+
+# comparing performance across horizons 
+plot_horizon_performance(lassow1$USDC$depeg_1d, lassow1$USDC$depeg_3d, lassow1$USDC$depeg_5d, lassow1$USDC$depeg_7d)
+
+# looking at top 5 coeffs (not stable, with odds ratio close to 0/+inf)
+show_lasso_coeffs(lassow1$USDC$depeg_1d, 5)
+show_lasso_coeffs(lassow1$USDC$depeg_3d, 5)
+show_lasso_coeffs(lassow1$USDC$depeg_5d, 5)
+show_lasso_coeffs(lassow1$USDC$depeg_7d, 5)
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- USDT ---------------------------------------
-# COPY OVER CODE
+lasso_USDT_1_metrics1 <- depeg_metrics(lassow1$USDT$depeg_1d$test$y, lassow1$USDT$depeg_1d$pred_class)
+lasso_USDT_3_metrics1 <- depeg_metrics(lassow1$USDT$depeg_3d$test$y, lassow1$USDT$depeg_3d$pred_class)
+lasso_USDT_5_metrics1 <- depeg_metrics(lassow1$USDT$depeg_5d$test$y, lassow1$USDT$depeg_5d$pred_class)
+lasso_USDT_7_metrics1 <- depeg_metrics(lassow1$USDT$depeg_7d$test$y, lassow1$USDT$depeg_7d$pred_class)
+
+plot_lasso_USDT_w1_data <- list(depeg_1d = list(test = dfw1$USDT$depeg_1d$test,
+                                                pred = lassow1$USDT$depeg_1d$pred_class),
+                                depeg_3d = list(test = dfw1$USDT$depeg_3d$test,
+                                                pred = lassow1$USDT$depeg_3d$pred_class),
+                                depeg_5d = list(test = dfw1$USDT$depeg_5d$test,
+                                                pred = lassow1$USDT$depeg_5d$pred_class),
+                                depeg_7d = list(test = dfw1$USDT$depeg_7d$test,
+                                                pred = lassow1$USDT$depeg_7d$pred_class))
+
+plot_lasso_USDT_w1 <- plot_results(plot_lasso_USDT_w1_data, org_data = data_USDT,
+                                   title = "Window 1: USDT Depeg Predictions")
+plot_lasso_USDT_w1
+
+# comparing performance across horizons 
+plot_horizon_performance(lassow1$USDT$depeg_1d, lassow1$USDT$depeg_3d, lassow1$USDT$depeg_5d, lassow1$USDT$depeg_7d)
+
+# looking at top 5 coeffs (not stable, with odds ratio close to 0/+inf)
+show_lasso_coeffs(lassow1$USDT$depeg_1d, 5)
+show_lasso_coeffs(lassow1$USDT$depeg_3d, 5)
+show_lasso_coeffs(lassow1$USDT$depeg_5d, 5)
+show_lasso_coeffs(lassow1$USDT$depeg_7d, 5)
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- UST ----------------------------------------
-# COPY OVER CODE
+lasso_UST_1_metrics1 <- depeg_metrics(lassow1$UST$depeg_1d$test$y, lassow1$UST$depeg_1d$pred_class)
+lasso_UST_3_metrics1 <- depeg_metrics(lassow1$UST$depeg_3d$test$y, lassow1$UST$depeg_3d$pred_class)
+lasso_UST_5_metrics1 <- depeg_metrics(lassow1$UST$depeg_5d$test$y, lassow1$UST$depeg_5d$pred_class)
+lasso_UST_7_metrics1 <- depeg_metrics(lassow1$UST$depeg_7d$test$y, lassow1$UST$depeg_7d$pred_class)
+
+plot_lasso_UST_w1_data <- list(depeg_1d = list(test = dfw1$UST$depeg_1d$test,
+                                               pred = lassow1$UST$depeg_1d$pred_class),
+                               depeg_3d = list(test = dfw1$UST$depeg_3d$test,
+                                               pred = lassow1$UST$depeg_3d$pred_class),
+                               depeg_5d = list(test = dfw1$UST$depeg_5d$test,
+                                               pred = lassow1$UST$depeg_5d$pred_class),
+                               depeg_7d = list(test = dfw1$UST$depeg_7d$test,
+                                               pred = lassow1$UST$depeg_7d$pred_class))
+
+plot_lasso_UST_w1 <- plot_results(plot_lasso_UST_w1_data, org_data = data_UST,
+                                  title = "Window 1: UST Depeg Predictions")
+plot_lasso_UST_w1
+
+# comparing performance across horizons 
+plot_horizon_performance(lassow1$UST$depeg_1d, lassow1$UST$depeg_3d, lassow1$UST$depeg_5d, lassow1$UST$depeg_7d)
+
+# looking at top 5 coeffs (not stable, with odds ratio close to 0/+inf)
+show_lasso_coeffs(lassow1$UST$depeg_1d, 5)
+show_lasso_coeffs(lassow1$UST$depeg_3d, 5)
+show_lasso_coeffs(lassow1$UST$depeg_5d, 5)
+show_lasso_coeffs(lassow1$UST$depeg_7d, 5)
+
 # ------------------------------------------------------------------------------
 
 # ==============================================================================
@@ -1419,7 +2163,6 @@ show_lasso_coeffs(lassow1$DAI$depeg_7d, 10)
 lassow2 = run_lasso_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
 
 # --------------------------------- DAI ----------------------------------------
-#comparing performance across horizons 
 lasso_DAI_1_metrics2 <- depeg_metrics(lassow2$DAI$depeg_1d$test$y, lassow2$DAI$depeg_1d$pred_class)
 lasso_DAI_3_metrics2 <- depeg_metrics(lassow2$DAI$depeg_3d$test$y, lassow2$DAI$depeg_3d$pred_class)
 lasso_DAI_5_metrics2 <- depeg_metrics(lassow2$DAI$depeg_5d$test$y, lassow2$DAI$depeg_5d$pred_class)
@@ -1441,23 +2184,101 @@ plot_logit_lasso_DAI_w2
 #comparing performance across horizons 
 plot_horizon_performance(lassow2$DAI$depeg_1d, lassow2$DAI$depeg_3d, lassow2$DAI$depeg_5d, lassow2$DAI$depeg_7d)
 
-#looking at top 10 coeffs (not stable, with odds ratio close to 0/+inf)
-show_lasso_coeffs(lassow2$DAI$depeg_1d, 10)
-show_lasso_coeffs(lassow2$DAI$depeg_3d, 10)
-show_lasso_coeffs(lassow2$DAI$depeg_5d, 10)
-show_lasso_coeffs(lassow2$DAI$depeg_7d, 10)
+#looking at top 5 coeffs (not stable, with odds ratio close to 0/+inf)
+show_lasso_coeffs(lassow2$DAI$depeg_1d, 5)
+show_lasso_coeffs(lassow2$DAI$depeg_3d, 5)
+show_lasso_coeffs(lassow2$DAI$depeg_5d, 5)
+show_lasso_coeffs(lassow2$DAI$depeg_7d, 5)
 # ------------------------------------------------------------------------------
 
 # --------------------------------- PAX ----------------------------------------
-# COPY OVER CODE
+lasso_PAX_1_metrics2 <- depeg_metrics(lassow2$PAX$depeg_1d$test$y, lassow2$PAX$depeg_1d$pred_class)
+lasso_PAX_3_metrics2 <- depeg_metrics(lassow2$PAX$depeg_3d$test$y, lassow2$PAX$depeg_3d$pred_class)
+lasso_PAX_5_metrics2 <- depeg_metrics(lassow2$PAX$depeg_5d$test$y, lassow2$PAX$depeg_5d$pred_class)
+lasso_PAX_7_metrics2 <- depeg_metrics(lassow2$PAX$depeg_7d$test$y, lassow2$PAX$depeg_7d$pred_class)
+
+plot_lasso_PAX_w2_data <- list(depeg_1d = list(test = dfw2$PAX$depeg_1d$test,
+                                               pred = lassow2$PAX$depeg_1d$pred_class),
+                               depeg_3d = list(test = dfw2$PAX$depeg_3d$test,
+                                               pred = lassow2$PAX$depeg_3d$pred_class),
+                               depeg_5d = list(test = dfw2$PAX$depeg_5d$test,
+                                               pred = lassow2$PAX$depeg_5d$pred_class),
+                               depeg_7d = list(test = dfw2$PAX$depeg_7d$test,
+                                               pred = lassow2$PAX$depeg_7d$pred_class))
+
+plot_lasso_PAX_w2 <- plot_results(plot_lasso_PAX_w2_data, org_data = data_PAX,
+                                  title = "Window 2: PAX Depeg Predictions")
+plot_lasso_PAX_w2
+
+# comparing performance across horizons 
+plot_horizon_performance(lassow2$PAX$depeg_1d, lassow2$PAX$depeg_3d, lassow2$PAX$depeg_5d, lassow2$PAX$depeg_7d)
+
+# looking at top 5 coeffs (not stable, with odds ratio close to 0/+inf)
+show_lasso_coeffs(lassow2$PAX$depeg_1d, 5)
+show_lasso_coeffs(lassow2$PAX$depeg_3d, 5)
+show_lasso_coeffs(lassow2$PAX$depeg_5d, 5)
+show_lasso_coeffs(lassow2$PAX$depeg_7d, 5)
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- USDC ---------------------------------------
-# COPY OVER CODE
+lasso_USDC_1_metrics2 <- depeg_metrics(lassow2$USDC$depeg_1d$test$y, lassow2$USDC$depeg_1d$pred_class)
+lasso_USDC_3_metrics2 <- depeg_metrics(lassow2$USDC$depeg_3d$test$y, lassow2$USDC$depeg_3d$pred_class)
+lasso_USDC_5_metrics2 <- depeg_metrics(lassow2$USDC$depeg_5d$test$y, lassow2$USDC$depeg_5d$pred_class)
+lasso_USDC_7_metrics2 <- depeg_metrics(lassow2$USDC$depeg_7d$test$y, lassow2$USDC$depeg_7d$pred_class)
+
+plot_lasso_USDC_w2_data <- list(depeg_1d = list(test = dfw2$USDC$depeg_1d$test,
+                                                pred = lassow2$USDC$depeg_1d$pred_class),
+                                depeg_3d = list(test = dfw2$USDC$depeg_3d$test,
+                                                pred = lassow2$USDC$depeg_3d$pred_class),
+                                depeg_5d = list(test = dfw2$USDC$depeg_5d$test,
+                                                pred = lassow2$USDC$depeg_5d$pred_class),
+                                depeg_7d = list(test = dfw2$USDC$depeg_7d$test,
+                                                pred = lassow2$USDC$depeg_7d$pred_class))
+
+plot_lasso_USDC_w2 <- plot_results(plot_lasso_USDC_w2_data, org_data = data_USDC,
+                                   title = "Window 2: USDC Depeg Predictions")
+plot_lasso_USDC_w2
+
+# comparing performance across horizons 
+plot_horizon_performance(lassow2$USDC$depeg_1d, lassow2$USDC$depeg_3d, lassow2$USDC$depeg_5d, lassow2$USDC$depeg_7d)
+
+# looking at top 5 coeffs (not stable, with odds ratio close to 0/+inf)
+show_lasso_coeffs(lassow2$USDC$depeg_1d, 5)
+show_lasso_coeffs(lassow2$USDC$depeg_3d, 5)
+show_lasso_coeffs(lassow2$USDC$depeg_5d, 5)
+show_lasso_coeffs(lassow2$USDC$depeg_7d, 5)
+
 # ------------------------------------------------------------------------------
 
 # --------------------------------- USDT ---------------------------------------
-# COPY OVER CODE
+lasso_USDT_1_metrics2 <- depeg_metrics(lassow2$USDT$depeg_1d$test$y, lassow2$USDT$depeg_1d$pred_class)
+lasso_USDT_3_metrics2 <- depeg_metrics(lassow2$USDT$depeg_3d$test$y, lassow2$USDT$depeg_3d$pred_class)
+lasso_USDT_5_metrics2 <- depeg_metrics(lassow2$USDT$depeg_5d$test$y, lassow2$USDT$depeg_5d$pred_class)
+lasso_USDT_7_metrics2 <- depeg_metrics(lassow2$USDT$depeg_7d$test$y, lassow2$USDT$depeg_7d$pred_class)
+
+plot_lasso_USDT_w2_data <- list(depeg_1d = list(test = dfw2$USDT$depeg_1d$test,
+                                                pred = lassow2$USDT$depeg_1d$pred_class),
+                                depeg_3d = list(test = dfw2$USDT$depeg_3d$test,
+                                                pred = lassow2$USDT$depeg_3d$pred_class),
+                                depeg_5d = list(test = dfw2$USDT$depeg_5d$test,
+                                                pred = lassow2$USDT$depeg_5d$pred_class),
+                                depeg_7d = list(test = dfw2$USDT$depeg_7d$test,
+                                                pred = lassow2$USDT$depeg_7d$pred_class))
+
+plot_lasso_USDT_w2 <- plot_results(plot_lasso_USDT_w2_data, org_data = data_USDT,
+                                   title = "Window 2: USDT Depeg Predictions")
+plot_lasso_USDT_w2
+
+# comparing performance across horizons 
+plot_horizon_performance(lassow2$USDT$depeg_1d, lassow2$USDT$depeg_3d, lassow2$USDT$depeg_5d, lassow2$USDT$depeg_7d)
+
+# looking at top 5 coeffs (not stable, with odds ratio close to 0/+inf)
+show_lasso_coeffs(lassow2$USDT$depeg_1d, 5)
+show_lasso_coeffs(lassow2$USDT$depeg_3d, 5)
+show_lasso_coeffs(lassow2$USDT$depeg_5d, 5)
+show_lasso_coeffs(lassow2$USDT$depeg_7d, 5)
+
 # ------------------------------------------------------------------------------
 
 # ==============================================================================
