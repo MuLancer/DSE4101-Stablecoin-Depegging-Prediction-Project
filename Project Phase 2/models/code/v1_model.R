@@ -2007,6 +2007,7 @@ source("func-lasso.R")
 
 ## WINDOW 1 ====================================================================
 # run LASSO on all coins for all horizons
+set.seed(99)
 lassow1 = run_lasso_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
 
 # --------------------------------- DAI ----------------------------------------
@@ -2164,6 +2165,7 @@ show_lasso_coeffs(lassow1$UST$depeg_7d, 5)
 
 ## WINDOW 2 ====================================================================
 # run LASSO on all coins for all horizons
+set.seed(99)
 lassow2 = run_lasso_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
 
 # --------------------------------- DAI ----------------------------------------
