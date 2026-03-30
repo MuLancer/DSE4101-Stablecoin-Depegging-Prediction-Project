@@ -217,9 +217,9 @@ plot_cv_curve <- function(cv_errors, title) {
 }
 
 
-#Plot PCs against test set date
+#Plot PCs against test set dates
 plot_test_pcs <- function(result_data, test_data, coin_df, coin, horizon, title = NULL,
-                          show_labels = TRUE) {
+                          show_labels = TRUE, depeg_col = "depeg_1d") {
   library(ggplot2)
   library(tidyr)
   library(dplyr)
@@ -246,21 +246,43 @@ plot_test_pcs <- function(result_data, test_data, coin_df, coin, horizon, title 
   test_start <- min(test_dates)
   test_end <- max(test_dates)
   
-  depeg_df <- coin_df %>%
+  depeg_regions <- coin_df %>%
     mutate(
       date = as.Date(date),
-      depeg_flag = as.integer(as.character(.data[[horizon]]))
+      depeg_flag = as.integer(as.character(.data[[depeg_col]]))
     ) %>%
     filter(date >= test_start, date <= test_end) %>%
     arrange(date) %>%
     mutate(
-      prev_flag = dplyr::lag(depeg_flag, default = 0),
-      event_start = depeg_flag == 1 & prev_flag == 0
+      break_group = cumsum(depeg_flag != lag(depeg_flag, default = first(depeg_flag)))
     ) %>%
-    filter(event_start) %>%
-    select(date)
+    filter(depeg_flag == 1) %>%
+    group_by(break_group) %>%
+    summarise(
+      start_date = min(date),
+      end_date = max(date),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      label_date = start_date,
+      xmin = start_date,
+      xmax = end_date + 1
+    )
   
   p <- ggplot() +
+    geom_rect(
+      data = depeg_regions,
+      aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf),
+      fill = "red",
+      alpha = 0.12
+    ) +
+    geom_vline(
+      data = depeg_regions,
+      aes(xintercept = start_date),
+      color = "red4",
+      linewidth = 1.2,
+      alpha = 0.95
+    ) +
     geom_line(
       data = plot_df,
       aes(x = time, y = score),
@@ -268,14 +290,6 @@ plot_test_pcs <- function(result_data, test_data, coin_df, coin, horizon, title 
       linewidth = 0.9
     ) +
     facet_wrap(~ PC, scales = "free_y") +
-    geom_vline(
-      data = depeg_df,
-      aes(xintercept = date),
-      color = "red",
-      linetype = "solid",
-      linewidth = 1,
-      alpha = 0.9
-    ) +
     scale_x_date(date_labels = "%b %Y", date_breaks = "1 month") +
     theme_minimal() +
     labs(
@@ -287,12 +301,12 @@ plot_test_pcs <- function(result_data, test_data, coin_df, coin, horizon, title 
       plot.margin = margin(20, 30, 10, 10)
     )
   
-  if (show_labels && nrow(depeg_df) > 0) {
+  if (show_labels && nrow(depeg_regions) > 0) {
     p <- p +
       geom_text(
-        data = depeg_df,
-        aes(x = date, y = Inf, label = format(date, "%Y-%m-%d")),
-        color = "red",
+        data = depeg_regions,
+        aes(x = label_date, y = Inf, label = format(start_date, "%Y-%m-%d")),
+        color = "red4",
         angle = 90,
         vjust = -0.8,
         hjust = 1,
@@ -304,6 +318,7 @@ plot_test_pcs <- function(result_data, test_data, coin_df, coin, horizon, title 
   
   print(p)
 }
+
 
 
 pcr.rolling.window <- function(Y, nprev, indice, lag = 1, max_comp = 10, cv_folds = 5) {
