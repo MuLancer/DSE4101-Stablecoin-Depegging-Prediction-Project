@@ -17,7 +17,7 @@ depeg_metrics <- function(actual, predicted) {
   specificity <- TN / (TN + FP)
   precision <- TP / (TP + FP)
   recall <- sensitivity
-  f1 <- 2 / (1/precision + 1/recall)
+  f1 <- 2 * (precision * recall) / (precision + recall)
   
   # cost ratios (FP vs FN): In the case of our project, FN is more detrimental
   FP_cost_ratio <- FP / (FP + FN)
