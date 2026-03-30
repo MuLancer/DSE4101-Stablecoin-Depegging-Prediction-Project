@@ -1,6 +1,148 @@
 
 rungb <- function(train_data, test_data, title) {
   
+  library(xgboost)
+  
+  X_train <- train_data$X
+  y_train <- train_data$y
+  
+  X_test <- test_data$X
+  y_test <- test_data$y
+  
+  X_train_scaled <- scale(X_train) # Need to scale to avoid issues (Input `inf` error)
+  train_center <- attr(X_train_scaled, "scaled:center")
+  train_scale  <- attr(X_train_scaled, "scaled:scale")
+  X_test_scaled <- scale(X_test, center = train_center, scale = train_scale)
+  
+  dtrain <- xgb.DMatrix(data = data.matrix(X_train_scaled),
+                        label = as.numeric(as.character(y_train)))
+  dtest <- xgb.DMatrix(data = data.matrix(X_test_scaled))
+
+  # Parameter grid ==============================
+  param_grid <- expand.grid(
+    max_depth = c(2, 5, 6),         # shallower trees to avoid overfit, 6 is default
+    eta = c(0.01, 0.1),             # slower and faster learning rate
+    subsample = c(0.5, 0.7, 0.8),   # using half, 70% and 80% (default) of randomly selected obs for training
+    colsample_bytree = c(0.5, 0.7, 0.8) # using half, 70% and 80% (default) of randomly selected features for training
+  )
+  
+  nrounds_cap <- 1000
+  early_stop <- 75
+  nfold <- 5
+  
+  best_logloss <- Inf
+  best_params <- NULL
+  best_nrounds <- NULL
+  
+  # Grid search + CV ==============================
+  for(i in 1:nrow(param_grid)) {
+    
+    params <- list(objective = "binary:logistic",
+                   eval_metric = "logloss",
+                   max_depth = param_grid$max_depth[i],
+                   eta = param_grid$eta[i],
+                   subsample = param_grid$subsample[i],
+                   colsample_bytree = param_grid$colsample_bytree[i])
+    
+    cv <- xgb.cv(params = params,
+                 data = dtrain,
+                 nrounds = nrounds_cap,
+                 nfold = nfold,
+                 early_stopping_rounds = early_stop,
+                 verbose = 0)
+    
+    mean_logloss <- min(cv$evaluation_log$test_logloss_mean)
+    best_iter <- cv$best_iteration
+    
+    if(mean_logloss < best_logloss) {
+      best_logloss <- mean_logloss
+      best_params <- params
+      best_nrounds <- best_iter
+    }
+  }
+  
+  # Train final model on best params =================
+  gb_model <- xgb.train(params = best_params,
+                        data = dtrain,
+                        nrounds = best_nrounds,
+                        verbose = 0)
+  
+  # Compute predictions ==============================
+  pred_prob <- predict(gb_model, dtest)
+  pred_class <- ifelse(pred_prob >= 0.5, "1", "0")
+  pred_class <- factor(pred_class, levels = levels(y_test))
+  
+  # confusion matrix
+  cm <- table(Predicted = pred_class, Actual = y_test)
+  accuracy <- sum(diag(cm)) / sum(cm)
+  
+  cat("\n", title, "\n")
+  cat("Accuracy:", round(accuracy, 4), "\n")
+  cat("Best Params:\n")
+  print(best_params)
+  cat("Best nrounds:", best_nrounds, "\n")
+  
+  print(cm)
+  
+  importance_matrix <- xgb.importance(model = gb_model)
+  
+  return(list(
+    model = gb_model, 
+    pred_prob = pred_prob,
+    pred_class = pred_class,
+    importance = importance_matrix,
+    confusion_matrix = cm,
+    tuning = list(
+      best_params = best_params,
+      best_nrounds = best_nrounds,
+      best_logloss = best_logloss
+    )
+  ))
+}
+
+
+rungb_all <- function(dfw, coin_list, horizons) {
+  all_results <- list()
+  
+  for(coin in names(coin_list)) {
+    cat("RUNNING GRADIENT BOOSTING FOR:", coin)
+    
+    coin_results <- list()
+    
+    for(h in horizons) {
+      cat("\n---", h, "---\n")
+      train_data <- dfw[[coin]][[h]]$train
+      test_data <- dfw[[coin]][[h]]$test
+      
+      cat("Training class distribution:")
+      print(table(train_data$y))
+      cat("\nTest class distribution:")
+      print(table(test_data$y))
+      
+      title <- paste(coin, ":", h)
+      gb_results <- rungb(train_data = train_data,
+                          test_data = test_data,
+                          title = title)
+      
+      coin_results[[h]] <- gb_results
+    }
+    
+    all_results[[coin]] <- coin_results
+  }
+  
+  return(all_results)
+}
+
+
+
+
+
+############
+# Old Code #
+############
+
+rungb_default <- function(train_data, test_data, title) {
+  
   X_train <- train_data$X
   y_train <- train_data$y
   
@@ -57,39 +199,6 @@ rungb <- function(train_data, test_data, title) {
               pred_class = pred_class,
               importance = importance_matrix,
               confusion_matrix = cm))
-}
-
-
-rungb_all <- function(dfw, coin_list, horizons) {
-  all_results <- list()
-  
-  for(coin in names(coin_list)) {
-    cat("RUNNING GRADIENT BOOSTING FOR:", coin)
-    
-    coin_results <- list()
-    
-    for(h in horizons) {
-      cat("\n---", h, "---\n")
-      train_data <- dfw[[coin]][[h]]$train
-      test_data <- dfw[[coin]][[h]]$test
-      
-      cat("Training class distribution:")
-      print(table(train_data$y))
-      cat("\nTest class distribution:")
-      print(table(test_data$y))
-      
-      title <- paste(coin, ":", h)
-      gb_results <- rungb(train_data = train_data,
-                          test_data = test_data,
-                          title = title)
-      
-      coin_results[[h]] <- gb_results
-    }
-    
-    all_results[[coin]] <- coin_results
-  }
-  
-  return(all_results)
 }
 
 

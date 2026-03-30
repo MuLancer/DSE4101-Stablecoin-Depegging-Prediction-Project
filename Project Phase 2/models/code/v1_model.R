@@ -1104,6 +1104,10 @@ source("func-pcr.R")
 # run PCR on all coins for all horizons
 pcrw1 = runpcr_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
 
+pcrw1_USDC_3_metrics <- depeg_metrics(dfw1$USDC$depeg_3d$test$y, pcrw1$USDC$depeg_3d$pred_class)
+pcrw1_USDC_5_metrics <- depeg_metrics(dfw1$USDC$depeg_5d$test$y, pcrw1$USDC$depeg_5d$pred_class)
+pcrw1_USDC_7_metrics <- depeg_metrics(dfw1$USDC$depeg_7d$test$y, pcrw1$USDC$depeg_7d$pred_class)
+
 # --------------------------------- DAI ----------------------------------------
 # depeg_1d 
 summary(pcrw1$DAI$depeg_1d$model)
