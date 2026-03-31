@@ -328,6 +328,19 @@ write.csv(
 # Generate 4-horizon bar plots for each coin
 # ============================================
 
+# Show the top 5 most important features (window 1)
+rf_logloss_imp_w1 %>% 
+  filter(coin == "UST", horizon == "depeg_7d") %>% 
+  select(feature, importance_logloss) %>%
+  head(5)
+
+# Show the top 5 most important features (window 2)
+rf_logloss_imp_w2 %>% 
+  filter(coin == "USDT", horizon == "depeg_7d") %>% 
+  select(feature, importance_logloss) %>%
+  head(5)
+
+
 # RF Window 1
 for (coin in c("DAI", "PAX", "USDC", "USDT", "UST")) {
   p <- plot_coin_feature_importance(

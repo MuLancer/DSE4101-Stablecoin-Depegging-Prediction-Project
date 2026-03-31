@@ -190,7 +190,7 @@ plot_coin_feature_importance <- function(imp_data,
       size = 3
     ) +
     ggplot2::coord_flip() +
-    ggplot2::facet_wrap(~ horizon_label, nrow = 2, scales = "free_y") +
+    ggplot2::facet_wrap(~ horizon_label, nrow = 1, scales = "free_y") +
     tidytext::scale_x_reordered() +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, 0.15))) +
     ggplot2::labs(
