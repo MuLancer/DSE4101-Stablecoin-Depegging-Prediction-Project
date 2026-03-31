@@ -721,7 +721,99 @@ summary_metrics <- bind_rows(
   extract_metrics(gbw2_USDC_1_metrics, "GB", "Window 2", "USDC", "1d"),
   extract_metrics(gbw2_USDC_3_metrics, "GB", "Window 2", "USDC", "3d"),
   extract_metrics(gbw2_USDC_5_metrics, "GB", "Window 2", "USDC", "5d"),
-  extract_metrics(gbw2_USDC_7_metrics, "GB", "Window 2", "USDC", "7d")
+  extract_metrics(gbw2_USDC_7_metrics, "GB", "Window 2", "USDC", "7d"),
+  
+  # ---------------- PCR ----------------
+  extract_metrics(pcrw1_DAI_1_metrics,  "PCR", "Window 1", "DAI",  "1d"),
+  extract_metrics(pcrw1_DAI_3_metrics,  "PCR", "Window 1", "DAI",  "3d"),
+  extract_metrics(pcrw1_DAI_5_metrics,  "PCR", "Window 1", "DAI",  "5d"),
+  extract_metrics(pcrw1_DAI_7_metrics,  "PCR", "Window 1", "DAI",  "7d"),
+  
+  extract_metrics(pcrw1_PAX_1_metrics,  "PCR", "Window 1", "PAX",  "1d"),
+  extract_metrics(pcrw1_PAX_3_metrics,  "PCR", "Window 1", "PAX",  "3d"),
+  extract_metrics(pcrw1_PAX_5_metrics,  "PCR", "Window 1", "PAX",  "5d"),
+  extract_metrics(pcrw1_PAX_7_metrics,  "PCR", "Window 1", "PAX",  "7d"),
+  
+  extract_metrics(pcrw1_USDT_1_metrics, "PCR", "Window 1", "USDT", "1d"),
+  extract_metrics(pcrw1_USDT_3_metrics, "PCR", "Window 1", "USDT", "3d"),
+  extract_metrics(pcrw1_USDT_5_metrics, "PCR", "Window 1", "USDT", "5d"),
+  extract_metrics(pcrw1_USDT_7_metrics, "PCR", "Window 1", "USDT", "7d"),
+  
+  extract_metrics(pcrw1_USDC_1_metrics, "PCR", "Window 1", "USDC", "1d"),
+  extract_metrics(pcrw1_USDC_3_metrics, "PCR", "Window 1", "USDC", "3d"),
+  extract_metrics(pcrw1_USDC_5_metrics, "PCR", "Window 1", "USDC", "5d"),
+  extract_metrics(pcrw1_USDC_7_metrics, "PCR", "Window 1", "USDC", "7d"),
+  
+  extract_metrics(pcrw1_UST_1_metrics,  "PCR", "Window 1", "UST",  "1d"),
+  extract_metrics(pcrw1_UST_3_metrics,  "PCR", "Window 1", "UST",  "3d"),
+  extract_metrics(pcrw1_UST_5_metrics,  "PCR", "Window 1", "UST",  "5d"),
+  extract_metrics(pcrw1_UST_7_metrics,  "PCR", "Window 1", "UST",  "7d"),
+  
+  extract_metrics(pcrw2_DAI_1_metrics,  "PCR", "Window 2", "DAI",  "1d"),
+  extract_metrics(pcrw2_DAI_3_metrics,  "PCR", "Window 2", "DAI",  "3d"),
+  extract_metrics(pcrw2_DAI_5_metrics,  "PCR", "Window 2", "DAI",  "5d"),
+  extract_metrics(pcrw2_DAI_7_metrics,  "PCR", "Window 2", "DAI",  "7d"),
+  
+  extract_metrics(pcrw2_PAX_1_metrics,  "PCR", "Window 2", "PAX",  "1d"),
+  extract_metrics(pcrw2_PAX_3_metrics,  "PCR", "Window 2", "PAX",  "3d"),
+  extract_metrics(pcrw2_PAX_5_metrics,  "PCR", "Window 2", "PAX",  "5d"),
+  extract_metrics(pcrw2_PAX_7_metrics,  "PCR", "Window 2", "PAX",  "7d"),
+  
+  extract_metrics(pcrw2_USDT_1_metrics, "PCR", "Window 2", "USDT", "1d"),
+  extract_metrics(pcrw2_USDT_3_metrics, "PCR", "Window 2", "USDT", "3d"),
+  extract_metrics(pcrw2_USDT_5_metrics, "PCR", "Window 2", "USDT", "5d"),
+  extract_metrics(pcrw2_USDT_7_metrics, "PCR", "Window 2", "USDT", "7d"),
+  
+  extract_metrics(pcrw2_USDC_1_metrics, "PCR", "Window 2", "USDC", "1d"),
+  extract_metrics(pcrw2_USDC_3_metrics, "PCR", "Window 2", "USDC", "3d"),
+  extract_metrics(pcrw2_USDC_5_metrics, "PCR", "Window 2", "USDC", "5d"),
+  extract_metrics(pcrw2_USDC_7_metrics, "PCR", "Window 2", "USDC", "7d"),
+  
+  # ---------------- PLS ----------------
+  extract_metrics(plsw1_DAI_1_metrics,  "PLS", "Window 1", "DAI",  "1d"),
+  extract_metrics(plsw1_DAI_3_metrics,  "PLS", "Window 1", "DAI",  "3d"),
+  extract_metrics(plsw1_DAI_5_metrics,  "PLS", "Window 1", "DAI",  "5d"),
+  extract_metrics(plsw1_DAI_7_metrics,  "PLS", "Window 1", "DAI",  "7d"),
+  
+  extract_metrics(plsw1_PAX_1_metrics,  "PLS", "Window 1", "PAX",  "1d"),
+  extract_metrics(plsw1_PAX_3_metrics,  "PLS", "Window 1", "PAX",  "3d"),
+  extract_metrics(plsw1_PAX_5_metrics,  "PLS", "Window 1", "PAX",  "5d"),
+  extract_metrics(plsw1_PAX_7_metrics,  "PLS", "Window 1", "PAX",  "7d"),
+  
+  extract_metrics(plsw1_USDT_1_metrics, "PLS", "Window 1", "USDT", "1d"),
+  extract_metrics(plsw1_USDT_3_metrics, "PLS", "Window 1", "USDT", "3d"),
+  extract_metrics(plsw1_USDT_5_metrics, "PLS", "Window 1", "USDT", "5d"),
+  extract_metrics(plsw1_USDT_7_metrics, "PLS", "Window 1", "USDT", "7d"),
+  
+  extract_metrics(plsw1_USDC_1_metrics, "PLS", "Window 1", "USDC", "1d"),
+  extract_metrics(plsw1_USDC_3_metrics, "PLS", "Window 1", "USDC", "3d"),
+  extract_metrics(plsw1_USDC_5_metrics, "PLS", "Window 1", "USDC", "5d"),
+  extract_metrics(plsw1_USDC_7_metrics, "PLS", "Window 1", "USDC", "7d"),
+  
+  extract_metrics(plsw1_UST_1_metrics,  "PLS", "Window 1", "UST",  "1d"),
+  extract_metrics(plsw1_UST_3_metrics,  "PLS", "Window 1", "UST",  "3d"),
+  extract_metrics(plsw1_UST_5_metrics,  "PLS", "Window 1", "UST",  "5d"),
+  extract_metrics(plsw1_UST_7_metrics,  "PLS", "Window 1", "UST",  "7d"),
+  
+  extract_metrics(plsw2_DAI_1_metrics,  "PLS", "Window 2", "DAI",  "1d"),
+  extract_metrics(plsw2_DAI_3_metrics,  "PLS", "Window 2", "DAI",  "3d"),
+  extract_metrics(plsw2_DAI_5_metrics,  "PLS", "Window 2", "DAI",  "5d"),
+  extract_metrics(plsw2_DAI_7_metrics,  "PLS", "Window 2", "DAI",  "7d"),
+  
+  extract_metrics(plsw2_PAX_1_metrics,  "PLS", "Window 2", "PAX",  "1d"),
+  extract_metrics(plsw2_PAX_3_metrics,  "PLS", "Window 2", "PAX",  "3d"),
+  extract_metrics(plsw2_PAX_5_metrics,  "PLS", "Window 2", "PAX",  "5d"),
+  extract_metrics(plsw2_PAX_7_metrics,  "PLS", "Window 2", "PAX",  "7d"),
+  
+  extract_metrics(plsw2_USDT_1_metrics, "PLS", "Window 2", "USDT", "1d"),
+  extract_metrics(plsw2_USDT_3_metrics, "PLS", "Window 2", "USDT", "3d"),
+  extract_metrics(plsw2_USDT_5_metrics, "PLS", "Window 2", "USDT", "5d"),
+  extract_metrics(plsw2_USDT_7_metrics, "PLS", "Window 2", "USDT", "7d"),
+  
+  extract_metrics(plsw2_USDC_1_metrics, "PLS", "Window 2", "USDC", "1d"),
+  extract_metrics(plsw2_USDC_3_metrics, "PLS", "Window 2", "USDC", "3d"),
+  extract_metrics(plsw2_USDC_5_metrics, "PLS", "Window 2", "USDC", "5d"),
+  extract_metrics(plsw2_USDC_7_metrics, "PLS", "Window 2", "USDC", "7d")
 )
 
 
@@ -777,7 +869,7 @@ p_accuracy_heatmap <- ggplot(summary_plot, aes(x = horizon, y = coin, fill = acc
   facet_grid(window ~ model) +
   scale_fill_viridis_c(labels = number_format(accuracy = 0.01)) +
   labs(
-    title = "Accyradct Score by Model, Window, Coin, and Horizon",
+    title = "Accuracy Score by Model, Window, Coin, and Horizon",
     x = "Forecast Horizon",
     y = "Coin",
     fill = "Accuracy"
