@@ -61,6 +61,25 @@ rungb <- function(train_data, test_data, title) {
     }
   }
   
+  # Backup if tuning failed =====================
+  # e.g. if nrounds == 0 because of class imbalance
+  if (is.null(best_nrounds)) {
+    cat("WARNING: nrounds == 0. Using default nrounds == 50.\n")
+    best_nrounds <- 50
+  }
+  
+  if (is.null(best_params)) {
+    cat("WARNING: No valid CV result. Using default parameters.\n")
+    best_params <- list(
+      objective = "binary:logistic",
+      eval_metric = "logloss",
+      max_depth = 3,
+      eta = 0.1,
+      subsample = 0.8,
+      colsample_bytree = 0.8
+    )
+  }
+  
   # Train final model on best params =================
   gb_model <- xgb.train(params = best_params,
                         data = dtrain,
