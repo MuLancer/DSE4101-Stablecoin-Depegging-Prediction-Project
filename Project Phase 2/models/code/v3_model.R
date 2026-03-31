@@ -353,7 +353,7 @@ for (coin in c("DAI", "PAX", "USDC", "USDT", "UST")) {
   print(p)
   ggsave(
     paste0("../../plots/feature_importance/RF_", coin, "_feature_importance_w1.png"),
-    p, width = 10, height = 8
+    p, width = 16, height = 4
   )
 }
 
@@ -369,7 +369,7 @@ for (coin in c("DAI", "PAX", "USDC", "USDT")) {
   print(p)
   ggsave(
     paste0("../../plots/feature_importance/RF_", coin, "_feature_importance_w2.png"),
-    p, width = 10, height = 8
+    p, width = 16, height = 4
   )
 }
 
@@ -385,7 +385,7 @@ for (coin in c("DAI", "PAX", "USDC", "USDT", "UST")) {
   print(p)
   ggsave(
     paste0("../../plots/feature_importance/GB_", coin, "_feature_importance_w1.png"),
-    p, width = 10, height = 8
+    p, width = 16, height = 4
   )
 }
 
@@ -401,7 +401,7 @@ for (coin in c("DAI", "PAX", "USDC", "USDT")) {
   print(p)
   ggsave(
     paste0("../../plots/feature_importance/GB_", coin, "_feature_importance_w2.png"),
-    p, width = 10, height = 8
+    p, width = 16, height = 4
   )
 }
 
