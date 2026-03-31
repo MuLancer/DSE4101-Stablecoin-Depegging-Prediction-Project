@@ -419,7 +419,6 @@ source("func-pcr.R")
 pcrw1 = runpcr_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
 pcrw2 = runpcr_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
 
-
 ## Some additional functions: show PCR components, plot CV error curve
 summary(pcrw1$DAI$depeg_1d$model)
 cat("Optimal No. of components for DAI 1d:", pcrw1$DAI$depeg_1d$ncomp, "\n")
@@ -501,15 +500,19 @@ lasso_DAI_3_metrics2 <- depeg_metrics(lassow2$DAI$depeg_3d$test$y, lassow2$DAI$d
 lasso_DAI_5_metrics2 <- depeg_metrics(lassow2$DAI$depeg_5d$test$y, lassow2$DAI$depeg_5d$pred_class)
 lasso_DAI_7_metrics2 <- depeg_metrics(lassow2$DAI$depeg_7d$test$y, lassow2$DAI$depeg_7d$pred_class)
 
-# ---Summary ---
+
+
+
+# --------------------- Summary ---------------------
 #model performance
+
+# Random Forest
 #-- window 1
 #DAI
 rfw1_DAI_1_metrics <- depeg_metrics(dfw1$DAI$depeg_1d$test$y, rfw1$DAI$depeg_1d$pred_class)
 rfw1_DAI_3_metrics <- depeg_metrics(dfw1$DAI$depeg_3d$test$y, rfw1$DAI$depeg_3d$pred_class)
 rfw1_DAI_5_metrics <- depeg_metrics(dfw1$DAI$depeg_5d$test$y, rfw1$DAI$depeg_5d$pred_class)
 rfw1_DAI_7_metrics <- depeg_metrics(dfw1$DAI$depeg_7d$test$y, rfw1$DAI$depeg_7d$pred_class)
-
 
 # PAX
 rfw1_PAX_1_metrics <- depeg_metrics(dfw1$PAX$depeg_1d$test$y, rfw1$PAX$depeg_1d$pred_class)
@@ -534,8 +537,6 @@ rfw1_UST_1_metrics <- depeg_metrics(dfw1$UST$depeg_1d$test$y, rfw1$UST$depeg_1d$
 rfw1_UST_3_metrics <- depeg_metrics(dfw1$UST$depeg_3d$test$y, rfw1$UST$depeg_3d$pred_class)
 rfw1_UST_5_metrics <- depeg_metrics(dfw1$UST$depeg_5d$test$y, rfw1$UST$depeg_5d$pred_class)
 rfw1_UST_7_metrics <- depeg_metrics(dfw1$UST$depeg_7d$test$y, rfw1$UST$depeg_7d$pred_class)
-
-
 
 #--- Window 2
 # PAX
@@ -563,30 +564,8 @@ rfw2_DAI_5_metrics <- depeg_metrics(dfw2$DAI$depeg_5d$test$y, rfw2$DAI$depeg_5d$
 rfw2_DAI_7_metrics <- depeg_metrics(dfw2$DAI$depeg_7d$test$y, rfw2$DAI$depeg_7d$pred_class)
 
 
-extract_metrics <- function(metric_obj, model, window, coin, horizon) {
-  tibble(
-    model = model,
-    window = window,
-    coin = coin,
-    horizon = horizon,
-    accuracy = metric_obj$accuracy,
-    misclassifications = metric_obj$misclassifications,
-    sensitivity = metric_obj$sensitivity,
-    specificity = metric_obj$specificity,
-    precision = metric_obj$precision,
-    recall = metric_obj$recall,
-    f1_score = metric_obj$f1_score,
-    TP = unname(metric_obj$confusion_matrix["TP"]),
-    TN = unname(metric_obj$confusion_matrix["TN"]),
-    FP = unname(metric_obj$confusion_matrix["FP"]),
-    FN = unname(metric_obj$confusion_matrix["FN"]),
-    FP_cost_ratio = metric_obj$FP_cost_ratio,
-    FN_cost_ratio = metric_obj$FN_cost_ratio,
-    total_observations = metric_obj$total_observations
-  )
-}
-
 #Gradient Boosting
+#-- window 1
 # DAI
 gbw1_DAI_1_metrics <- depeg_metrics(dfw1$DAI$depeg_1d$test$y, gbw1$DAI$depeg_1d$pred_class)
 gbw1_DAI_3_metrics <- depeg_metrics(dfw1$DAI$depeg_3d$test$y, gbw1$DAI$depeg_3d$pred_class)
@@ -641,6 +620,145 @@ gbw2_DAI_1_metrics <- depeg_metrics(dfw2$DAI$depeg_1d$test$y, gbw2$DAI$depeg_1d$
 gbw2_DAI_3_metrics <- depeg_metrics(dfw2$DAI$depeg_3d$test$y, gbw2$DAI$depeg_3d$pred_class)
 gbw2_DAI_5_metrics <- depeg_metrics(dfw2$DAI$depeg_5d$test$y, gbw2$DAI$depeg_5d$pred_class)
 gbw2_DAI_7_metrics <- depeg_metrics(dfw2$DAI$depeg_7d$test$y, gbw2$DAI$depeg_7d$pred_class)
+
+# PCR
+#-- window 1
+# DAI
+pcrw1_DAI_1_metrics <- depeg_metrics(dfw1$DAI$depeg_1d$test$y, pcrw1$DAI$depeg_1d$pred_class)
+pcrw1_DAI_3_metrics <- depeg_metrics(dfw1$DAI$depeg_3d$test$y, pcrw1$DAI$depeg_3d$pred_class)
+pcrw1_DAI_5_metrics <- depeg_metrics(dfw1$DAI$depeg_5d$test$y, pcrw1$DAI$depeg_5d$pred_class)
+pcrw1_DAI_7_metrics <- depeg_metrics(dfw1$DAI$depeg_7d$test$y, pcrw1$DAI$depeg_7d$pred_class)
+
+# PAX
+pcrw1_PAX_1_metrics <- depeg_metrics(dfw1$PAX$depeg_1d$test$y, pcrw1$PAX$depeg_1d$pred_class)
+pcrw1_PAX_3_metrics <- depeg_metrics(dfw1$PAX$depeg_3d$test$y, pcrw1$PAX$depeg_3d$pred_class)
+pcrw1_PAX_5_metrics <- depeg_metrics(dfw1$PAX$depeg_5d$test$y, pcrw1$PAX$depeg_5d$pred_class)
+pcrw1_PAX_7_metrics <- depeg_metrics(dfw1$PAX$depeg_7d$test$y, pcrw1$PAX$depeg_7d$pred_class)
+
+# USDT
+pcrw1_USDT_1_metrics <- depeg_metrics(dfw1$USDT$depeg_1d$test$y, pcrw1$USDT$depeg_1d$pred_class)
+pcrw1_USDT_3_metrics <- depeg_metrics(dfw1$USDT$depeg_3d$test$y, pcrw1$USDT$depeg_3d$pred_class)
+pcrw1_USDT_5_metrics <- depeg_metrics(dfw1$USDT$depeg_5d$test$y, pcrw1$USDT$depeg_5d$pred_class)
+pcrw1_USDT_7_metrics <- depeg_metrics(dfw1$USDT$depeg_7d$test$y, pcrw1$USDT$depeg_7d$pred_class)
+
+# USDC
+pcrw1_USDC_1_metrics <- depeg_metrics(dfw1$USDC$depeg_1d$test$y, pcrw1$USDC$depeg_1d$pred_class)
+pcrw1_USDC_3_metrics <- depeg_metrics(dfw1$USDC$depeg_3d$test$y, pcrw1$USDC$depeg_3d$pred_class)
+pcrw1_USDC_5_metrics <- depeg_metrics(dfw1$USDC$depeg_5d$test$y, pcrw1$USDC$depeg_5d$pred_class)
+pcrw1_USDC_7_metrics <- depeg_metrics(dfw1$USDC$depeg_7d$test$y, pcrw1$USDC$depeg_7d$pred_class)
+
+# UST
+pcrw1_UST_1_metrics <- depeg_metrics(dfw1$UST$depeg_1d$test$y, pcrw1$UST$depeg_1d$pred_class)
+pcrw1_UST_3_metrics <- depeg_metrics(dfw1$UST$depeg_3d$test$y, pcrw1$UST$depeg_3d$pred_class)
+pcrw1_UST_5_metrics <- depeg_metrics(dfw1$UST$depeg_5d$test$y, pcrw1$UST$depeg_5d$pred_class)
+pcrw1_UST_7_metrics <- depeg_metrics(dfw1$UST$depeg_7d$test$y, pcrw1$UST$depeg_7d$pred_class)
+
+#--- Window 2
+# PAX
+pcrw2_PAX_1_metrics <- depeg_metrics(dfw2$PAX$depeg_1d$test$y, pcrw2$PAX$depeg_1d$pred_class)
+pcrw2_PAX_3_metrics <- depeg_metrics(dfw2$PAX$depeg_3d$test$y, pcrw2$PAX$depeg_3d$pred_class)
+pcrw2_PAX_5_metrics <- depeg_metrics(dfw2$PAX$depeg_5d$test$y, pcrw2$PAX$depeg_5d$pred_class)
+pcrw2_PAX_7_metrics <- depeg_metrics(dfw2$PAX$depeg_7d$test$y, pcrw2$PAX$depeg_7d$pred_class)
+
+# USDT
+pcrw2_USDT_1_metrics <- depeg_metrics(dfw2$USDT$depeg_1d$test$y, pcrw2$USDT$depeg_1d$pred_class)
+pcrw2_USDT_3_metrics <- depeg_metrics(dfw2$USDT$depeg_3d$test$y, pcrw2$USDT$depeg_3d$pred_class)
+pcrw2_USDT_5_metrics <- depeg_metrics(dfw2$USDT$depeg_5d$test$y, pcrw2$USDT$depeg_5d$pred_class)
+pcrw2_USDT_7_metrics <- depeg_metrics(dfw2$USDT$depeg_7d$test$y, pcrw2$USDT$depeg_7d$pred_class)
+
+# USDC
+pcrw2_USDC_1_metrics <- depeg_metrics(dfw2$USDC$depeg_1d$test$y, pcrw2$USDC$depeg_1d$pred_class)
+pcrw2_USDC_3_metrics <- depeg_metrics(dfw2$USDC$depeg_3d$test$y, pcrw2$USDC$depeg_3d$pred_class)
+pcrw2_USDC_5_metrics <- depeg_metrics(dfw2$USDC$depeg_5d$test$y, pcrw2$USDC$depeg_5d$pred_class)
+pcrw2_USDC_7_metrics <- depeg_metrics(dfw2$USDC$depeg_7d$test$y, pcrw2$USDC$depeg_7d$pred_class)
+
+# DAI
+pcrw2_DAI_1_metrics <- depeg_metrics(dfw2$DAI$depeg_1d$test$y, pcrw2$DAI$depeg_1d$pred_class)
+pcrw2_DAI_3_metrics <- depeg_metrics(dfw2$DAI$depeg_3d$test$y, pcrw2$DAI$depeg_3d$pred_class)
+pcrw2_DAI_5_metrics <- depeg_metrics(dfw2$DAI$depeg_5d$test$y, pcrw2$DAI$depeg_5d$pred_class)
+pcrw2_DAI_7_metrics <- depeg_metrics(dfw2$DAI$depeg_7d$test$y, pcrw2$DAI$depeg_7d$pred_class)
+
+# PLS
+#-- window 1
+# DAI
+plsw1_DAI_1_metrics <- depeg_metrics(dfw1$DAI$depeg_1d$test$y, plsw1$DAI$depeg_1d$pred_class)
+plsw1_DAI_3_metrics <- depeg_metrics(dfw1$DAI$depeg_3d$test$y, plsw1$DAI$depeg_3d$pred_class)
+plsw1_DAI_5_metrics <- depeg_metrics(dfw1$DAI$depeg_5d$test$y, plsw1$DAI$depeg_5d$pred_class)
+plsw1_DAI_7_metrics <- depeg_metrics(dfw1$DAI$depeg_7d$test$y, plsw1$DAI$depeg_7d$pred_class)
+
+# PAX
+plsw1_PAX_1_metrics <- depeg_metrics(dfw1$PAX$depeg_1d$test$y, plsw1$PAX$depeg_1d$pred_class)
+plsw1_PAX_3_metrics <- depeg_metrics(dfw1$PAX$depeg_3d$test$y, plsw1$PAX$depeg_3d$pred_class)
+plsw1_PAX_5_metrics <- depeg_metrics(dfw1$PAX$depeg_5d$test$y, plsw1$PAX$depeg_5d$pred_class)
+plsw1_PAX_7_metrics <- depeg_metrics(dfw1$PAX$depeg_7d$test$y, plsw1$PAX$depeg_7d$pred_class)
+
+# USDT
+plsw1_USDT_1_metrics <- depeg_metrics(dfw1$USDT$depeg_1d$test$y, plsw1$USDT$depeg_1d$pred_class)
+plsw1_USDT_3_metrics <- depeg_metrics(dfw1$USDT$depeg_3d$test$y, plsw1$USDT$depeg_3d$pred_class)
+plsw1_USDT_5_metrics <- depeg_metrics(dfw1$USDT$depeg_5d$test$y, plsw1$USDT$depeg_5d$pred_class)
+plsw1_USDT_7_metrics <- depeg_metrics(dfw1$USDT$depeg_7d$test$y, plsw1$USDT$depeg_7d$pred_class)
+
+# USDC
+plsw1_USDC_1_metrics <- depeg_metrics(dfw1$USDC$depeg_1d$test$y, plsw1$USDC$depeg_1d$pred_class)
+plsw1_USDC_3_metrics <- depeg_metrics(dfw1$USDC$depeg_3d$test$y, plsw1$USDC$depeg_3d$pred_class)
+plsw1_USDC_5_metrics <- depeg_metrics(dfw1$USDC$depeg_5d$test$y, plsw1$USDC$depeg_5d$pred_class)
+plsw1_USDC_7_metrics <- depeg_metrics(dfw1$USDC$depeg_7d$test$y, plsw1$USDC$depeg_7d$pred_class)
+
+# UST
+plsw1_UST_1_metrics <- depeg_metrics(dfw1$UST$depeg_1d$test$y, plsw1$UST$depeg_1d$pred_class)
+plsw1_UST_3_metrics <- depeg_metrics(dfw1$UST$depeg_3d$test$y, plsw1$UST$depeg_3d$pred_class)
+plsw1_UST_5_metrics <- depeg_metrics(dfw1$UST$depeg_5d$test$y, plsw1$UST$depeg_5d$pred_class)
+plsw1_UST_7_metrics <- depeg_metrics(dfw1$UST$depeg_7d$test$y, plsw1$UST$depeg_7d$pred_class)
+
+#--- Window 2
+# PAX
+plsw2_PAX_1_metrics <- depeg_metrics(dfw2$PAX$depeg_1d$test$y, plsw2$PAX$depeg_1d$pred_class)
+plsw2_PAX_3_metrics <- depeg_metrics(dfw2$PAX$depeg_3d$test$y, plsw2$PAX$depeg_3d$pred_class)
+plsw2_PAX_5_metrics <- depeg_metrics(dfw2$PAX$depeg_5d$test$y, plsw2$PAX$depeg_5d$pred_class)
+plsw2_PAX_7_metrics <- depeg_metrics(dfw2$PAX$depeg_7d$test$y, plsw2$PAX$depeg_7d$pred_class)
+
+# USDT
+plsw2_USDT_1_metrics <- depeg_metrics(dfw2$USDT$depeg_1d$test$y, plsw2$USDT$depeg_1d$pred_class)
+plsw2_USDT_3_metrics <- depeg_metrics(dfw2$USDT$depeg_3d$test$y, plsw2$USDT$depeg_3d$pred_class)
+plsw2_USDT_5_metrics <- depeg_metrics(dfw2$USDT$depeg_5d$test$y, plsw2$USDT$depeg_5d$pred_class)
+plsw2_USDT_7_metrics <- depeg_metrics(dfw2$USDT$depeg_7d$test$y, plsw2$USDT$depeg_7d$pred_class)
+
+# USDC
+plsw2_USDC_1_metrics <- depeg_metrics(dfw2$USDC$depeg_1d$test$y, plsw2$USDC$depeg_1d$pred_class)
+plsw2_USDC_3_metrics <- depeg_metrics(dfw2$USDC$depeg_3d$test$y, plsw2$USDC$depeg_3d$pred_class)
+plsw2_USDC_5_metrics <- depeg_metrics(dfw2$USDC$depeg_5d$test$y, plsw2$USDC$depeg_5d$pred_class)
+plsw2_USDC_7_metrics <- depeg_metrics(dfw2$USDC$depeg_7d$test$y, plsw2$USDC$depeg_7d$pred_class)
+
+# DAI
+plsw2_DAI_1_metrics <- depeg_metrics(dfw2$DAI$depeg_1d$test$y, plsw2$DAI$depeg_1d$pred_class)
+plsw2_DAI_3_metrics <- depeg_metrics(dfw2$DAI$depeg_3d$test$y, plsw2$DAI$depeg_3d$pred_class)
+plsw2_DAI_5_metrics <- depeg_metrics(dfw2$DAI$depeg_5d$test$y, plsw2$DAI$depeg_5d$pred_class)
+plsw2_DAI_7_metrics <- depeg_metrics(dfw2$DAI$depeg_7d$test$y, plsw2$DAI$depeg_7d$pred_class)
+
+
+extract_metrics <- function(metric_obj, model, window, coin, horizon) {
+  tibble(
+    model = model,
+    window = window,
+    coin = coin,
+    horizon = horizon,
+    accuracy = metric_obj$accuracy,
+    misclassifications = metric_obj$misclassifications,
+    sensitivity = metric_obj$sensitivity,
+    specificity = metric_obj$specificity,
+    precision = metric_obj$precision,
+    recall = metric_obj$recall,
+    f1_score = metric_obj$f1_score,
+    TP = unname(metric_obj$confusion_matrix["TP"]),
+    TN = unname(metric_obj$confusion_matrix["TN"]),
+    FP = unname(metric_obj$confusion_matrix["FP"]),
+    FN = unname(metric_obj$confusion_matrix["FN"]),
+    FP_cost_ratio = metric_obj$FP_cost_ratio,
+    FN_cost_ratio = metric_obj$FN_cost_ratio,
+    total_observations = metric_obj$total_observations
+  )
+}
+
 
 
 summary_metrics <- bind_rows(
@@ -856,6 +974,7 @@ summary_plot <- summary_main %>%
     model = factor(model, levels = c("RF", "GB", "PCR", "PLS")),
     coin = factor(coin, levels = c("DAI", "PAX", "USDT", "USDC", "UST"))
   )
+
 p_f1_heatmap <- ggplot(summary_plot, aes(x = horizon, y = coin, fill = f1_score)) +
   geom_tile(color = "white", linewidth = 0.4) +
   geom_text(aes(label = round(f1_score, 2)), size = 3) +
