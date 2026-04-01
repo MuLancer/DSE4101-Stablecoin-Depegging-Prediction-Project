@@ -1396,12 +1396,6 @@ plot_test_pcs(result_data = pcrw2, test_data = dfw2, coin_df = data_USDT, coin =
 
 # ==============================================================================
 
-
-# plot_pcr_list <- list(plot_pcr_DAI, plot_pcr_PAX, plot_pcr_USDC, plot_pcr_USDT, plot_pcr_UST)
-# pcr_grid <- grid.arrange(grobs = plot_pcr_list, nrow = 2, ncol = 3)
-# ggsave("../../plots/PCR_model_OOS.png", pcr_grid, width = 12, height = 8)
-
-
 #############################
 ### Partial Least Squares ###
 #############################
@@ -1696,10 +1690,6 @@ plot_cv_curve(plsw2$USDT$depeg_7d$cv_errors_plot, title = "USDT 7d: PLS Cross-Va
 plot_test_comps(result_data = plsw2, test_data = dfw2, coin_df = data_USDT, coin = "USDT", horizon = "depeg_7d", title = "USDT depeg_7d: test PLS scores")
 
 # ------------------------------------------------------------------------------
-
-# plot_pcr_list <- list(plot_pcr_DAI, plot_pcr_PAX, plot_pcr_USDC, plot_pcr_USDT, plot_pcr_UST)
-# pcr_grid <- grid.arrange(grobs = plot_pcr_list, nrow = 2, ncol = 3)
-# ggsave("../../plots/PCR_model_OOS.png", pcr_grid, width = 12, height = 8)
 
 # ==============================================================================
 
