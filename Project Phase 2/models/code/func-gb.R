@@ -111,6 +111,7 @@ rungb <- function(train_data, test_data, title) {
     pred_class = pred_class,
     importance = importance_matrix,
     confusion_matrix = cm,
+    X_test_scaled = X_test_scaled,
     tuning = list(
       best_params = best_params,
       best_nrounds = best_nrounds,

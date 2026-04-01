@@ -100,6 +100,11 @@ run_logloss_importance_all <- function(model_results, dfw, coin_list, horizons,
     for (h in horizons) {
       cat("Running:", model_name, "|", window_name, "|", coin, "|", h, "\n")
       
+      # if(!is.null(dfw[[coin]][[h]]$X_test_scaled)){
+      #   test_X <- dfw[[coin]][[h]]$X_test_scaled     # for GB, need to use scaled
+      # } else {
+      #   test_X <- dfw[[coin]][[h]]$test$X            # for RF, no scaling
+      # }
       test_X <- dfw[[coin]][[h]]$test$X
       test_y <- dfw[[coin]][[h]]$test$y
       model_entry <- model_results[[coin]][[h]]

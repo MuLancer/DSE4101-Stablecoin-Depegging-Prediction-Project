@@ -340,8 +340,7 @@ for (coin in c("DAI", "PAX", "USDC", "USDT", "UST")) {
   print(p)
   ggsave(
     paste0("../../plots/feature_importance/RF_", coin, "_feature_importance_w1.png"),
-    p, width = 10, height = 8
-  )
+    p, width = 16, height = 4)
 }
 
 # RF Window 2
@@ -356,9 +355,17 @@ for (coin in c("DAI", "PAX", "USDC", "USDT")) {
   print(p)
   ggsave(
     paste0("../../plots/feature_importance/RF_", coin, "_feature_importance_w2.png"),
-    p, width = 10, height = 8
+    p, width = 16, height = 4
   )
 }
+
+# Code to show top 5 predictors by logloss importance
+rf_logloss_imp_all %>% filter(window == "Window 1", 
+                              coin == "UST", 
+                              horizon == "depeg_7d") %>%
+  mutate(importance_logloss = round(importance_logloss, 5)) %>%
+  select(feature, importance_logloss) %>%
+  head(5)
 
 # GB Window 1
 for (coin in c("DAI", "PAX", "USDC", "USDT", "UST")) {
@@ -372,8 +379,7 @@ for (coin in c("DAI", "PAX", "USDC", "USDT", "UST")) {
   print(p)
   ggsave(
     paste0("../../plots/feature_importance/GB_", coin, "_feature_importance_w1.png"),
-    p, width = 10, height = 8
-  )
+    p, width = 16, height = 4)
 }
 
 # GB Window 2
@@ -388,9 +394,16 @@ for (coin in c("DAI", "PAX", "USDC", "USDT")) {
   print(p)
   ggsave(
     paste0("../../plots/feature_importance/GB_", coin, "_feature_importance_w2.png"),
-    p, width = 10, height = 8
-  )
+    p, width = 16, height = 4)
 }
+
+# Code to show top 5 predictors by logloss importance
+gb_logloss_imp_all %>% filter(window == "Window 1", 
+                              coin == "UST", 
+                              horizon == "depeg_7d") %>%
+  mutate(importance_logloss = round(importance_logloss, 5)) %>%
+  select(feature, importance_logloss) %>%
+  head(5)
 
 ######################################
 ### Principal Component Regression ###
