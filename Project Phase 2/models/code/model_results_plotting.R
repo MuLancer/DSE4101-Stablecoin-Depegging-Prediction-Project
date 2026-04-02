@@ -15,9 +15,10 @@ summary_main <- read_csv("../../model performance output/summary_main.csv")
 # ============================================
 summary_plot <- summary_main %>%
   mutate(
-    horizon = factor(horizon, levels = c(1, 3, 5, 7), labels = c("1d", "3d", "5d", "7d")),
+    horizon = factor(horizon, levels = c("depeg_1d", "depeg_3d", "depeg_5d", "depeg_7d"), 
+                     labels = c("1d", "3d", "5d", "7d")),
     window  = factor(window, levels = c("Window 1", "Window 2")),
-    model   = factor(model, levels = c("RF", "GB", "PCR", "PLS")),
+    model   = factor(model, levels = c("RF", "GB", "PCR", "PLS", "LASSO")),
     coin    = factor(coin, levels = c("DAI", "PAX", "USDC", "USDT", "UST"))
   )
 
@@ -26,6 +27,9 @@ summary_plot_f1 <- summary_plot %>%
 
 summary_plot_accuracy <- summary_plot %>%
   filter(!is.na(accuracy), !is.nan(accuracy))
+
+summary_plot_auc <- summary_plot %>%
+  filter(!is.na(auc), !is.nan(auc))
 
 summary_plot_recall <- summary_plot %>%
   filter(!is.na(recall), !is.nan(recall))
@@ -117,6 +121,13 @@ p_accuracy_heatmap <- make_heatmap(
   fill_label = "Accuracy"
 )
 
+p_auc_heatmap <- make_heatmap(
+  summary_plot_auc,
+  metric = "auc",
+  title = "AUC by Model, Window, Coin, and Horizon",
+  fill_label = "AUC"
+)
+
 p_recall_heatmap <- make_heatmap(
   summary_plot_recall,
   metric = "recall",
@@ -147,6 +158,13 @@ p_accuracy_lines <- make_line_plot(
   metric = "accuracy",
   title = "Accuracy Across Forecast Horizons",
   y_label = "Accuracy"
+)
+
+p_auc_lines <- make_line_plot(
+  summary_plot_auc,
+  metric = "auc",
+  title = "AUC Across Forecast Horizons",
+  y_label = "AUC"
 )
 
 p_recall_lines <- make_line_plot(
@@ -244,31 +262,62 @@ p_best_models_accuracy <- ggplot(best_models_accuracy, aes(x = horizon, y = accu
   )
 
 # ============================================
+# Best model by AUC
+# ============================================
+best_models_auc <- summary_plot_auc %>%
+  group_by(window, coin, horizon) %>%
+  slice_max(order_by = auc, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+p_best_models_auc <- ggplot(best_models_auc, aes(x = horizon, y = auc, fill = model)) +
+  geom_col() +
+  facet_grid(window ~ coin) +
+  scale_y_continuous(limits = c(0, 1), labels = number_format(accuracy = 0.01)) +
+  labs(
+    title = "Best Model by AUC",
+    x = "Forecast Horizon",
+    y = "Best AUC",
+    fill = "Winning Model"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    strip.text = element_text(face = "bold")
+  )
+
+# ============================================
 # Save all plots
 # ============================================
-save_plot(p_f1_heatmap,           "f1_heatmap.png",              width = 12, height = 8)
-save_plot(p_accuracy_heatmap,     "accuracy_heatmap.png",        width = 12, height = 8)
-save_plot(p_recall_heatmap,       "recall_heatmap.png",          width = 12, height = 8)
-save_plot(p_precision_heatmap,    "precision_heatmap.png",       width = 12, height = 8)
+save_plot(p_f1_heatmap,           "f1_heatmap.png",              width = 16, height = 8)
+save_plot(p_accuracy_heatmap,     "accuracy_heatmap.png",        width = 16, height = 8)
+save_plot(p_auc_heatmap,           "auc_heatmap.png",            width = 16, height = 8)
+save_plot(p_recall_heatmap,       "recall_heatmap.png",          width = 16, height = 8)
+save_plot(p_precision_heatmap,    "precision_heatmap.png",       width = 16, height = 8)
 
-save_plot(p_f1_lines,             "f1_lines.png",                width = 12, height = 8)
-save_plot(p_accuracy_lines,       "accuracy_lines.png",          width = 12, height = 8)
-save_plot(p_recall_lines,         "recall_lines.png",            width = 12, height = 8)
+save_plot(p_f1_lines,             "f1_lines.png",                width = 16, height = 8)
+save_plot(p_accuracy_lines,       "accuracy_lines.png",          width = 16, height = 8)
+save_plot(p_auc_lines,             "auc_lines.png",              width = 16, height = 8)
+save_plot(p_recall_lines,         "recall_lines.png",            width = 16, height = 8)
 
 save_plot(p_pr_scatter,           "precision_recall_scatter.png", width = 10, height = 7)
-save_plot(p_confusion,            "confusion_components.png",    width = 14, height = 10)
-save_plot(p_best_models_f1,       "best_model_f1.png",           width = 12, height = 8)
-save_plot(p_best_models_accuracy, "best_model_accuracy.png",     width = 12, height = 8)
+save_plot(p_confusion,            "confusion_components.png",     width = 14, height = 10)
+save_plot(p_best_models_f1,       "best_model_f1.png",            width = 16, height = 8)
+save_plot(p_best_models_accuracy, "best_model_accuracy.png",      width = 16, height = 8)
+save_plot(p_best_models_auc,       "best_model_auc.png",          width = 16, height = 8)
 
 
 p_f1_heatmap
 p_accuracy_heatmap
 p_recall_heatmap
+p_auc_heatmap
 p_precision_heatmap
+
 p_f1_lines
 p_accuracy_lines
+p_auc_lines
 p_recall_lines
+
 p_pr_scatter
 p_confusion
 p_best_models_f1
 p_best_models_accuracy
+p_best_models_auc
