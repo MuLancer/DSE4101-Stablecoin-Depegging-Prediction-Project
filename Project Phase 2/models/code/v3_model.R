@@ -529,7 +529,9 @@ summary_metrics <- bind_rows(
   extract_metrics("PCR", "Window 1", results_pcrw1),
   extract_metrics("PCR", "Window 2", results_pcrw2),
   extract_metrics("PLS", "Window 1", results_plsw1),
-  extract_metrics("PLS", "Window 2", results_plsw2)
+  extract_metrics("PLS", "Window 2", results_plsw2),
+  extract_metrics("LASSO", "Window 1", results_lassow1),
+  extract_metrics("LASSO", "Window 2", results_lassow2)
   )
 
 
