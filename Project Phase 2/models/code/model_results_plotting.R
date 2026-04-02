@@ -293,16 +293,16 @@ save_plot(p_auc_heatmap,           "auc_heatmap.png",            width = 16, hei
 save_plot(p_recall_heatmap,       "recall_heatmap.png",          width = 16, height = 8)
 save_plot(p_precision_heatmap,    "precision_heatmap.png",       width = 16, height = 8)
 
-save_plot(p_f1_lines,             "f1_lines.png",                width = 16, height = 8)
+save_plot(p_f1_lines,             "f1_lines.png",                width = 11, height = 8)
 save_plot(p_accuracy_lines,       "accuracy_lines.png",          width = 16, height = 8)
-save_plot(p_auc_lines,             "auc_lines.png",              width = 16, height = 8)
+save_plot(p_auc_lines,             "auc_lines.png",              width = 11, height = 8)
 save_plot(p_recall_lines,         "recall_lines.png",            width = 16, height = 8)
 
 save_plot(p_pr_scatter,           "precision_recall_scatter.png", width = 10, height = 7)
 save_plot(p_confusion,            "confusion_components.png",     width = 14, height = 10)
-save_plot(p_best_models_f1,       "best_model_f1.png",            width = 16, height = 8)
+save_plot(p_best_models_f1,       "best_model_f1.png",            width = 11, height = 8)
 save_plot(p_best_models_accuracy, "best_model_accuracy.png",      width = 16, height = 8)
-save_plot(p_best_models_auc,       "best_model_auc.png",          width = 16, height = 8)
+save_plot(p_best_models_auc,       "best_model_auc.png",          width = 11, height = 8)
 
 
 p_f1_heatmap
