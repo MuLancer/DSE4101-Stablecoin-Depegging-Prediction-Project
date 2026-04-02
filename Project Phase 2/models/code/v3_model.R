@@ -35,17 +35,6 @@ data_USDT <- read.csv("../../data/USDT/USDT_onchain_features.csv") %>% mutate(da
 data_UST  <- read.csv("../../data/UST/UST_onchain_features.csv")  %>% mutate(date = as.Date(date))
 
 
-###############################
-### Load relevant functions ###
-###############################
-
-# load depeg metrics function
-source("func-depeg_metrics.R")
-
-# load in plotting functions
-source("func-plots.R")
-
-
 ########################
 ### Data Preparation ###
 ########################
@@ -230,7 +219,7 @@ dfw2 <- w2()
 #####################
 source("func-rf.R")
 
-## WINDOW 1 ====================================================================
+## RUN MODEL ====================================================================
 # run random forest on all coins for all horizons
 rfw1 = runrf_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
 rfw2 = runrf_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
@@ -243,7 +232,7 @@ rfw2 = runrf_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
 
 source("func-gb.R")
 
-## WINDOW 1 ====================================================================
+## RUN MODEL ====================================================================
 # run XGBoost on all coins for all horizons
 gbw1 = rungb_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
 gbw2 = rungb_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
@@ -414,7 +403,7 @@ source("func-pcr.R")
 # occurs when some PCs predict the class exactly (overfit)
 # happens due to small sample size and class imbalance (depeg rare)
 
-## WINDOW 1 ====================================================================
+## RUN MODEL ====================================================================
 # run PCR on all coins for all horizons
 pcrw1 = runpcr_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
 pcrw2 = runpcr_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
@@ -447,7 +436,7 @@ plot_cv_curve(pcrw1$UST$depeg_7d$cv_errors, title = "UST 7d: PCR Cross-Validatio
 #############################
 source("func-pls.R") 
 
-## WINDOW 1 ====================================================================
+## RUN MODEL ====================================================================
 # run PLS on all coins for all horizons
 plsw1 = runpls_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
 plsw2 = runpls_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
@@ -475,7 +464,7 @@ source("func-logit.R")
 # occurs when some PCs predict the class exactly (overfit)
 # happens due to small sample size and class imbalance (depeg rare)
 
-## WINDOW 1 ====================================================================
+## RUN MODEL ====================================================================
 # run Logit on all coins for all horizons
 logitw1 = runlogit_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
 logitw2 = runlogit_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
@@ -490,486 +479,97 @@ source("func-lasso.R")
 # the stronger-penalty solutions remain valid and are still returned by cv.glmnet().
 
 
-## WINDOW 1 ====================================================================
+## RUN MODEL ====================================================================
 # run LASSO on all coins for all horizons
 lassow1 = run_lasso_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
 lassow2 = run_lasso_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
 
 
-lasso_DAI_1_metrics2 <- depeg_metrics(lassow2$DAI$depeg_1d$test$y, lassow2$DAI$depeg_1d$pred_class)
-lasso_DAI_3_metrics2 <- depeg_metrics(lassow2$DAI$depeg_3d$test$y, lassow2$DAI$depeg_3d$pred_class)
-lasso_DAI_5_metrics2 <- depeg_metrics(lassow2$DAI$depeg_5d$test$y, lassow2$DAI$depeg_5d$pred_class)
-lasso_DAI_7_metrics2 <- depeg_metrics(lassow2$DAI$depeg_7d$test$y, lassow2$DAI$depeg_7d$pred_class)
 
-# ---Summary ---
-#model performance
-#-- window 1
-#DAI
-rfw1_DAI_1_metrics <- depeg_metrics(dfw1$DAI$depeg_1d$test$y, rfw1$DAI$depeg_1d$pred_class)
-rfw1_DAI_3_metrics <- depeg_metrics(dfw1$DAI$depeg_3d$test$y, rfw1$DAI$depeg_3d$pred_class)
-rfw1_DAI_5_metrics <- depeg_metrics(dfw1$DAI$depeg_5d$test$y, rfw1$DAI$depeg_5d$pred_class)
-rfw1_DAI_7_metrics <- depeg_metrics(dfw1$DAI$depeg_7d$test$y, rfw1$DAI$depeg_7d$pred_class)
+###############################
+### Load relevant functions ###
+###############################
 
+# load depeg metrics function
+source("func-depeg_metrics.R")
 
-# PAX
-rfw1_PAX_1_metrics <- depeg_metrics(dfw1$PAX$depeg_1d$test$y, rfw1$PAX$depeg_1d$pred_class)
-rfw1_PAX_3_metrics <- depeg_metrics(dfw1$PAX$depeg_3d$test$y, rfw1$PAX$depeg_3d$pred_class)
-rfw1_PAX_5_metrics <- depeg_metrics(dfw1$PAX$depeg_5d$test$y, rfw1$PAX$depeg_5d$pred_class)
-rfw1_PAX_7_metrics <- depeg_metrics(dfw1$PAX$depeg_7d$test$y, rfw1$PAX$depeg_7d$pred_class)
+# load in plotting functions
+source("func-plots.R")
 
-# USDT
-rfw1_USDT_1_metrics <- depeg_metrics(dfw1$USDT$depeg_1d$test$y, rfw1$USDT$depeg_1d$pred_class)
-rfw1_USDT_3_metrics <- depeg_metrics(dfw1$USDT$depeg_3d$test$y, rfw1$USDT$depeg_3d$pred_class)
-rfw1_USDT_5_metrics <- depeg_metrics(dfw1$USDT$depeg_5d$test$y, rfw1$USDT$depeg_5d$pred_class)
-rfw1_USDT_7_metrics <- depeg_metrics(dfw1$USDT$depeg_7d$test$y, rfw1$USDT$depeg_7d$pred_class)
+# -------------------------
+# Get Performance Metrics 
+# -------------------------
+results_rfw1 <- get_all_metrics(rfw1, dfw1, coins_w1, horizons)
+results_rfw2 <- get_all_metrics(rfw2, dfw2, coins_w2, horizons)
 
-# USDC
-rfw1_USDC_1_metrics <- depeg_metrics(dfw1$USDC$depeg_1d$test$y, rfw1$USDC$depeg_1d$pred_class)
-rfw1_USDC_3_metrics <- depeg_metrics(dfw1$USDC$depeg_3d$test$y, rfw1$USDC$depeg_3d$pred_class)
-rfw1_USDC_5_metrics <- depeg_metrics(dfw1$USDC$depeg_5d$test$y, rfw1$USDC$depeg_5d$pred_class)
-rfw1_USDC_7_metrics <- depeg_metrics(dfw1$USDC$depeg_7d$test$y, rfw1$USDC$depeg_7d$pred_class)
+results_gbw1 <- get_all_metrics(gbw1, dfw1, coins_w1, horizons)
+results_gbw2 <- get_all_metrics(gbw2, dfw2, coins_w2, horizons)
 
-# UST
-rfw1_UST_1_metrics <- depeg_metrics(dfw1$UST$depeg_1d$test$y, rfw1$UST$depeg_1d$pred_class)
-rfw1_UST_3_metrics <- depeg_metrics(dfw1$UST$depeg_3d$test$y, rfw1$UST$depeg_3d$pred_class)
-rfw1_UST_5_metrics <- depeg_metrics(dfw1$UST$depeg_5d$test$y, rfw1$UST$depeg_5d$pred_class)
-rfw1_UST_7_metrics <- depeg_metrics(dfw1$UST$depeg_7d$test$y, rfw1$UST$depeg_7d$pred_class)
+results_pcrw1 <- get_all_metrics(pcrw1, dfw1, coins_w1, horizons)
+results_pcrw2 <- get_all_metrics(pcrw2, dfw2, coins_w2, horizons)
 
+results_plsw1 <- get_all_metrics(plsw1, dfw1, coins_w1, horizons)
+results_plsw2 <- get_all_metrics(plsw2, dfw2, coins_w2, horizons)
 
-
-#--- Window 2
-# PAX
-rfw2_PAX_1_metrics <- depeg_metrics(dfw2$PAX$depeg_1d$test$y, rfw2$PAX$depeg_1d$pred_class)
-rfw2_PAX_3_metrics <- depeg_metrics(dfw2$PAX$depeg_3d$test$y, rfw2$PAX$depeg_3d$pred_class)
-rfw2_PAX_5_metrics <- depeg_metrics(dfw2$PAX$depeg_5d$test$y, rfw2$PAX$depeg_5d$pred_class)
-rfw2_PAX_7_metrics <- depeg_metrics(dfw2$PAX$depeg_7d$test$y, rfw2$PAX$depeg_7d$pred_class)
-
-# USDT
-rfw2_USDT_1_metrics <- depeg_metrics(dfw2$USDT$depeg_1d$test$y, rfw2$USDT$depeg_1d$pred_class)
-rfw2_USDT_3_metrics <- depeg_metrics(dfw2$USDT$depeg_3d$test$y, rfw2$USDT$depeg_3d$pred_class)
-rfw2_USDT_5_metrics <- depeg_metrics(dfw2$USDT$depeg_5d$test$y, rfw2$USDT$depeg_5d$pred_class)
-rfw2_USDT_7_metrics <- depeg_metrics(dfw2$USDT$depeg_7d$test$y, rfw2$USDT$depeg_7d$pred_class)
-
-# USDC
-rfw2_USDC_1_metrics <- depeg_metrics(dfw2$USDC$depeg_1d$test$y, rfw2$USDC$depeg_1d$pred_class)
-rfw2_USDC_3_metrics <- depeg_metrics(dfw2$USDC$depeg_3d$test$y, rfw2$USDC$depeg_3d$pred_class)
-rfw2_USDC_5_metrics <- depeg_metrics(dfw2$USDC$depeg_5d$test$y, rfw2$USDC$depeg_5d$pred_class)
-rfw2_USDC_7_metrics <- depeg_metrics(dfw2$USDC$depeg_7d$test$y, rfw2$USDC$depeg_7d$pred_class)
-
-# DAI
-rfw2_DAI_1_metrics <- depeg_metrics(dfw2$DAI$depeg_1d$test$y, rfw2$DAI$depeg_1d$pred_class)
-rfw2_DAI_3_metrics <- depeg_metrics(dfw2$DAI$depeg_3d$test$y, rfw2$DAI$depeg_3d$pred_class)
-rfw2_DAI_5_metrics <- depeg_metrics(dfw2$DAI$depeg_5d$test$y, rfw2$DAI$depeg_5d$pred_class)
-rfw2_DAI_7_metrics <- depeg_metrics(dfw2$DAI$depeg_7d$test$y, rfw2$DAI$depeg_7d$pred_class)
-
-#Gradient Boosting
-# DAI
-gbw1_DAI_1_metrics <- depeg_metrics(dfw1$DAI$depeg_1d$test$y, gbw1$DAI$depeg_1d$pred_class)
-gbw1_DAI_3_metrics <- depeg_metrics(dfw1$DAI$depeg_3d$test$y, gbw1$DAI$depeg_3d$pred_class)
-gbw1_DAI_5_metrics <- depeg_metrics(dfw1$DAI$depeg_5d$test$y, gbw1$DAI$depeg_5d$pred_class)
-gbw1_DAI_7_metrics <- depeg_metrics(dfw1$DAI$depeg_7d$test$y, gbw1$DAI$depeg_7d$pred_class)
-
-# PAX
-gbw1_PAX_1_metrics <- depeg_metrics(dfw1$PAX$depeg_1d$test$y, gbw1$PAX$depeg_1d$pred_class)
-gbw1_PAX_3_metrics <- depeg_metrics(dfw1$PAX$depeg_3d$test$y, gbw1$PAX$depeg_3d$pred_class)
-gbw1_PAX_5_metrics <- depeg_metrics(dfw1$PAX$depeg_5d$test$y, gbw1$PAX$depeg_5d$pred_class)
-gbw1_PAX_7_metrics <- depeg_metrics(dfw1$PAX$depeg_7d$test$y, gbw1$PAX$depeg_7d$pred_class)
-
-# USDT
-gbw1_USDT_1_metrics <- depeg_metrics(dfw1$USDT$depeg_1d$test$y, gbw1$USDT$depeg_1d$pred_class)
-gbw1_USDT_3_metrics <- depeg_metrics(dfw1$USDT$depeg_3d$test$y, gbw1$USDT$depeg_3d$pred_class)
-gbw1_USDT_5_metrics <- depeg_metrics(dfw1$USDT$depeg_5d$test$y, gbw1$USDT$depeg_5d$pred_class)
-gbw1_USDT_7_metrics <- depeg_metrics(dfw1$USDT$depeg_7d$test$y, gbw1$USDT$depeg_7d$pred_class)
-
-# USDC
-gbw1_USDC_1_metrics <- depeg_metrics(dfw1$USDC$depeg_1d$test$y, gbw1$USDC$depeg_1d$pred_class)
-gbw1_USDC_3_metrics <- depeg_metrics(dfw1$USDC$depeg_3d$test$y, gbw1$USDC$depeg_3d$pred_class)
-gbw1_USDC_5_metrics <- depeg_metrics(dfw1$USDC$depeg_5d$test$y, gbw1$USDC$depeg_5d$pred_class)
-gbw1_USDC_7_metrics <- depeg_metrics(dfw1$USDC$depeg_7d$test$y, gbw1$USDC$depeg_7d$pred_class)
-
-# UST
-gbw1_UST_1_metrics <- depeg_metrics(dfw1$UST$depeg_1d$test$y, gbw1$UST$depeg_1d$pred_class)
-gbw1_UST_3_metrics <- depeg_metrics(dfw1$UST$depeg_3d$test$y, gbw1$UST$depeg_3d$pred_class)
-gbw1_UST_5_metrics <- depeg_metrics(dfw1$UST$depeg_5d$test$y, gbw1$UST$depeg_5d$pred_class)
-gbw1_UST_7_metrics <- depeg_metrics(dfw1$UST$depeg_7d$test$y, gbw1$UST$depeg_7d$pred_class)
-
-#--- Window 2
-# PAX
-gbw2_PAX_1_metrics <- depeg_metrics(dfw2$PAX$depeg_1d$test$y, gbw2$PAX$depeg_1d$pred_class)
-gbw2_PAX_3_metrics <- depeg_metrics(dfw2$PAX$depeg_3d$test$y, gbw2$PAX$depeg_3d$pred_class)
-gbw2_PAX_5_metrics <- depeg_metrics(dfw2$PAX$depeg_5d$test$y, gbw2$PAX$depeg_5d$pred_class)
-gbw2_PAX_7_metrics <- depeg_metrics(dfw2$PAX$depeg_7d$test$y, gbw2$PAX$depeg_7d$pred_class)
-
-# USDT
-gbw2_USDT_1_metrics <- depeg_metrics(dfw2$USDT$depeg_1d$test$y, gbw2$USDT$depeg_1d$pred_class)
-gbw2_USDT_3_metrics <- depeg_metrics(dfw2$USDT$depeg_3d$test$y, gbw2$USDT$depeg_3d$pred_class)
-gbw2_USDT_5_metrics <- depeg_metrics(dfw2$USDT$depeg_5d$test$y, gbw2$USDT$depeg_5d$pred_class)
-gbw2_USDT_7_metrics <- depeg_metrics(dfw2$USDT$depeg_7d$test$y, gbw2$USDT$depeg_7d$pred_class)
-
-# USDC
-gbw2_USDC_1_metrics <- depeg_metrics(dfw2$USDC$depeg_1d$test$y, gbw2$USDC$depeg_1d$pred_class)
-gbw2_USDC_3_metrics <- depeg_metrics(dfw2$USDC$depeg_3d$test$y, gbw2$USDC$depeg_3d$pred_class)
-gbw2_USDC_5_metrics <- depeg_metrics(dfw2$USDC$depeg_5d$test$y, gbw2$USDC$depeg_5d$pred_class)
-gbw2_USDC_7_metrics <- depeg_metrics(dfw2$USDC$depeg_7d$test$y, gbw2$USDC$depeg_7d$pred_class)
-
-# DAI
-gbw2_DAI_1_metrics <- depeg_metrics(dfw2$DAI$depeg_1d$test$y, gbw2$DAI$depeg_1d$pred_class)
-gbw2_DAI_3_metrics <- depeg_metrics(dfw2$DAI$depeg_3d$test$y, gbw2$DAI$depeg_3d$pred_class)
-gbw2_DAI_5_metrics <- depeg_metrics(dfw2$DAI$depeg_5d$test$y, gbw2$DAI$depeg_5d$pred_class)
-gbw2_DAI_7_metrics <- depeg_metrics(dfw2$DAI$depeg_7d$test$y, gbw2$DAI$depeg_7d$pred_class)
-
-# =========================
-# PCR
-# =========================
-
-# -- Window 1
-# DAI
-pcrw1_DAI_1_metrics <- depeg_metrics(dfw1$DAI$depeg_1d$test$y, pcrw1$DAI$depeg_1d$pred_class)
-pcrw1_DAI_3_metrics <- depeg_metrics(dfw1$DAI$depeg_3d$test$y, pcrw1$DAI$depeg_3d$pred_class)
-pcrw1_DAI_5_metrics <- depeg_metrics(dfw1$DAI$depeg_5d$test$y, pcrw1$DAI$depeg_5d$pred_class)
-pcrw1_DAI_7_metrics <- depeg_metrics(dfw1$DAI$depeg_7d$test$y, pcrw1$DAI$depeg_7d$pred_class)
-
-# PAX
-pcrw1_PAX_1_metrics <- depeg_metrics(dfw1$PAX$depeg_1d$test$y, pcrw1$PAX$depeg_1d$pred_class)
-pcrw1_PAX_3_metrics <- depeg_metrics(dfw1$PAX$depeg_3d$test$y, pcrw1$PAX$depeg_3d$pred_class)
-pcrw1_PAX_5_metrics <- depeg_metrics(dfw1$PAX$depeg_5d$test$y, pcrw1$PAX$depeg_5d$pred_class)
-pcrw1_PAX_7_metrics <- depeg_metrics(dfw1$PAX$depeg_7d$test$y, pcrw1$PAX$depeg_7d$pred_class)
-
-# USDT
-pcrw1_USDT_1_metrics <- depeg_metrics(dfw1$USDT$depeg_1d$test$y, pcrw1$USDT$depeg_1d$pred_class)
-pcrw1_USDT_3_metrics <- depeg_metrics(dfw1$USDT$depeg_3d$test$y, pcrw1$USDT$depeg_3d$pred_class)
-pcrw1_USDT_5_metrics <- depeg_metrics(dfw1$USDT$depeg_5d$test$y, pcrw1$USDT$depeg_5d$pred_class)
-pcrw1_USDT_7_metrics <- depeg_metrics(dfw1$USDT$depeg_7d$test$y, pcrw1$USDT$depeg_7d$pred_class)
-
-# USDC
-pcrw1_USDC_1_metrics <- depeg_metrics(dfw1$USDC$depeg_1d$test$y, pcrw1$USDC$depeg_1d$pred_class)
-pcrw1_USDC_3_metrics <- depeg_metrics(dfw1$USDC$depeg_3d$test$y, pcrw1$USDC$depeg_3d$pred_class)
-pcrw1_USDC_5_metrics <- depeg_metrics(dfw1$USDC$depeg_5d$test$y, pcrw1$USDC$depeg_5d$pred_class)
-pcrw1_USDC_7_metrics <- depeg_metrics(dfw1$USDC$depeg_7d$test$y, pcrw1$USDC$depeg_7d$pred_class)
-
-# UST
-pcrw1_UST_1_metrics <- depeg_metrics(dfw1$UST$depeg_1d$test$y, pcrw1$UST$depeg_1d$pred_class)
-pcrw1_UST_3_metrics <- depeg_metrics(dfw1$UST$depeg_3d$test$y, pcrw1$UST$depeg_3d$pred_class)
-pcrw1_UST_5_metrics <- depeg_metrics(dfw1$UST$depeg_5d$test$y, pcrw1$UST$depeg_5d$pred_class)
-pcrw1_UST_7_metrics <- depeg_metrics(dfw1$UST$depeg_7d$test$y, pcrw1$UST$depeg_7d$pred_class)
-
-# -- Window 2
-# PAX
-pcrw2_PAX_1_metrics <- depeg_metrics(dfw2$PAX$depeg_1d$test$y, pcrw2$PAX$depeg_1d$pred_class)
-pcrw2_PAX_3_metrics <- depeg_metrics(dfw2$PAX$depeg_3d$test$y, pcrw2$PAX$depeg_3d$pred_class)
-pcrw2_PAX_5_metrics <- depeg_metrics(dfw2$PAX$depeg_5d$test$y, pcrw2$PAX$depeg_5d$pred_class)
-pcrw2_PAX_7_metrics <- depeg_metrics(dfw2$PAX$depeg_7d$test$y, pcrw2$PAX$depeg_7d$pred_class)
-
-# USDT
-pcrw2_USDT_1_metrics <- depeg_metrics(dfw2$USDT$depeg_1d$test$y, pcrw2$USDT$depeg_1d$pred_class)
-pcrw2_USDT_3_metrics <- depeg_metrics(dfw2$USDT$depeg_3d$test$y, pcrw2$USDT$depeg_3d$pred_class)
-pcrw2_USDT_5_metrics <- depeg_metrics(dfw2$USDT$depeg_5d$test$y, pcrw2$USDT$depeg_5d$pred_class)
-pcrw2_USDT_7_metrics <- depeg_metrics(dfw2$USDT$depeg_7d$test$y, pcrw2$USDT$depeg_7d$pred_class)
-
-# USDC
-pcrw2_USDC_1_metrics <- depeg_metrics(dfw2$USDC$depeg_1d$test$y, pcrw2$USDC$depeg_1d$pred_class)
-pcrw2_USDC_3_metrics <- depeg_metrics(dfw2$USDC$depeg_3d$test$y, pcrw2$USDC$depeg_3d$pred_class)
-pcrw2_USDC_5_metrics <- depeg_metrics(dfw2$USDC$depeg_5d$test$y, pcrw2$USDC$depeg_5d$pred_class)
-pcrw2_USDC_7_metrics <- depeg_metrics(dfw2$USDC$depeg_7d$test$y, pcrw2$USDC$depeg_7d$pred_class)
-
-# DAI
-pcrw2_DAI_1_metrics <- depeg_metrics(dfw2$DAI$depeg_1d$test$y, pcrw2$DAI$depeg_1d$pred_class)
-pcrw2_DAI_3_metrics <- depeg_metrics(dfw2$DAI$depeg_3d$test$y, pcrw2$DAI$depeg_3d$pred_class)
-pcrw2_DAI_5_metrics <- depeg_metrics(dfw2$DAI$depeg_5d$test$y, pcrw2$DAI$depeg_5d$pred_class)
-pcrw2_DAI_7_metrics <- depeg_metrics(dfw2$DAI$depeg_7d$test$y, pcrw2$DAI$depeg_7d$pred_class)
-
-
-# =========================
-# PLS
-# =========================
-
-# -- Window 1
-# DAI
-plsw1_DAI_1_metrics <- depeg_metrics(dfw1$DAI$depeg_1d$test$y, plsw1$DAI$depeg_1d$pred_class)
-plsw1_DAI_3_metrics <- depeg_metrics(dfw1$DAI$depeg_3d$test$y, plsw1$DAI$depeg_3d$pred_class)
-plsw1_DAI_5_metrics <- depeg_metrics(dfw1$DAI$depeg_5d$test$y, plsw1$DAI$depeg_5d$pred_class)
-plsw1_DAI_7_metrics <- depeg_metrics(dfw1$DAI$depeg_7d$test$y, plsw1$DAI$depeg_7d$pred_class)
-
-# PAX
-plsw1_PAX_1_metrics <- depeg_metrics(dfw1$PAX$depeg_1d$test$y, plsw1$PAX$depeg_1d$pred_class)
-plsw1_PAX_3_metrics <- depeg_metrics(dfw1$PAX$depeg_3d$test$y, plsw1$PAX$depeg_3d$pred_class)
-plsw1_PAX_5_metrics <- depeg_metrics(dfw1$PAX$depeg_5d$test$y, plsw1$PAX$depeg_5d$pred_class)
-plsw1_PAX_7_metrics <- depeg_metrics(dfw1$PAX$depeg_7d$test$y, plsw1$PAX$depeg_7d$pred_class)
-
-# USDT
-plsw1_USDT_1_metrics <- depeg_metrics(dfw1$USDT$depeg_1d$test$y, plsw1$USDT$depeg_1d$pred_class)
-plsw1_USDT_3_metrics <- depeg_metrics(dfw1$USDT$depeg_3d$test$y, plsw1$USDT$depeg_3d$pred_class)
-plsw1_USDT_5_metrics <- depeg_metrics(dfw1$USDT$depeg_5d$test$y, plsw1$USDT$depeg_5d$pred_class)
-plsw1_USDT_7_metrics <- depeg_metrics(dfw1$USDT$depeg_7d$test$y, plsw1$USDT$depeg_7d$pred_class)
-
-# USDC
-plsw1_USDC_1_metrics <- depeg_metrics(dfw1$USDC$depeg_1d$test$y, plsw1$USDC$depeg_1d$pred_class)
-plsw1_USDC_3_metrics <- depeg_metrics(dfw1$USDC$depeg_3d$test$y, plsw1$USDC$depeg_3d$pred_class)
-plsw1_USDC_5_metrics <- depeg_metrics(dfw1$USDC$depeg_5d$test$y, plsw1$USDC$depeg_5d$pred_class)
-plsw1_USDC_7_metrics <- depeg_metrics(dfw1$USDC$depeg_7d$test$y, plsw1$USDC$depeg_7d$pred_class)
-
-# UST
-plsw1_UST_1_metrics <- depeg_metrics(dfw1$UST$depeg_1d$test$y, plsw1$UST$depeg_1d$pred_class)
-plsw1_UST_3_metrics <- depeg_metrics(dfw1$UST$depeg_3d$test$y, plsw1$UST$depeg_3d$pred_class)
-plsw1_UST_5_metrics <- depeg_metrics(dfw1$UST$depeg_5d$test$y, plsw1$UST$depeg_5d$pred_class)
-plsw1_UST_7_metrics <- depeg_metrics(dfw1$UST$depeg_7d$test$y, plsw1$UST$depeg_7d$pred_class)
-
-# -- Window 2
-# PAX
-plsw2_PAX_1_metrics <- depeg_metrics(dfw2$PAX$depeg_1d$test$y, plsw2$PAX$depeg_1d$pred_class)
-plsw2_PAX_3_metrics <- depeg_metrics(dfw2$PAX$depeg_3d$test$y, plsw2$PAX$depeg_3d$pred_class)
-plsw2_PAX_5_metrics <- depeg_metrics(dfw2$PAX$depeg_5d$test$y, plsw2$PAX$depeg_5d$pred_class)
-plsw2_PAX_7_metrics <- depeg_metrics(dfw2$PAX$depeg_7d$test$y, plsw2$PAX$depeg_7d$pred_class)
-
-# USDT
-plsw2_USDT_1_metrics <- depeg_metrics(dfw2$USDT$depeg_1d$test$y, plsw2$USDT$depeg_1d$pred_class)
-plsw2_USDT_3_metrics <- depeg_metrics(dfw2$USDT$depeg_3d$test$y, plsw2$USDT$depeg_3d$pred_class)
-plsw2_USDT_5_metrics <- depeg_metrics(dfw2$USDT$depeg_5d$test$y, plsw2$USDT$depeg_5d$pred_class)
-plsw2_USDT_7_metrics <- depeg_metrics(dfw2$USDT$depeg_7d$test$y, plsw2$USDT$depeg_7d$pred_class)
-
-# USDC
-plsw2_USDC_1_metrics <- depeg_metrics(dfw2$USDC$depeg_1d$test$y, plsw2$USDC$depeg_1d$pred_class)
-plsw2_USDC_3_metrics <- depeg_metrics(dfw2$USDC$depeg_3d$test$y, plsw2$USDC$depeg_3d$pred_class)
-plsw2_USDC_5_metrics <- depeg_metrics(dfw2$USDC$depeg_5d$test$y, plsw2$USDC$depeg_5d$pred_class)
-plsw2_USDC_7_metrics <- depeg_metrics(dfw2$USDC$depeg_7d$test$y, plsw2$USDC$depeg_7d$pred_class)
-
-# DAI
-plsw2_DAI_1_metrics <- depeg_metrics(dfw2$DAI$depeg_1d$test$y, plsw2$DAI$depeg_1d$pred_class)
-plsw2_DAI_3_metrics <- depeg_metrics(dfw2$DAI$depeg_3d$test$y, plsw2$DAI$depeg_3d$pred_class)
-plsw2_DAI_5_metrics <- depeg_metrics(dfw2$DAI$depeg_5d$test$y, plsw2$DAI$depeg_5d$pred_class)
-plsw2_DAI_7_metrics <- depeg_metrics(dfw2$DAI$depeg_7d$test$y, plsw2$DAI$depeg_7d$pred_class)
-
+results_lassow1 <- get_all_metrics(lassow1, dfw1, coins_w1, horizons)
+results_lassow2 <- get_all_metrics(lassow2, dfw2, coins_w2, horizons)
 
 # constructing summary
-extract_metrics <- function(metric_obj, model, window, coin, horizon) {
-  tibble(
-    model = model,
-    window = window,
-    coin = coin,
-    horizon = horizon,
-    accuracy = metric_obj$accuracy,
-    misclassifications = metric_obj$misclassifications,
-    sensitivity = metric_obj$sensitivity,
-    specificity = metric_obj$specificity,
-    precision = metric_obj$precision,
-    recall = metric_obj$recall,
-    f1_score = metric_obj$f1_score,
-    TP = unname(metric_obj$confusion_matrix["TP"]),
-    TN = unname(metric_obj$confusion_matrix["TN"]),
-    FP = unname(metric_obj$confusion_matrix["FP"]),
-    FN = unname(metric_obj$confusion_matrix["FN"]),
-    FP_cost_ratio = metric_obj$FP_cost_ratio,
-    FN_cost_ratio = metric_obj$FN_cost_ratio,
-    total_observations = metric_obj$total_observations
-  )
+extract_metrics <- function(model, window, results){
+  results <- results %>%
+    mutate(model = model, window = window, results) %>%
+    select(model, window, everything())
 }
+
 summary_metrics <- bind_rows(
-  # ---------------- RF ----------------
-  extract_metrics(rfw1_DAI_1_metrics,  "RF", "Window 1", "DAI",  "1d"),
-  extract_metrics(rfw1_DAI_3_metrics,  "RF", "Window 1", "DAI",  "3d"),
-  extract_metrics(rfw1_DAI_5_metrics,  "RF", "Window 1", "DAI",  "5d"),
-  extract_metrics(rfw1_DAI_7_metrics,  "RF", "Window 1", "DAI",  "7d"),
-  
-  extract_metrics(rfw1_PAX_1_metrics,  "RF", "Window 1", "PAX",  "1d"),
-  extract_metrics(rfw1_PAX_3_metrics,  "RF", "Window 1", "PAX",  "3d"),
-  extract_metrics(rfw1_PAX_5_metrics,  "RF", "Window 1", "PAX",  "5d"),
-  extract_metrics(rfw1_PAX_7_metrics,  "RF", "Window 1", "PAX",  "7d"),
-  
-  extract_metrics(rfw1_USDT_1_metrics, "RF", "Window 1", "USDT", "1d"),
-  extract_metrics(rfw1_USDT_3_metrics, "RF", "Window 1", "USDT", "3d"),
-  extract_metrics(rfw1_USDT_5_metrics, "RF", "Window 1", "USDT", "5d"),
-  extract_metrics(rfw1_USDT_7_metrics, "RF", "Window 1", "USDT", "7d"),
-  
-  extract_metrics(rfw1_USDC_1_metrics, "RF", "Window 1", "USDC", "1d"),
-  extract_metrics(rfw1_USDC_3_metrics, "RF", "Window 1", "USDC", "3d"),
-  extract_metrics(rfw1_USDC_5_metrics, "RF", "Window 1", "USDC", "5d"),
-  extract_metrics(rfw1_USDC_7_metrics, "RF", "Window 1", "USDC", "7d"),
-  
-  extract_metrics(rfw1_UST_1_metrics,  "RF", "Window 1", "UST",  "1d"),
-  extract_metrics(rfw1_UST_3_metrics,  "RF", "Window 1", "UST",  "3d"),
-  extract_metrics(rfw1_UST_5_metrics,  "RF", "Window 1", "UST",  "5d"),
-  extract_metrics(rfw1_UST_7_metrics,  "RF", "Window 1", "UST",  "7d"),
-  
-  extract_metrics(rfw2_DAI_1_metrics,  "RF", "Window 2", "DAI",  "1d"),
-  extract_metrics(rfw2_DAI_3_metrics,  "RF", "Window 2", "DAI",  "3d"),
-  extract_metrics(rfw2_DAI_5_metrics,  "RF", "Window 2", "DAI",  "5d"),
-  extract_metrics(rfw2_DAI_7_metrics,  "RF", "Window 2", "DAI",  "7d"),
-  
-  extract_metrics(rfw2_PAX_1_metrics,  "RF", "Window 2", "PAX",  "1d"),
-  extract_metrics(rfw2_PAX_3_metrics,  "RF", "Window 2", "PAX",  "3d"),
-  extract_metrics(rfw2_PAX_5_metrics,  "RF", "Window 2", "PAX",  "5d"),
-  extract_metrics(rfw2_PAX_7_metrics,  "RF", "Window 2", "PAX",  "7d"),
-  
-  extract_metrics(rfw2_USDT_1_metrics, "RF", "Window 2", "USDT", "1d"),
-  extract_metrics(rfw2_USDT_3_metrics, "RF", "Window 2", "USDT", "3d"),
-  extract_metrics(rfw2_USDT_5_metrics, "RF", "Window 2", "USDT", "5d"),
-  extract_metrics(rfw2_USDT_7_metrics, "RF", "Window 2", "USDT", "7d"),
-  
-  extract_metrics(rfw2_USDC_1_metrics, "RF", "Window 2", "USDC", "1d"),
-  extract_metrics(rfw2_USDC_3_metrics, "RF", "Window 2", "USDC", "3d"),
-  extract_metrics(rfw2_USDC_5_metrics, "RF", "Window 2", "USDC", "5d"),
-  extract_metrics(rfw2_USDC_7_metrics, "RF", "Window 2", "USDC", "7d"),
-  
-  # ---------------- GB ----------------
-  extract_metrics(gbw1_DAI_1_metrics,  "GB", "Window 1", "DAI",  "1d"),
-  extract_metrics(gbw1_DAI_3_metrics,  "GB", "Window 1", "DAI",  "3d"),
-  extract_metrics(gbw1_DAI_5_metrics,  "GB", "Window 1", "DAI",  "5d"),
-  extract_metrics(gbw1_DAI_7_metrics,  "GB", "Window 1", "DAI",  "7d"),
-  
-  extract_metrics(gbw1_PAX_1_metrics,  "GB", "Window 1", "PAX",  "1d"),
-  extract_metrics(gbw1_PAX_3_metrics,  "GB", "Window 1", "PAX",  "3d"),
-  extract_metrics(gbw1_PAX_5_metrics,  "GB", "Window 1", "PAX",  "5d"),
-  extract_metrics(gbw1_PAX_7_metrics,  "GB", "Window 1", "PAX",  "7d"),
-  
-  extract_metrics(gbw1_USDT_1_metrics, "GB", "Window 1", "USDT", "1d"),
-  extract_metrics(gbw1_USDT_3_metrics, "GB", "Window 1", "USDT", "3d"),
-  extract_metrics(gbw1_USDT_5_metrics, "GB", "Window 1", "USDT", "5d"),
-  extract_metrics(gbw1_USDT_7_metrics, "GB", "Window 1", "USDT", "7d"),
-  
-  extract_metrics(gbw1_USDC_1_metrics, "GB", "Window 1", "USDC", "1d"),
-  extract_metrics(gbw1_USDC_3_metrics, "GB", "Window 1", "USDC", "3d"),
-  extract_metrics(gbw1_USDC_5_metrics, "GB", "Window 1", "USDC", "5d"),
-  extract_metrics(gbw1_USDC_7_metrics, "GB", "Window 1", "USDC", "7d"),
-  
-  extract_metrics(gbw1_UST_1_metrics,  "GB", "Window 1", "UST",  "1d"),
-  extract_metrics(gbw1_UST_3_metrics,  "GB", "Window 1", "UST",  "3d"),
-  extract_metrics(gbw1_UST_5_metrics,  "GB", "Window 1", "UST",  "5d"),
-  extract_metrics(gbw1_UST_7_metrics,  "GB", "Window 1", "UST",  "7d"),
-  
-  extract_metrics(gbw2_DAI_1_metrics,  "GB", "Window 2", "DAI",  "1d"),
-  extract_metrics(gbw2_DAI_3_metrics,  "GB", "Window 2", "DAI",  "3d"),
-  extract_metrics(gbw2_DAI_5_metrics,  "GB", "Window 2", "DAI",  "5d"),
-  extract_metrics(gbw2_DAI_7_metrics,  "GB", "Window 2", "DAI",  "7d"),
-  
-  extract_metrics(gbw2_PAX_1_metrics,  "GB", "Window 2", "PAX",  "1d"),
-  extract_metrics(gbw2_PAX_3_metrics,  "GB", "Window 2", "PAX",  "3d"),
-  extract_metrics(gbw2_PAX_5_metrics,  "GB", "Window 2", "PAX",  "5d"),
-  extract_metrics(gbw2_PAX_7_metrics,  "GB", "Window 2", "PAX",  "7d"),
-  
-  extract_metrics(gbw2_USDT_1_metrics, "GB", "Window 2", "USDT", "1d"),
-  extract_metrics(gbw2_USDT_3_metrics, "GB", "Window 2", "USDT", "3d"),
-  extract_metrics(gbw2_USDT_5_metrics, "GB", "Window 2", "USDT", "5d"),
-  extract_metrics(gbw2_USDT_7_metrics, "GB", "Window 2", "USDT", "7d"),
-  
-  extract_metrics(gbw2_USDC_1_metrics, "GB", "Window 2", "USDC", "1d"),
-  extract_metrics(gbw2_USDC_3_metrics, "GB", "Window 2", "USDC", "3d"),
-  extract_metrics(gbw2_USDC_5_metrics, "GB", "Window 2", "USDC", "5d"),
-  extract_metrics(gbw2_USDC_7_metrics, "GB", "Window 2", "USDC", "7d"),
-  
-  # ---------------- PCR ----------------
-  extract_metrics(pcrw1_DAI_1_metrics,  "PCR", "Window 1", "DAI",  "1d"),
-  extract_metrics(pcrw1_DAI_3_metrics,  "PCR", "Window 1", "DAI",  "3d"),
-  extract_metrics(pcrw1_DAI_5_metrics,  "PCR", "Window 1", "DAI",  "5d"),
-  extract_metrics(pcrw1_DAI_7_metrics,  "PCR", "Window 1", "DAI",  "7d"),
-  
-  extract_metrics(pcrw1_PAX_1_metrics,  "PCR", "Window 1", "PAX",  "1d"),
-  extract_metrics(pcrw1_PAX_3_metrics,  "PCR", "Window 1", "PAX",  "3d"),
-  extract_metrics(pcrw1_PAX_5_metrics,  "PCR", "Window 1", "PAX",  "5d"),
-  extract_metrics(pcrw1_PAX_7_metrics,  "PCR", "Window 1", "PAX",  "7d"),
-  
-  extract_metrics(pcrw1_USDT_1_metrics, "PCR", "Window 1", "USDT", "1d"),
-  extract_metrics(pcrw1_USDT_3_metrics, "PCR", "Window 1", "USDT", "3d"),
-  extract_metrics(pcrw1_USDT_5_metrics, "PCR", "Window 1", "USDT", "5d"),
-  extract_metrics(pcrw1_USDT_7_metrics, "PCR", "Window 1", "USDT", "7d"),
-  
-  extract_metrics(pcrw1_USDC_1_metrics, "PCR", "Window 1", "USDC", "1d"),
-  extract_metrics(pcrw1_USDC_3_metrics, "PCR", "Window 1", "USDC", "3d"),
-  extract_metrics(pcrw1_USDC_5_metrics, "PCR", "Window 1", "USDC", "5d"),
-  extract_metrics(pcrw1_USDC_7_metrics, "PCR", "Window 1", "USDC", "7d"),
-  
-  extract_metrics(pcrw1_UST_1_metrics,  "PCR", "Window 1", "UST",  "1d"),
-  extract_metrics(pcrw1_UST_3_metrics,  "PCR", "Window 1", "UST",  "3d"),
-  extract_metrics(pcrw1_UST_5_metrics,  "PCR", "Window 1", "UST",  "5d"),
-  extract_metrics(pcrw1_UST_7_metrics,  "PCR", "Window 1", "UST",  "7d"),
-  
-  extract_metrics(pcrw2_DAI_1_metrics,  "PCR", "Window 2", "DAI",  "1d"),
-  extract_metrics(pcrw2_DAI_3_metrics,  "PCR", "Window 2", "DAI",  "3d"),
-  extract_metrics(pcrw2_DAI_5_metrics,  "PCR", "Window 2", "DAI",  "5d"),
-  extract_metrics(pcrw2_DAI_7_metrics,  "PCR", "Window 2", "DAI",  "7d"),
-  
-  extract_metrics(pcrw2_PAX_1_metrics,  "PCR", "Window 2", "PAX",  "1d"),
-  extract_metrics(pcrw2_PAX_3_metrics,  "PCR", "Window 2", "PAX",  "3d"),
-  extract_metrics(pcrw2_PAX_5_metrics,  "PCR", "Window 2", "PAX",  "5d"),
-  extract_metrics(pcrw2_PAX_7_metrics,  "PCR", "Window 2", "PAX",  "7d"),
-  
-  extract_metrics(pcrw2_USDT_1_metrics, "PCR", "Window 2", "USDT", "1d"),
-  extract_metrics(pcrw2_USDT_3_metrics, "PCR", "Window 2", "USDT", "3d"),
-  extract_metrics(pcrw2_USDT_5_metrics, "PCR", "Window 2", "USDT", "5d"),
-  extract_metrics(pcrw2_USDT_7_metrics, "PCR", "Window 2", "USDT", "7d"),
-  
-  extract_metrics(pcrw2_USDC_1_metrics, "PCR", "Window 2", "USDC", "1d"),
-  extract_metrics(pcrw2_USDC_3_metrics, "PCR", "Window 2", "USDC", "3d"),
-  extract_metrics(pcrw2_USDC_5_metrics, "PCR", "Window 2", "USDC", "5d"),
-  extract_metrics(pcrw2_USDC_7_metrics, "PCR", "Window 2", "USDC", "7d"),
-  
-  # ---------------- PLS ----------------
-  extract_metrics(plsw1_DAI_1_metrics,  "PLS", "Window 1", "DAI",  "1d"),
-  extract_metrics(plsw1_DAI_3_metrics,  "PLS", "Window 1", "DAI",  "3d"),
-  extract_metrics(plsw1_DAI_5_metrics,  "PLS", "Window 1", "DAI",  "5d"),
-  extract_metrics(plsw1_DAI_7_metrics,  "PLS", "Window 1", "DAI",  "7d"),
-  
-  extract_metrics(plsw1_PAX_1_metrics,  "PLS", "Window 1", "PAX",  "1d"),
-  extract_metrics(plsw1_PAX_3_metrics,  "PLS", "Window 1", "PAX",  "3d"),
-  extract_metrics(plsw1_PAX_5_metrics,  "PLS", "Window 1", "PAX",  "5d"),
-  extract_metrics(plsw1_PAX_7_metrics,  "PLS", "Window 1", "PAX",  "7d"),
-  
-  extract_metrics(plsw1_USDT_1_metrics, "PLS", "Window 1", "USDT", "1d"),
-  extract_metrics(plsw1_USDT_3_metrics, "PLS", "Window 1", "USDT", "3d"),
-  extract_metrics(plsw1_USDT_5_metrics, "PLS", "Window 1", "USDT", "5d"),
-  extract_metrics(plsw1_USDT_7_metrics, "PLS", "Window 1", "USDT", "7d"),
-  
-  extract_metrics(plsw1_USDC_1_metrics, "PLS", "Window 1", "USDC", "1d"),
-  extract_metrics(plsw1_USDC_3_metrics, "PLS", "Window 1", "USDC", "3d"),
-  extract_metrics(plsw1_USDC_5_metrics, "PLS", "Window 1", "USDC", "5d"),
-  extract_metrics(plsw1_USDC_7_metrics, "PLS", "Window 1", "USDC", "7d"),
-  
-  extract_metrics(plsw1_UST_1_metrics,  "PLS", "Window 1", "UST",  "1d"),
-  extract_metrics(plsw1_UST_3_metrics,  "PLS", "Window 1", "UST",  "3d"),
-  extract_metrics(plsw1_UST_5_metrics,  "PLS", "Window 1", "UST",  "5d"),
-  extract_metrics(plsw1_UST_7_metrics,  "PLS", "Window 1", "UST",  "7d"),
-  
-  extract_metrics(plsw2_DAI_1_metrics,  "PLS", "Window 2", "DAI",  "1d"),
-  extract_metrics(plsw2_DAI_3_metrics,  "PLS", "Window 2", "DAI",  "3d"),
-  extract_metrics(plsw2_DAI_5_metrics,  "PLS", "Window 2", "DAI",  "5d"),
-  extract_metrics(plsw2_DAI_7_metrics,  "PLS", "Window 2", "DAI",  "7d"),
-  
-  extract_metrics(plsw2_PAX_1_metrics,  "PLS", "Window 2", "PAX",  "1d"),
-  extract_metrics(plsw2_PAX_3_metrics,  "PLS", "Window 2", "PAX",  "3d"),
-  extract_metrics(plsw2_PAX_5_metrics,  "PLS", "Window 2", "PAX",  "5d"),
-  extract_metrics(plsw2_PAX_7_metrics,  "PLS", "Window 2", "PAX",  "7d"),
-  
-  extract_metrics(plsw2_USDT_1_metrics, "PLS", "Window 2", "USDT", "1d"),
-  extract_metrics(plsw2_USDT_3_metrics, "PLS", "Window 2", "USDT", "3d"),
-  extract_metrics(plsw2_USDT_5_metrics, "PLS", "Window 2", "USDT", "5d"),
-  extract_metrics(plsw2_USDT_7_metrics, "PLS", "Window 2", "USDT", "7d"),
-  
-  extract_metrics(plsw2_USDC_1_metrics, "PLS", "Window 2", "USDC", "1d"),
-  extract_metrics(plsw2_USDC_3_metrics, "PLS", "Window 2", "USDC", "3d"),
-  extract_metrics(plsw2_USDC_5_metrics, "PLS", "Window 2", "USDC", "5d"),
-  extract_metrics(plsw2_USDC_7_metrics, "PLS", "Window 2", "USDC", "7d")
-)
+  extract_metrics("RF", "Window 1", results_rfw1),
+  extract_metrics("RF", "Window 2", results_rfw2),
+  extract_metrics("GB", "Window 1", results_gbw1),
+  extract_metrics("GB", "Window 2", results_gbw2),
+  extract_metrics("PCR", "Window 1", results_pcrw1),
+  extract_metrics("PCR", "Window 2", results_pcrw2),
+  extract_metrics("PLS", "Window 1", results_plsw1),
+  extract_metrics("PLS", "Window 2", results_plsw2)
+  )
 
 
 summary_main <- summary_metrics %>%
   select(model, window, coin, horizon, accuracy, sensitivity, specificity,
-         precision, recall, f1_score, TP, TN, FP, FN, total_observations) %>%
-  mutate(across(c(accuracy, sensitivity, specificity, precision, recall, f1_score),
+         precision, recall, f1_score, auc, TP, TN, FP, FN, total_observations) %>%
+  mutate(across(c(accuracy, sensitivity, specificity, precision, recall, f1_score, auc),
                 ~ round(.x, 3))) %>%
   arrange(model, window, coin, horizon)
 
-summary_main
-
 summary_compare <- summary_main %>%
-  select(model, window, coin, horizon, accuracy, f1_score, precision, recall) %>%
+  select(model, window, coin, horizon, accuracy, f1_score, auc, precision, recall) %>%
   tidyr::pivot_wider(
     names_from = model,
-    values_from = c(accuracy, f1_score, precision, recall)
+    values_from = c(accuracy, f1_score, auc, precision, recall)
   )
 
-summary_compare
 
 write.csv(
   summary_main,
   "../../model performance output/summary_main.csv",
   row.names = FALSE
 )
+
+
+
+# Plot Results ===========================================
+
+#### Window 1
+# DAI
+plot_rfw1_DAI_data <- list(depeg_1d = list(test = dfw1$DAI$depeg_1d$test,
+                                           pred = rfw1$DAI$depeg_1d$pred_class),
+                           depeg_3d = list(test = dfw1$DAI$depeg_3d$test,
+                                           pred = rfw1$DAI$depeg_3d$pred_class),
+                           depeg_5d = list(test = dfw1$DAI$depeg_5d$test,
+                                           pred = rfw1$DAI$depeg_5d$pred_class),
+                           depeg_7d = list(test = dfw1$DAI$depeg_7d$test,
+                                           pred = rfw1$DAI$depeg_7d$pred_class))
+plot_rfw1_DAI <- plot_results(coin_data = plot_rfw1_DAI_data,org_data = data_DAI,
+                              title = "Window 1: DAI Depeg Predictions")
+
+
+# Plot AUC ===============================================

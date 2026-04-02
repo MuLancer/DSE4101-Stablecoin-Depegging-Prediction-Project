@@ -420,12 +420,12 @@ plot_rfw2_DAI <- plot_results(coin_data = plot_rfw2_DAI_data,org_data = data_DAI
 plot_rfw2_DAI
 
 # AUC has error here since all of it is just class 0
-#auc_rfw2_DAI_1 <- plot_auc(dfw2$DAI$depeg_1d$test$y, dfw2$DAI$depeg_1d$pred_class, 
-#                         title = "ROC: DAI depeg_1d",
-#                         add_ci = TRUE, add_optimal = TRUE)
-# auc_rfw2_DAI_1
+auc_rfw2_DAI_1 <- plot_auc(dfw2$DAI$depeg_1d$test$y, rfw2$DAI$depeg_1d$pred_class, 
+                         title = "ROC: DAI depeg_1d",
+                         add_ci = TRUE, add_optimal = TRUE)
+auc_rfw2_DAI_1
 
-auc_rfw2_DAI_3 <- plot_auc(dfw2$DAI$depeg_3d$pred_class, dfw2$DAI$depeg_3d$pred_class, 
+auc_rfw2_DAI_3 <- plot_auc(dfw2$DAI$depeg_3d$test$y, rfw2$DAI$depeg_3d$pred_class, 
                          title = "ROC: DAI depeg_3d",
                          add_ci = TRUE, add_optimal = TRUE)
 auc_rfw2_DAI_3
