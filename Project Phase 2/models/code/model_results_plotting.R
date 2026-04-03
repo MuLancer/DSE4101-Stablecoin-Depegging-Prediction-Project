@@ -174,6 +174,7 @@ p_recall_lines <- make_line_plot(
   y_label = "Recall"
 )
 
+
 # ============================================
 # Precision vs Recall scatter
 # ============================================
@@ -284,6 +285,30 @@ p_best_models_auc <- ggplot(best_models_auc, aes(x = horizon, y = auc, fill = mo
     strip.text = element_text(face = "bold")
   )
 
+
+# ============================================
+# Best model by Recall
+# ============================================
+
+best_models_recall <- summary_plot_recall %>%
+  group_by(window, coin, horizon) %>%
+  slice_max(order_by = recall, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+p_best_models_recall <- ggplot(best_models_recall, aes(x = horizon, y = recall, fill = model)) +
+  geom_col() +
+  facet_grid(window ~ coin) +
+  scale_y_continuous(limits = c(0, 1), labels = number_format(accuracy = 0.01)) +
+  labs(
+    title = "Best Model by Recall",
+    x = "Forecast Horizon",
+    y = "Best Recall",
+    fill = "Winning Model"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    strip.text = element_text(face = "bold")
+  )
 # ============================================
 # Save all plots
 # ============================================
@@ -294,7 +319,7 @@ save_plot(p_recall_heatmap,       "recall_heatmap.png",          width = 16, hei
 save_plot(p_precision_heatmap,    "precision_heatmap.png",       width = 16, height = 8)
 
 save_plot(p_f1_lines,             "f1_lines.png",                width = 11, height = 8)
-save_plot(p_accuracy_lines,       "accuracy_lines.png",          width = 16, height = 8)
+save_plot(p_accuracy_lines,       "accuracy_lines.png",          width = 11, height = 8)
 save_plot(p_auc_lines,             "auc_lines.png",              width = 11, height = 8)
 save_plot(p_recall_lines,         "recall_lines.png",            width = 16, height = 8)
 
@@ -303,7 +328,7 @@ save_plot(p_confusion,            "confusion_components.png",     width = 14, he
 save_plot(p_best_models_f1,       "best_model_f1.png",            width = 11, height = 8)
 save_plot(p_best_models_accuracy, "best_model_accuracy.png",      width = 16, height = 8)
 save_plot(p_best_models_auc,       "best_model_auc.png",          width = 11, height = 8)
-
+save_plot(p_best_models_recall,       "best_model_recall.png",          width = 11, height = 8)
 
 p_f1_heatmap
 p_accuracy_heatmap
