@@ -157,8 +157,8 @@ source("../../code/10_rf_gb_feature_imp_analysis.R")
 | Forecast horizons | `depeg_1d`, `depeg_3d`, `depeg_5d`, `depeg_7d` | Binary: 1 if price breaches ThreshD or ThreshU within the horizon |
 | Depeg thresholds | `ThreshD`, `ThreshU` | Dynamic per-coin thresholds constructed in `2_[COIN]_Prep.R` |
 | SMOTE | `dup_size = 1`, `nn = 3` | Applied to training sets only; not applied to test sets |
-| RF hyperparameters | `ntree` , `mtry`, `nodesize` | Applied to each coin per forecast horizon, saved in `rfw1$[COIN]$[horizon]$tuning_params` or  `rfw2$[COIN]$[horizon]$tuning_params`|
-| XGBoost hyperparameters | `eta` , `max_depth`, `subsample`, `colsample_bytree`, `nrounds` | Applied to each coin per forecast horizon, saved in `gbw1$[COIN]$[horizon]$tuning_params` or  `gbw2$[COIN]$[horizon]$tuning_params`. Features are z-score scaled using train-set statistics before training|
+| RF hyperparameters | `ntree` , `mtry`, `nodesize` | Applied to each coin per forecast horizon, saved in `rfw1$[COIN]$[horizon]$tuning` or  `rfw2$[COIN]$[horizon]$tuning`|
+| XGBoost hyperparameters | `eta` , `max_depth`, `subsample`, `colsample_bytree`, `nrounds` | Applied to each coin per forecast horizon, saved in `gbw1$[COIN]$[horizon]$tuning` or  `gbw2$[COIN]$[horizon]$tuning`. Features are z-score scaled using train-set statistics before training|
 | Feature Importance | `n_repeats = 10`, `seed = 123` | Log-loss permutation importance via `func-feature_importance_logloss.R` |
 | UST availability | Window 1 only | UST data ends 2022-05-08; excluded from Window 2 |
 
