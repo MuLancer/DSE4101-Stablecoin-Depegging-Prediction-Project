@@ -72,7 +72,7 @@ Project Phase 2/
 ```
 
 ## Requirements
-- R version: 4.2 or later recommended.
+R version: 4.2 or later recommended.
 Install all required packages by running this once in R:
 ```r
 install.packages(c("tidyverse", "dplyr", "readr", "tidyr", "lubridate", "zoo", "TTR", "jsonlite", "randomForest", "xgboost", "pls", "glmnet", "smotefamily", "pROC", "ggplot2", "gridExtra", "patchwork", "scales","tibble", "purrr", "stringr", "forcats", "tidytext", "grid", "bigrquery", "glue"))
