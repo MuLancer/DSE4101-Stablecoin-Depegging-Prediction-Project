@@ -1,4 +1,4 @@
-# DSE4101-Stablecoin-Depegging-Prediction-Project
+# DSE4101 Digital Currencies 2: Early Detection of Stablecoin Depegs
 
 ## Overview
 This project builds a machine learning-based early warning system for predicting stablecoin depegging events. Binary depeg indicators are constructed across four forecast horizons (1, 3, 5, and 7 days ahead) for five stablecoins: DAI, USDC, USDT, PAX, and UST. Models evaluated include Random Forest, XGBoost (Gradient Boosting), Principal Components Regression (PCR), Partial Least Squares (PLS), Logistic Regression, and LASSO.
