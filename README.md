@@ -104,18 +104,18 @@ Run the scripts in code/ in the numbered order below. All scripts expect the wor
 - BigQuery warning (7_onchain_data_transformation_API.R): This script queries the public Ethereum token transfers table on Google BigQuery and scans billions of records. Running all eight years will consume a large portion of the 1 TB free-tier quota. Do not run this unless the onchain_metrics_YYYY.csv files are missing from data/. The script has a file.exists() guard per year -> do not bypass it. A GCP project with billing enabled and bigrquery authenticated is required. The project ID is hardcoded as "dse4101" and must be updated to your own GCP project.
 
 ### *Step 2 - Recompute depeg labels (models/code/1_final_data_prep.R)*
-> This script redefines the binary depeg target variables across all four horizons using a rolling-window approach based on each coin's dynamic thresholds (ThreshD, ThreshU).
-> It reads from and overwrites the five `[COIN]_onchain_features.csv` files.
-> Set the working directory to Project Phase 2/ and run:
+This script redefines the binary depeg target variables across all four horizons using a rolling-window approach based on each coin's dynamic thresholds (ThreshD, ThreshU).
+It reads from and overwrites the five `[COIN]_onchain_features.csv` files.
+Set the working directory to Project Phase 2/ and run:
 ```r
 setwd("path/to/Project Phase 2")
 source("models/code/1_final_data_prep.R")
 ```
-> If the `[COIN]_onchain_features.csv` files are already present with correctly defined depeg columns, this step can be skipped but running it first is recommended to ensure label consistency before modelling.
+ If the `[COIN]_onchain_features.csv` files are already present with correctly defined depeg columns, this step can be skipped but running it first is recommended to ensure label consistency before modelling.
 
 ### *Step 3 -  Run all models (models/code/v3_model.R)*
-> v3_model.R is the main script.
-> Set the working directory to Project Phase 2/models/code/ and run:
+v3_model.R is the main script.
+Set the working directory to Project Phase 2/models/code/ and run:
 ```r
 setwd("path/to/Project Phase 2/models/code")
 source("v3_model.R")
@@ -133,7 +133,7 @@ The script will:
 - Compile all evaluation metrics (accuracy, sensitivity, specificity, precision, recall, F1, AUC) into a single summary table and save to: `model performance output/summary_main.csv`
 - The script runs sequentially across all coins, horizons, windows, and models. Expect a runtime of several minutes.
 
-**Note on warnings:** PCR and Logistic Regression may emit `glm.fit: fitted probabilities numerically 0 or 1 occurred.` This is expected and caused by small sample size and class imbalance when certain components predict the class perfectly in-sample. LASSO may emit convergence warnings for the least-regularised end of the path; the model selected at optimal lambda is not affected.
+> **Note on warnings:** PCR and Logistic Regression may emit `glm.fit: fitted probabilities numerically 0 or 1 occurred.` This is expected and caused by small sample size and class imbalance when certain components predict the class perfectly in-sample. LASSO may emit convergence warnings for the least-regularised end of the path; the model selected at optimal lambda is not affected.
 
 ### *Step 4 - Generate model performance plots (models/code/model_results_plotting.R)*
 This script reads `model performance output/summary_main.csv` (written in Step 3) and generates comparative performance plots across models, coins, and horizons. Run it after `v3_model.R` has completed.
