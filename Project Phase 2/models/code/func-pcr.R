@@ -219,7 +219,9 @@ plot_cv_curve <- function(cv_errors, title) {
 
 #Plot PCs against test set dates
 plot_test_pcs <- function(result_data, test_data, coin_df, coin, horizon, title = NULL,
-                          show_labels = TRUE, depeg_col = "depeg_1d") {
+                          show_labels = TRUE, depeg_col = "depeg_1d",
+                          pc_name = NULL, x_date_breaks = "2 months",
+                          x_date_labels = "%b %Y") {
   library(ggplot2)
   library(tidyr)
   library(dplyr)
@@ -228,8 +230,14 @@ plot_test_pcs <- function(result_data, test_data, coin_df, coin, horizon, title 
   scores <- as.data.frame(pcr_result$test_pc_scores)
   colnames(scores) <- paste0("PC", seq_len(ncol(scores)))
   
-  test_dates <- as.Date(test_data[[coin]][[horizon]]$test$dates)
+  if (!is.null(pc_name)) {
+    if (!pc_name %in% colnames(scores)) {
+      stop(paste("pc_name not found. Available:", paste(colnames(scores), collapse = ", ")))
+    }
+    scores <- scores[, pc_name, drop = FALSE]
+  }
   
+  test_dates <- as.Date(test_data[[coin]][[horizon]]$test$dates)
   if (length(test_dates) != nrow(scores)) {
     stop("Length of test dates must match number of rows in test_pc_scores")
   }
@@ -290,7 +298,7 @@ plot_test_pcs <- function(result_data, test_data, coin_df, coin, horizon, title 
       linewidth = 0.9
     ) +
     facet_wrap(~ PC, scales = "free_y") +
-    scale_x_date(date_labels = "%b %Y", date_breaks = "1 month") +
+    scale_x_date(date_labels = x_date_labels, date_breaks = x_date_breaks) +
     theme_minimal() +
     labs(
       title = if (is.null(title)) paste(coin, "-", horizon, ": test PC scores") else title,
@@ -298,7 +306,8 @@ plot_test_pcs <- function(result_data, test_data, coin_df, coin, horizon, title 
       y = "PC score"
     ) +
     theme(
-      plot.margin = margin(20, 30, 10, 10)
+      plot.margin = margin(20, 30, 10, 10),
+      axis.text.x = element_text(angle = 45, hjust = 1)
     )
   
   if (show_labels && nrow(depeg_regions) > 0) {
@@ -317,7 +326,9 @@ plot_test_pcs <- function(result_data, test_data, coin_df, coin, horizon, title 
   }
   
   print(p)
+  invisible(p)
 }
+
 
 
 

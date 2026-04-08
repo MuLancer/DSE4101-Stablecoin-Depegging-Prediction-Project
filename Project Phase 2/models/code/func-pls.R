@@ -227,7 +227,9 @@ plot_cv_curve <- function(cv_errors, title) {
 
 #Plot Comps against test set dates
 plot_test_comps <- function(result_data, test_data, coin_df, coin, horizon, title = NULL,
-                            show_labels = TRUE, depeg_col = "depeg_1d") {
+                            show_labels = TRUE, depeg_col = "depeg_1d",
+                            comp_name = NULL, x_date_breaks = "2 months",
+                            x_date_labels = "%b %Y") {
   library(ggplot2)
   library(tidyr)
   library(dplyr)
@@ -236,8 +238,14 @@ plot_test_comps <- function(result_data, test_data, coin_df, coin, horizon, titl
   scores <- as.data.frame(pls_result$test_pls_scores)
   colnames(scores) <- paste0("Comp", seq_len(ncol(scores)))
   
-  test_dates <- as.Date(test_data[[coin]][[horizon]]$test$dates)
+  if (!is.null(comp_name)) {
+    if (!comp_name %in% colnames(scores)) {
+      stop(paste("comp_name not found. Available:", paste(colnames(scores), collapse = ", ")))
+    }
+    scores <- scores[, comp_name, drop = FALSE]
+  }
   
+  test_dates <- as.Date(test_data[[coin]][[horizon]]$test$dates)
   if (length(test_dates) != nrow(scores)) {
     stop("Length of test dates must match number of rows in test_pls_scores")
   }
@@ -298,15 +306,16 @@ plot_test_comps <- function(result_data, test_data, coin_df, coin, horizon, titl
       linewidth = 0.9
     ) +
     facet_wrap(~ Component, scales = "free_y") +
-    scale_x_date(date_labels = "%b %Y", date_breaks = "1 month") +
+    scale_x_date(date_labels = x_date_labels, date_breaks = x_date_breaks) +
     theme_minimal() +
     labs(
       title = if (is.null(title)) paste(coin, "-", horizon, ": test PLS scores") else title,
       x = "Time",
-      y = "PLS score"
+      y = "Component score"
     ) +
     theme(
-      plot.margin = margin(20, 30, 10, 10)
+      plot.margin = margin(20, 30, 10, 10),
+      axis.text.x = element_text(angle = 45, hjust = 1)
     )
   
   if (show_labels && nrow(depeg_regions) > 0) {
@@ -325,4 +334,5 @@ plot_test_comps <- function(result_data, test_data, coin_df, coin, horizon, titl
   }
   
   print(p)
+  invisible(p)
 }
