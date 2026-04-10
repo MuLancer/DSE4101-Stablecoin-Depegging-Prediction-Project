@@ -615,7 +615,7 @@ write.csv(
 
 
 
-# Plot Results ===========================================
+# Plot Results =========================================== Example Implementation
 
 #### Window 1
 # DAI
@@ -631,4 +631,25 @@ plot_rfw1_DAI <- plot_results(coin_data = plot_rfw1_DAI_data,org_data = data_DAI
                               title = "Window 1: DAI Depeg Predictions")
 
 
-# Plot AUC ===============================================
+# Plot AUC =============================================== Example Implementation
+
+# AUC has error here since all of it is just class 0
+#auc_rfw1_DAI_1 <- plot_auc(dfw1$DAI$depeg_1d$test$y, rfw1$DAI$depeg_1d$pred_class, 
+#                         title = "ROC: DAI depeg_1d",
+#                         add_ci = TRUE, add_optimal = TRUE)
+# auc_rfw1_DAI_1
+
+auc_rfw1_DAI_3 <- plot_auc(dfw1$DAI$depeg_3d$test$y, rfw1$DAI$depeg_3d$pred_class, 
+                         title = "ROC: DAI depeg_3d",
+                         add_ci = TRUE, add_optimal = TRUE)
+auc_rfw1_DAI_3
+
+auc_rfw1_DAI_5 <- plot_auc(dfw1$DAI$depeg_5d$test$y, rfw1$DAI$depeg_5d$pred_class, 
+                         title = "ROC: DAI depeg_5d",
+                         add_ci = TRUE, add_optimal = TRUE)
+auc_rfw1_DAI_5
+
+auc_rfw1_DAI_7 <- plot_auc(dfw1$DAI$depeg_7d$test$y, rfw1$DAI$depeg_7d$pred_class, 
+                         title = "ROC: DAI depeg_7d",
+                         add_ci = TRUE, add_optimal = TRUE)
+auc_rfw1_DAI_7
