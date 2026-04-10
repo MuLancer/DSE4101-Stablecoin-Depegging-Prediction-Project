@@ -1,5 +1,5 @@
 
-run_lasso <- function(train, test, cv_folds = 5) {
+run_lasso <- function(train, test, cv_folds = 5, seed = 99) {
   
   if (!requireNamespace("glmnet", quietly = TRUE)) {
     stop("Package 'glmnet' is required. Install it with install.packages('glmnet').")
@@ -33,6 +33,9 @@ run_lasso <- function(train, test, cv_folds = 5) {
   
   storage.mode(x_train) <- "double"
   storage.mode(x_test) <- "double"
+  
+  set.seed(seed)
+  foldid <- sample(rep(seq_len(cv_folds), length.out = nrow(x_train)))
   
   cvfit <- glmnet::cv.glmnet(
     x = x_train,
