@@ -408,27 +408,48 @@ source("func-pcr.R")
 pcrw1 = runpcr_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
 pcrw2 = runpcr_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
 
+#--------------------------------------------------------------
+##Examples: show optimal PCR components, plot PCs against time
+#--------------------------------------------------------------
 
-## Some additional functions: show PCR components, plot CV error curve
-summary(pcrw1$DAI$depeg_1d$model)
-cat("Optimal No. of components for DAI 1d:", pcrw1$DAI$depeg_1d$ncomp, "\n")
-show_pcr_comps(pcrw1$DAI$depeg_1d, top_n = 5)
-plot_cv_curve(pcrw1$DAI$depeg_1d$cv_errors, title = "DAI 1d: PCR Cross-Validation Error")
+# DAI, Window 1, depeg_5d
+cat("Optimal No. of components for DAI 5d:", pcrw1$DAI$depeg_5d$ncomp, "\n")
+show_pcr_comps(pcrw1$DAI$depeg_5d, top_n = 5)
+plot_cv_curve(pcrw1$DAI$depeg_5d$cv_errors, title = "DAI 5d, Window 1: PCR CV Error")
+plot_test_pcs(
+  result_data = pcrw1,
+  test_data = dfw1,
+  coin_df = data_DAI,
+  coin = "DAI",
+  horizon = "depeg_5d",
+  title = "DAI depeg_5d, Window 1: test PCR scores"
+)
 
-summary(pcrw1$UST$depeg_5d$model)
-cat("Optimal No. of components for UST 5d:", pcrw1$UST$depeg_5d$ncomp, "\n")
-show_pcr_comps(pcrw1$UST$depeg_5d, top_n = 5)
-plot_cv_curve(pcrw1$UST$depeg_5d$cv_errors, title = "UST 5d: PCR Cross-Validation Error")
+# PAX, Window 2, depeg_1d
+cat("Optimal No. of components for PAX 1d:", pcrw2$PAX$depeg_1d$ncomp, "\n")
+show_pcr_comps(pcrw2$PAX$depeg_1d, top_n = 5)
+plot_cv_curve(pcrw2$PAX$depeg_1d$cv_errors, title = "PAX 1d, Window 2: PCR CV Error")
+plot_test_pcs(
+  result_data = pcrw2,
+  test_data = dfw2,
+  coin_df = data_PAX,
+  coin = "PAX",
+  horizon = "depeg_1d",
+  title = "PAX depeg_1d, Window 2: test PCR scores"
+)
 
-summary(pcrw1$UST$depeg_7d$model)
-cat("Optimal No. of components for UST 7d:", pcrw1$UST$depeg_7d$ncomp, "\n")
-show_pcr_comps(pcrw1$UST$depeg_7d, top_n = 5)
-plot_cv_curve(pcrw1$UST$depeg_7d$cv_errors, title = "UST 7d: PCR Cross-Validation Error")
-
-
-# plot_pcr_list <- list(plot_pcr_DAI, plot_pcr_PAX, plot_pcr_USDC, plot_pcr_USDT, plot_pcr_UST)
-# pcr_grid <- grid.arrange(grobs = plot_pcr_list, nrow = 2, ncol = 3)
-# ggsave("../../plots/PCR_model_OOS.png", pcr_grid, width = 12, height = 8)
+# USDT, Window 2, depeg_7d
+cat("Optimal No. of components for USDT 7d:", pcrw2$USDT$depeg_7d$ncomp, "\n")
+show_pcr_comps(pcrw2$USDT$depeg_7d, top_n = 5)
+plot_cv_curve(pcrw2$USDT$depeg_7d$cv_errors, title = "USDT 7d, Window 2: PCR CV Error")
+plot_test_pcs(
+  result_data = pcrw2,
+  test_data = dfw2,
+  coin_df = data_USDT,
+  coin = "USDT",
+  horizon = "depeg_7d",
+  title = "USDT depeg_7d, Window 2: test PCR scores"
+)
 
 
 #############################
@@ -441,19 +462,43 @@ source("func-pls.R")
 plsw1 = runpls_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
 plsw2 = runpls_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
 
-## Some additional functions: show PLS components
-summary(plsw1$DAI$depeg_1d$model)
-cat("Optimal No. of components for DAI 1d:", plsw1$DAI$depeg_1d$ncomp, "\n")
-show_pls_comps(plsw1$DAI$depeg_1d, top_n = 5)
+#--------------------------------------------------------------------
+#Examples: show optimal PLS components, plot Components against time
+#--------------------------------------------------------------------
 
-summary(plsw1$UST$depeg_5d$model)
-cat("Optimal No. of components for UST 5d:", plsw1$UST$depeg_5d$ncomp, "\n")
-show_pls_comps(plsw1$UST$depeg_5d, top_n = 5)
+# DAI, Window 1, depeg_5d
+cat("Optimal No. of components for DAI 5d:", plsw1$DAI$depeg_5d$ncomp, "\n")
+show_pls_comps(plsw1$DAI$depeg_5d, top_n = 5)
+plot_test_comps(
+  result_data = plsw1,
+  test_data = dfw1,
+  coin_df = data_DAI,
+  coin = "DAI",
+  horizon = "depeg_5d",
+  title = "DAI depeg_5d, Window 1: test PLS scores"
+)
 
-summary(plsw1$UST$depeg_7d$model)
-cat("Optimal No. of components for UST 7d:", plsw1$UST$depeg_7d$ncomp, "\n")
-show_pls_comps(plsw1$UST$depeg_7d, top_n = 5)
+#PAX, Window 2, depeg_1d
+cat("Optimal No. of components for PAX 1d:", plsw2$PAX$depeg_1d$ncomp, "\n")
+show_pls_comps(plsw2$PAX$depeg_1d, top_n = 5)
+plot_test_comps(result_data = plsw2, 
+                test_data = dfw2, 
+                coin_df = data_PAX, 
+                coin = "PAX", 
+                horizon = "depeg_1d", 
+                title = "PAX depeg_1d, Window 2: test PLS scores")
 
+# USDT, Window 2, depeg_7d
+cat("Optimal No. of components for USDT 7d:", plsw2$USDT$depeg_7d$ncomp, "\n")
+show_pls_comps(plsw2$USDT$depeg_7d, top_n = 5)
+plot_test_comps(
+  result_data = plsw2,
+  test_data = dfw2,
+  coin_df = data_USDT,
+  coin = "USDT",
+  horizon = "depeg_7d",
+  title = "USDT depeg_7d, Window 2: test PLS scores"
+)
 
 ###########################
 ### Logistic Regression ###
@@ -484,6 +529,18 @@ source("func-lasso.R")
 lassow1 = run_lasso_all(dfw = dfw1, coin_list = coin_dfw1, horizons = horizons)
 lassow2 = run_lasso_all(dfw = dfw2, coin_list = coin_dfw2, horizons = horizons)
 
+#----------------------------------------
+#Examples: show top 5 LASSO coefficients
+#----------------------------------------
+
+# DAI, Window 1, depeg_5d
+show_lasso_coeffs(lassow1$DAI$depeg_5d, 5)
+
+# PAX, Window 2, depeg_1d
+show_lasso_coeffs(lassow2$PAX$depeg_1d, 5)
+
+# USDT, Window 2, depeg_7d
+show_lasso_coeffs(lassow2$USDT$depeg_7d, 5)
 
 
 ###############################
